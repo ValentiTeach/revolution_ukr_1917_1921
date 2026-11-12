@@ -1,0 +1,6 @@
+{
+  "name": "Вільна Доля: 1917–1921 (Ukrainian Revolution RPG)",
+  "description": "Інтерактивна піксельна історична RPG доби Української революції 1917–1921 років із системою діалогів, об'єднанням політичних фракцій, деревом морального вибору та стратегічними квестами.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
