@@ -12,9 +12,12 @@ import {
   GameMetrics,
   UniversalClause,
   DecisionTreeNode,
+  HeroRank,
+  HeroSprite,
 } from './types';
 
 export interface GameState {
+  version: number;
   chapter: ChapterId;
   currentStepId: string;
   metrics: GameMetrics;
@@ -23,6 +26,41 @@ export interface GameState {
   unlockedChapters: ChapterId[];
   isAlternateHistory: boolean;
   activeUniversalClauses: string[];
+  // --- Герой та прогрес ---
+  heroName: string;
+  heroSprite: HeroSprite;
+  hasSeenPrologue: boolean;
+  stars: number;
+  artifacts: string[];            // зібрані знахідки
+  achievements: string[];         // відкриті досягнення
+  completedChapters: ChapterId[]; // акти, за які пройдено інтерлюдію
+  quizCorrect: string[];          // id правильно відповіданих питань
+  minigamesWon: string[];         // chapterId виграних міні-ігор
+  usedOperations: string[];       // штабні операції, які вже проведено
+  proclaimedUniversals: number;   // скільки Універсалів проголошено
+}
+
+export const STATE_VERSION = 2;
+
+export const HERO_RANKS: HeroRank[] = [
+  { id: 'dzhura', title: 'Джура', minStars: 0, description: 'Юний посильний Центральної Ради. Усе ще попереду!' },
+  { id: 'kozak', title: 'Козак', minStars: 6, description: 'Тебе вже впізнають у коридорах Педагогічного музею.' },
+  { id: 'khorunzhyi', title: 'Хорунжий', minStars: 14, description: 'Тобі довіряють нести прапор на урочистостях.' },
+  { id: 'sotnyk', title: 'Сотник', minStars: 24, description: 'Ти вмієш домовлятися з делегатами та солдатами.' },
+  { id: 'polkovnyk', title: 'Полковник', minStars: 36, description: 'Твоє слово важить на засіданнях уряду.' },
+  { id: 'otaman', title: 'Отаман Долі', minStars: 50, description: 'Легенда революції. Про тебе складатимуть пісні!' },
+];
+
+export function getRank(stars: number): HeroRank {
+  let current = HERO_RANKS[0];
+  for (const rank of HERO_RANKS) {
+    if (stars >= rank.minStars) current = rank;
+  }
+  return current;
+}
+
+export function getNextRank(stars: number): HeroRank | null {
+  return HERO_RANKS.find((r) => r.minStars > stars) ?? null;
 }
 
 export const INITIAL_METRICS: GameMetrics = {
@@ -48,15 +86,93 @@ export function clamp(value: number, min = 0, max = 100): number {
 
 export function createInitialGameState(): GameState {
   return {
+    version: STATE_VERSION,
     chapter: 'CH1_RADA_CREATION',
-    currentStepId: 'rada_birth_1',
+    currentStepId: 'step_ch1_1',
     metrics: { ...INITIAL_METRICS },
     reputation: { ...INITIAL_REPUTATION },
     decisionHistory: [],
     unlockedChapters: ['CH1_RADA_CREATION'],
     isAlternateHistory: false,
     activeUniversalClauses: [],
+    heroName: '',
+    heroSprite: 'hero_boy',
+    hasSeenPrologue: false,
+    stars: 0,
+    artifacts: [],
+    achievements: [],
+    completedChapters: [],
+    quizCorrect: [],
+    minigamesWon: [],
+    usedOperations: [],
+    proclaimedUniversals: 0,
   };
+}
+
+/**
+ * Обережно піднімає старе збереження до поточної версії:
+ * усі відсутні поля отримують значення за замовчуванням.
+ */
+export function migrateGameState(raw: unknown): GameState {
+  const fresh = createInitialGameState();
+  if (!raw || typeof raw !== 'object') return fresh;
+  const saved = raw as Partial<GameState>;
+  const merged: GameState = {
+    ...fresh,
+    ...saved,
+    version: STATE_VERSION,
+    metrics: { ...fresh.metrics, ...(saved.metrics ?? {}) },
+    reputation: { ...fresh.reputation, ...(saved.reputation ?? {}) },
+    decisionHistory: Array.isArray(saved.decisionHistory) ? saved.decisionHistory : [],
+    artifacts: Array.isArray(saved.artifacts) ? saved.artifacts : [],
+    achievements: Array.isArray(saved.achievements) ? saved.achievements : [],
+    completedChapters: Array.isArray(saved.completedChapters) ? saved.completedChapters : [],
+    quizCorrect: Array.isArray(saved.quizCorrect) ? saved.quizCorrect : [],
+    minigamesWon: Array.isArray(saved.minigamesWon) ? saved.minigamesWon : [],
+    usedOperations: Array.isArray(saved.usedOperations) ? saved.usedOperations : [],
+  };
+  if (!merged.currentStepId || merged.currentStepId === 'rada_birth_1') {
+    merged.currentStepId = 'step_ch1_1';
+  }
+  return merged;
+}
+
+/** Додає зірки та повертає новий стан (без мутації). */
+export function awardStars(state: GameState, amount: number): GameState {
+  if (amount <= 0) return state;
+  return { ...state, stars: state.stars + amount };
+}
+
+/** Відкриває досягнення, якщо воно ще не відкрите. Повертає [стан, чиНове]. */
+export function unlockAchievement(state: GameState, id: string): [GameState, boolean] {
+  if (state.achievements.includes(id)) return [state, false];
+  return [{ ...state, achievements: [...state.achievements, id] }, true];
+}
+
+/** Перевіряє умови досягнень, які залежать від загального стану. */
+export function evaluateAchievements(state: GameState, totalArtifacts: number): { state: GameState; newlyUnlocked: string[] } {
+  let next = state;
+  const unlocked: string[] = [];
+  const tryUnlock = (id: string, condition: boolean) => {
+    if (!condition) return;
+    const [s, isNew] = unlockAchievement(next, id);
+    next = s;
+    if (isNew) unlocked.push(id);
+  };
+
+  tryUnlock('first_choice', state.decisionHistory.length >= 1);
+  tryUnlock('alt_history', state.decisionHistory.some((d) => !d.wasCanon));
+  tryUnlock('collector_3', state.artifacts.length >= 3);
+  tryUnlock('collector_all', totalArtifacts > 0 && state.artifacts.length >= totalArtifacts);
+  tryUnlock('quiz_master', state.quizCorrect.length >= 5);
+  tryUnlock('kruty_hero', state.minigamesWon.includes('CH6_FOURTH_UNIVERSAL_KRUTY'));
+  tryUnlock('lawmaker', state.proclaimedUniversals >= 1);
+  tryUnlock('strategist', state.usedOperations.length >= 1);
+  tryUnlock('unity_builder', state.metrics.nationalUnity >= 80);
+  tryUnlock('soborna', state.chapter === 'EPILOGUE');
+  tryUnlock('otaman', state.stars >= 50);
+
+  return { state: next, newlyUnlocked: unlocked };
 }
 
 export function applyChoiceToState(

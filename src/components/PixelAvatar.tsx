@@ -192,6 +192,188 @@ export const PixelAvatar: React.FC<PixelAvatarProps> = ({ id, size = 'md', class
           </svg>
         );
 
+      case 'yefremov':
+        // Сергій Єфремов: літературознавець, пенсне, акуратна борідка, метелик
+        return (
+          <svg viewBox="0 0 32 32" className="w-full h-full [image-rendering:pixelated]" shapeRendering="crispEdges">
+            <rect width="32" height="32" fill="#22262b" />
+            <rect x="4" y="24" width="24" height="8" fill="#44403c" />
+            <rect x="12" y="24" width="8" height="3" fill="#f8fafc" />
+            <rect x="14" y="24" width="4" height="2" fill="#7f1d1d" />
+            <rect x="10" y="8" width="12" height="15" fill="#f5d0b0" />
+            <rect x="9" y="6" width="14" height="4" fill="#57534e" />
+            <rect x="9" y="9" width="2" height="5" fill="#57534e" />
+            <rect x="21" y="9" width="2" height="5" fill="#57534e" />
+            <rect x="11" y="12" width="4" height="3" fill="#a8a29e" />
+            <rect x="17" y="12" width="4" height="3" fill="#a8a29e" />
+            <rect x="12" y="13" width="2" height="1" fill="#0f172a" />
+            <rect x="18" y="13" width="2" height="1" fill="#0f172a" />
+            <rect x="15" y="13" width="2" height="1" fill="#a8a29e" />
+            <rect x="15" y="15" width="2" height="2" fill="#e0a980" />
+            <rect x="12" y="18" width="8" height="1" fill="#57534e" />
+            <rect x="13" y="19" width="6" height="4" fill="#78716c" />
+            <rect x="14" y="23" width="4" height="1" fill="#78716c" />
+          </svg>
+        );
+
+      case 'vernadsky':
+        // Володимир Вернадський: вчений, сива борода, окуляри, білий комірець
+        return (
+          <svg viewBox="0 0 32 32" className="w-full h-full [image-rendering:pixelated]" shapeRendering="crispEdges">
+            <rect width="32" height="32" fill="#1d2630" />
+            <rect x="4" y="24" width="24" height="8" fill="#3f3f46" />
+            <rect x="12" y="24" width="8" height="3" fill="#f8fafc" />
+            <rect x="10" y="8" width="12" height="15" fill="#f5d0b0" />
+            <rect x="9" y="6" width="14" height="3" fill="#e5e7eb" />
+            <rect x="8" y="9" width="3" height="6" fill="#d1d5db" />
+            <rect x="21" y="9" width="3" height="6" fill="#d1d5db" />
+            <rect x="11" y="12" width="4" height="3" fill="#78350f" />
+            <rect x="17" y="12" width="4" height="3" fill="#78350f" />
+            <rect x="12" y="13" width="2" height="1" fill="#bae6fd" />
+            <rect x="18" y="13" width="2" height="1" fill="#bae6fd" />
+            <rect x="15" y="13" width="2" height="1" fill="#78350f" />
+            <rect x="15" y="15" width="2" height="2" fill="#e0a980" />
+            <rect x="11" y="17" width="10" height="5" fill="#e5e7eb" />
+            <rect x="13" y="21" width="6" height="4" fill="#f8fafc" />
+            <rect x="14" y="18" width="4" height="1" fill="#9ca3af" />
+          </svg>
+        );
+
+      case 'vitovsky':
+        // Дмитро Вітовський: мазепинка УСС, сіро-зелений однострій
+        return (
+          <svg viewBox="0 0 32 32" className="w-full h-full [image-rendering:pixelated]" shapeRendering="crispEdges">
+            <rect width="32" height="32" fill="#1f2a2e" />
+            <rect x="4" y="22" width="24" height="10" fill="#4b5d52" />
+            <rect x="14" y="22" width="4" height="10" fill="#3a4a40" />
+            <rect x="8" y="24" width="3" height="2" fill="#0284c7" />
+            <rect x="21" y="24" width="3" height="2" fill="#eab308" />
+            <rect x="10" y="11" width="12" height="12" fill="#f5d0b0" />
+            <rect x="8" y="4" width="16" height="8" fill="#4b5d52" />
+            <rect x="9" y="3" width="14" height="2" fill="#3a4a40" />
+            <rect x="10" y="10" width="12" height="2" fill="#3a4a40" />
+            <rect x="15" y="5" width="2" height="2" fill="#eab308" />
+            <rect x="12" y="14" width="2" height="2" fill="#1c1917" />
+            <rect x="18" y="14" width="2" height="2" fill="#1c1917" />
+            <rect x="15" y="16" width="2" height="2" fill="#e0a980" />
+            <rect x="12" y="19" width="8" height="1" fill="#57534e" />
+          </svg>
+        );
+
+      case 'ohienko':
+        // Іван Огієнко: професор, темне волосся, вуса, книжка
+        return (
+          <svg viewBox="0 0 32 32" className="w-full h-full [image-rendering:pixelated]" shapeRendering="crispEdges">
+            <rect width="32" height="32" fill="#2a2320" />
+            <rect x="4" y="23" width="24" height="9" fill="#1e293b" />
+            <rect x="13" y="23" width="6" height="5" fill="#f8fafc" />
+            <rect x="15" y="24" width="2" height="5" fill="#b91c1c" />
+            <rect x="20" y="26" width="6" height="5" fill="#b45309" />
+            <rect x="21" y="27" width="4" height="3" fill="#fde68a" />
+            <rect x="10" y="9" width="12" height="14" fill="#fbd5b5" />
+            <rect x="9" y="6" width="14" height="4" fill="#292524" />
+            <rect x="9" y="9" width="2" height="5" fill="#292524" />
+            <rect x="21" y="9" width="2" height="5" fill="#292524" />
+            <rect x="12" y="13" width="2" height="2" fill="#1c1917" />
+            <rect x="18" y="13" width="2" height="2" fill="#1c1917" />
+            <rect x="15" y="15" width="2" height="2" fill="#e0a980" />
+            <rect x="12" y="18" width="8" height="2" fill="#292524" />
+          </svg>
+        );
+
+      case 'soldier':
+        // Вояк-делегат: шинель, папаха, синьо-жовта стрічка
+        return (
+          <svg viewBox="0 0 32 32" className="w-full h-full [image-rendering:pixelated]" shapeRendering="crispEdges">
+            <rect width="32" height="32" fill="#262a22" />
+            <rect x="4" y="22" width="24" height="10" fill="#57603f" />
+            <rect x="15" y="22" width="2" height="10" fill="#3f4630" />
+            <rect x="6" y="23" width="4" height="2" fill="#0284c7" />
+            <rect x="6" y="25" width="4" height="2" fill="#eab308" />
+            <rect x="10" y="11" width="12" height="12" fill="#f0c49c" />
+            <rect x="8" y="4" width="16" height="8" fill="#57534e" />
+            <rect x="9" y="5" width="14" height="2" fill="#78716c" />
+            <rect x="12" y="14" width="2" height="2" fill="#1c1917" />
+            <rect x="18" y="14" width="2" height="2" fill="#1c1917" />
+            <rect x="15" y="16" width="2" height="2" fill="#d69a70" />
+            <rect x="11" y="18" width="10" height="2" fill="#78350f" />
+            <rect x="10" y="19" width="2" height="2" fill="#78350f" />
+            <rect x="20" y="19" width="2" height="2" fill="#78350f" />
+          </svg>
+        );
+
+      case 'hero_boy':
+        // Джура (хлопець): кашкет, вишиванка, торба через плече
+        return (
+          <svg viewBox="0 0 32 32" className="w-full h-full [image-rendering:pixelated]" shapeRendering="crispEdges">
+            <rect width="32" height="32" fill="#1e3a5f" />
+            <rect x="0" y="26" width="32" height="6" fill="#ca8a04" />
+            <rect x="5" y="22" width="22" height="10" fill="#f8fafc" />
+            <rect x="14" y="22" width="4" height="6" fill="#dc2626" />
+            <rect x="15" y="23" width="2" height="1" fill="#f8fafc" />
+            <rect x="15" y="25" width="2" height="1" fill="#f8fafc" />
+            <rect x="6" y="22" width="2" height="10" fill="#78350f" />
+            <rect x="10" y="10" width="12" height="13" fill="#fcd5b4" />
+            <rect x="8" y="6" width="16" height="5" fill="#334155" />
+            <rect x="7" y="10" width="13" height="2" fill="#1e293b" />
+            <rect x="10" y="11" width="2" height="3" fill="#7c2d12" />
+            <rect x="12" y="14" width="2" height="2" fill="#0f172a" />
+            <rect x="18" y="14" width="2" height="2" fill="#0f172a" />
+            <rect x="11" y="17" width="2" height="1" fill="#fca5a5" />
+            <rect x="19" y="17" width="2" height="1" fill="#fca5a5" />
+            <rect x="14" y="19" width="4" height="1" fill="#9a3412" />
+          </svg>
+        );
+
+      case 'hero_girl':
+        // Джура (дівчина): вінок зі стрічками, коса, вишиванка
+        return (
+          <svg viewBox="0 0 32 32" className="w-full h-full [image-rendering:pixelated]" shapeRendering="crispEdges">
+            <rect width="32" height="32" fill="#1e3a5f" />
+            <rect x="0" y="26" width="32" height="6" fill="#ca8a04" />
+            <rect x="5" y="22" width="22" height="10" fill="#f8fafc" />
+            <rect x="9" y="23" width="2" height="2" fill="#dc2626" />
+            <rect x="21" y="23" width="2" height="2" fill="#dc2626" />
+            <rect x="14" y="23" width="4" height="2" fill="#dc2626" />
+            <rect x="22" y="12" width="3" height="14" fill="#a16207" />
+            <rect x="23" y="26" width="2" height="2" fill="#0284c7" />
+            <rect x="10" y="10" width="12" height="13" fill="#fcd5b4" />
+            <rect x="9" y="7" width="14" height="5" fill="#a16207" />
+            <rect x="8" y="5" width="3" height="3" fill="#dc2626" />
+            <rect x="12" y="4" width="3" height="3" fill="#facc15" />
+            <rect x="16" y="4" width="3" height="3" fill="#2563eb" />
+            <rect x="20" y="5" width="3" height="3" fill="#dc2626" />
+            <rect x="12" y="14" width="2" height="2" fill="#0f172a" />
+            <rect x="18" y="14" width="2" height="2" fill="#0f172a" />
+            <rect x="11" y="17" width="2" height="1" fill="#fca5a5" />
+            <rect x="19" y="17" width="2" height="1" fill="#fca5a5" />
+            <rect x="14" y="19" width="4" height="1" fill="#be123c" />
+          </svg>
+        );
+
+      case 'pigeon':
+        // Сизокрил: поштовий голуб із листом
+        return (
+          <svg viewBox="0 0 32 32" className="w-full h-full [image-rendering:pixelated]" shapeRendering="crispEdges">
+            <rect width="32" height="32" fill="#7dd3fc" />
+            <rect x="0" y="24" width="32" height="8" fill="#fde68a" />
+            <rect x="9" y="13" width="14" height="10" fill="#94a3b8" />
+            <rect x="11" y="11" width="10" height="3" fill="#94a3b8" />
+            <rect x="18" y="7" width="7" height="7" fill="#64748b" />
+            <rect x="19" y="12" width="5" height="2" fill="#10b981" />
+            <rect x="21" y="9" width="2" height="2" fill="#f8fafc" />
+            <rect x="22" y="9" width="1" height="1" fill="#0f172a" />
+            <rect x="25" y="10" width="3" height="2" fill="#f59e0b" />
+            <rect x="6" y="15" width="9" height="5" fill="#cbd5e1" />
+            <rect x="4" y="17" width="4" height="3" fill="#475569" />
+            <rect x="12" y="16" width="8" height="1" fill="#475569" />
+            <rect x="13" y="23" width="1" height="2" fill="#f97316" />
+            <rect x="18" y="23" width="1" height="2" fill="#f97316" />
+            <rect x="15" y="18" width="5" height="4" fill="#fef3c7" />
+            <rect x="15" y="18" width="5" height="1" fill="#dc2626" />
+          </svg>
+        );
+
       default:
         // Default statesman delegate
         return (

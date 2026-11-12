@@ -168,6 +168,92 @@ class RetroAudioEngine {
       // Ignore
     }
   }
+
+  private tone(freq: number, start: number, dur: number, type: OscillatorType = 'triangle', vol = 0.06, endFreq?: number) {
+    if (!this.ctx) return;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    const t0 = this.ctx.currentTime + start;
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, t0);
+    if (endFreq) osc.frequency.exponentialRampToValueAtTime(endFreq, t0 + dur);
+    gain.gain.setValueAtTime(vol, t0);
+    gain.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start(t0);
+    osc.stop(t0 + dur);
+  }
+
+  /** Дзвінкий звук отримання зірки. */
+  public playStar() {
+    if (this.isMuted) return;
+    this.initContext();
+    try {
+      [784, 988, 1319].forEach((f, i) => this.tone(f, i * 0.07, 0.22, 'square', 0.04));
+    } catch {
+      // Ignore
+    }
+  }
+
+  /** Мʼякий звук помилки (без покарання, просто «ой»). */
+  public playWrong() {
+    if (this.isMuted) return;
+    this.initContext();
+    try {
+      this.tone(260, 0, 0.18, 'triangle', 0.07, 180);
+      this.tone(200, 0.12, 0.22, 'triangle', 0.06, 140);
+    } catch {
+      // Ignore
+    }
+  }
+
+  /** Гудок паровоза. */
+  public playTrain() {
+    if (this.isMuted) return;
+    this.initContext();
+    try {
+      this.tone(440, 0, 0.5, 'sawtooth', 0.04);
+      this.tone(554, 0, 0.5, 'sawtooth', 0.03);
+    } catch {
+      // Ignore
+    }
+  }
+
+  /** Шелест сторінки щоденника. */
+  public playPage() {
+    if (this.isMuted) return;
+    this.initContext();
+    if (!this.ctx) return;
+    try {
+      const len = Math.floor(this.ctx.sampleRate * 0.15);
+      const buffer = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / len) * 0.3;
+      const src = this.ctx.createBufferSource();
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'highpass';
+      filter.frequency.value = 1800;
+      src.buffer = buffer;
+      src.connect(filter);
+      filter.connect(this.ctx.destination);
+      src.start();
+    } catch {
+      // Ignore
+    }
+  }
+
+  /** Воркування голуба Сизокрила. */
+  public playCoo() {
+    if (this.isMuted) return;
+    this.initContext();
+    try {
+      this.tone(330, 0, 0.18, 'sine', 0.08, 260);
+      this.tone(300, 0.2, 0.25, 'sine', 0.07, 220);
+    } catch {
+      // Ignore
+    }
+  }
 }
 
 export const sound = new RetroAudioEngine();
