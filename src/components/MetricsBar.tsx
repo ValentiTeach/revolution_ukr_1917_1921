@@ -4,21 +4,52 @@
  */
 
 import React from 'react';
-import { Volume2, VolumeX, Shield, Users, Landmark, Award, Coins, GitBranch } from 'lucide-react';
-import { GameMetrics, ChapterId } from '../game/types';
+import { motion } from 'motion/react';
+import {
+  Backpack,
+  BookOpen,
+  GitBranch,
+  Lightbulb,
+  LightbulbOff,
+  Map as MapIcon,
+  MessageSquare,
+  Scroll,
+  Star,
+  Volume2,
+  VolumeX,
+} from 'lucide-react';
+import { GameMetrics, ChapterId, HeroSprite } from '../game/types';
 import { CHAPTER_CONFIG } from '../game/historicalData';
+import { METRIC_META } from '../game/metricsMeta';
+import { getRank } from '../game/rules';
 import { sound } from '../game/sound';
+import { PixelAvatar } from './PixelAvatar';
+
+export type GameTab = 'rpg' | 'satchel' | 'tree' | 'map' | 'universals' | 'archive';
 
 interface MetricsBarProps {
   metrics: GameMetrics;
   currentChapter: ChapterId;
   isAlternateHistory: boolean;
-  activeTab: 'rpg' | 'tree' | 'map' | 'universals' | 'archive';
-  onSelectTab: (tab: 'rpg' | 'tree' | 'map' | 'universals' | 'archive') => void;
+  activeTab: GameTab;
+  onSelectTab: (tab: GameTab) => void;
   isMuted: boolean;
   onToggleMute: () => void;
-  onRestart: () => void;
+  showHints: boolean;
+  onToggleHints: () => void;
+  heroName: string;
+  heroSprite: HeroSprite;
+  stars: number;
 }
+
+const TABS: { id: GameTab; label: string; icon: React.ElementType }[] = [
+  { id: 'rpg', label: 'Пригода', icon: MessageSquare },
+  { id: 'satchel', label: 'Торба', icon: Backpack },
+  { id: 'map', label: 'Штаб', icon: MapIcon },
+  { id: 'universals', label: 'Універсали', icon: Scroll },
+  { id: 'tree', label: 'Дерево Долі', icon: GitBranch },
+  { id: 'archive', label: 'Архів', icon: BookOpen },
+];
 
 export const MetricsBar: React.FC<MetricsBarProps> = ({
   metrics,
@@ -28,196 +59,135 @@ export const MetricsBar: React.FC<MetricsBarProps> = ({
   onSelectTab,
   isMuted,
   onToggleMute,
+  showHints,
+  onToggleHints,
+  heroName,
+  heroSprite,
+  stars,
 }) => {
   const chapterInfo = CHAPTER_CONFIG[currentChapter];
-
-  const metricItems = [
-    {
-      id: 'unity',
-      label: 'Єдність',
-      fullName: 'Національна Єдність',
-      value: metrics.nationalUnity,
-      icon: Users,
-      color: 'bg-sky-500',
-      textColor: 'text-sky-300',
-    },
-    {
-      id: 'army',
-      label: 'Армія',
-      fullName: 'Боєздатність Армії',
-      value: metrics.armyReadiness,
-      icon: Shield,
-      color: 'bg-amber-500',
-      textColor: 'text-amber-300',
-    },
-    {
-      id: 'diplomacy',
-      label: 'Дипломатія',
-      fullName: 'Міжнародний Авторитет',
-      value: metrics.diplomacy,
-      icon: Award,
-      color: 'bg-emerald-500',
-      textColor: 'text-emerald-300',
-    },
-    {
-      id: 'trust',
-      label: 'Довіра',
-      fullName: 'Народна Підтримка',
-      value: metrics.popularTrust,
-      icon: Landmark,
-      color: 'bg-rose-500',
-      textColor: 'text-rose-300',
-    },
-    {
-      id: 'treasury',
-      label: 'Скарбниця',
-      fullName: 'Державні Фінанси',
-      value: metrics.treasury,
-      icon: Coins,
-      color: 'bg-yellow-400',
-      textColor: 'text-yellow-300',
-    },
-  ];
-
-  const handleTabClick = (tab: 'rpg' | 'tree' | 'map' | 'universals' | 'archive') => {
-    sound.playSelect();
-    onSelectTab(tab);
-  };
+  const rank = getRank(stars);
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-amber-950/80 bg-stone-950/95 text-stone-200 backdrop-blur-md">
-      {/* Top zone: Brand & Main Navigation & Primary Controls */}
-      <div className="mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-6 px-4 py-2">
-        {/* Brand Zone */}
-        <div className="flex items-center justify-between gap-3 shrink-0">
-          <div className="flex items-center gap-2">
-            <span className="text-xl">🇺🇦</span>
+    <header className="sticky top-0 z-40 w-full border-b-2 border-amber-900/80 bg-stone-950/95 text-stone-200 backdrop-blur-md">
+      <div className="flag-strip" />
+      <div className="mx-auto max-w-7xl flex flex-col lg:flex-row lg:items-center justify-between gap-2 px-3 sm:px-4 py-2">
+        {/* Герой */}
+        <div className="flex items-center justify-between gap-3">
+          <button
+            type="button"
+            onClick={() => {
+              sound.playSelect();
+              onSelectTab('satchel');
+            }}
+            className="flex items-center gap-2 text-left"
+            title="Відкрити Торбу джури"
+          >
+            <PixelAvatar id={heroSprite} size="sm" />
             <div>
-              <span className="font-serif text-base sm:text-lg font-bold tracking-tight text-amber-300 whitespace-nowrap">
-                Вільна Доля: 1917–1921
-              </span>
-              <div className="text-[10px] sm:text-[11px] text-stone-400">
-                {chapterInfo?.period || '1917–1921'} · {chapterInfo?.title?.split(':')[0] || 'УЦР'}
+              <div className="font-serif text-sm sm:text-base font-bold text-amber-200 leading-tight">{heroName}</div>
+              <div className="flex items-center gap-2 text-[11px] text-stone-400">
+                <span>{rank.title}</span>
+                <motion.span
+                  key={stars}
+                  initial={{ scale: 1.6, color: '#fde047' }}
+                  animate={{ scale: 1, color: '#fcd34d' }}
+                  className="flex items-center gap-0.5 font-bold"
+                >
+                  <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                  {stars}
+                </motion.span>
+                <span className="hidden sm:inline">· {chapterInfo?.period}</span>
               </div>
             </div>
-          </div>
+          </button>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 lg:hidden">
             {isAlternateHistory && (
-              <span
-                title="Ваші рішення відхилилися від історичного канону"
-                className="inline-flex items-center gap-1 border border-amber-600/60 bg-amber-950/50 px-2 py-0.5 text-[10px] sm:text-[11px] text-amber-200"
-              >
-                <GitBranch className="h-3 w-3 text-amber-400" />
-                <span className="hidden xs:inline">Альтернатива</span>
+              <span title="Ти змінив(-ла) хід історії" className="border border-amber-600/60 bg-amber-950/50 px-1.5 py-1 text-[10px] text-amber-200">
+                ⚡
               </span>
             )}
-            <button
-              type="button"
-              onClick={onToggleMute}
-              aria-label={isMuted ? 'Увімкнути звук' : 'Вимкнути звук'}
-              title={isMuted ? 'Увімкнути звук' : 'Вимкнути звук'}
-              className="sm:hidden flex h-7 w-7 items-center justify-center border border-stone-700 bg-stone-900 text-stone-300 hover:border-amber-500 hover:text-amber-300 transition-colors"
-            >
-              {isMuted ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
-            </button>
+            <IconToggle
+              on={showHints}
+              onClick={onToggleHints}
+              labelOn="Сховати підказки"
+              labelOff="Показати підказки"
+              iconOn={Lightbulb}
+              iconOff={LightbulbOff}
+            />
+            <IconToggle on={!isMuted} onClick={onToggleMute} labelOn="Вимкнути звук" labelOff="Увімкнути звук" iconOn={Volume2} iconOff={VolumeX} />
           </div>
         </div>
 
-        {/* Navigation Tabs (Single line, accessible native buttons) */}
-        <nav aria-label="Головна навігація" className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
-          <button
-            type="button"
-            onClick={() => handleTabClick('rpg')}
-            className={`whitespace-nowrap px-2.5 sm:px-3 py-1.5 text-xs font-medium transition-all shrink-0 ${
-              activeTab === 'rpg'
-                ? 'border-b-2 border-amber-400 bg-stone-800 text-amber-300 font-semibold'
-                : 'text-stone-300 hover:bg-stone-900 hover:text-white'
-            }`}
-          >
-            RPG Сюжет
-          </button>
-          <button
-            type="button"
-            onClick={() => handleTabClick('tree')}
-            className={`whitespace-nowrap px-2.5 sm:px-3 py-1.5 text-xs font-medium transition-all shrink-0 ${
-              activeTab === 'tree'
-                ? 'border-b-2 border-amber-400 bg-stone-800 text-amber-300 font-semibold'
-                : 'text-stone-300 hover:bg-stone-900 hover:text-white'
-            }`}
-          >
-            Дерево Долі
-          </button>
-          <button
-            type="button"
-            onClick={() => handleTabClick('map')}
-            className={`whitespace-nowrap px-2.5 sm:px-3 py-1.5 text-xs font-medium transition-all shrink-0 ${
-              activeTab === 'map'
-                ? 'border-b-2 border-amber-400 bg-stone-800 text-amber-300 font-semibold'
-                : 'text-stone-300 hover:bg-stone-900 hover:text-white'
-            }`}
-          >
-            Штабний Стіл
-          </button>
-          <button
-            type="button"
-            onClick={() => handleTabClick('universals')}
-            className={`whitespace-nowrap px-2.5 sm:px-3 py-1.5 text-xs font-medium transition-all shrink-0 ${
-              activeTab === 'universals'
-                ? 'border-b-2 border-amber-400 bg-stone-800 text-amber-300 font-semibold'
-                : 'text-stone-300 hover:bg-stone-900 hover:text-white'
-            }`}
-          >
-            Кабінет Універсалів
-          </button>
-          <button
-            type="button"
-            onClick={() => handleTabClick('archive')}
-            className={`whitespace-nowrap px-2.5 sm:px-3 py-1.5 text-xs font-medium transition-all shrink-0 ${
-              activeTab === 'archive'
-                ? 'border-b-2 border-amber-400 bg-stone-800 text-amber-300 font-semibold'
-                : 'text-stone-300 hover:bg-stone-900 hover:text-white'
-            }`}
-          >
-            Історичний Архів
-          </button>
+        {/* Навігація */}
+        <nav aria-label="Головна навігація" className="flex items-center gap-1 overflow-x-auto scrollbar-none">
+          {TABS.map((t) => {
+            const Icon = t.icon;
+            const active = activeTab === t.id;
+            return (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => {
+                  sound.playSelect();
+                  onSelectTab(t.id);
+                }}
+                aria-current={active ? 'page' : undefined}
+                className={`flex items-center gap-1.5 whitespace-nowrap px-2.5 sm:px-3 py-2 text-xs sm:text-sm font-semibold border-b-2 transition-colors ${
+                  active ? 'border-amber-400 bg-stone-800 text-amber-300' : 'border-transparent text-stone-300 hover:bg-stone-900 hover:text-white'
+                }`}
+              >
+                <Icon className="h-4 w-4" />
+                {t.label}
+              </button>
+            );
+          })}
         </nav>
 
-        {/* Audio & Utility controls (Desktop) */}
-        <div className="hidden sm:flex items-center gap-2 shrink-0">
-          <button
-            type="button"
-            onClick={onToggleMute}
-            aria-label={isMuted ? 'Увімкнути звук' : 'Вимкнути звук'}
-            title={isMuted ? 'Увімкнути звук' : 'Вимкнути звук'}
-            className="flex h-8 w-8 items-center justify-center border border-stone-700 bg-stone-900 text-stone-300 hover:border-amber-500 hover:text-amber-300 transition-colors"
-          >
-            {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-          </button>
+        <div className="hidden lg:flex items-center gap-1.5">
+          {isAlternateHistory && (
+            <span
+              title="Твої рішення відхилилися від того, як було насправді"
+              className="inline-flex items-center gap-1 border border-amber-600/60 bg-amber-950/50 px-2 py-1 text-[11px] text-amber-200"
+            >
+              ⚡ Альтернатива
+            </span>
+          )}
+          <IconToggle
+            on={showHints}
+            onClick={onToggleHints}
+            labelOn="Сховати підказки"
+            labelOff="Показати підказки"
+            iconOn={Lightbulb}
+            iconOff={LightbulbOff}
+          />
+          <IconToggle on={!isMuted} onClick={onToggleMute} labelOn="Вимкнути звук" labelOff="Увімкнути звук" iconOn={Volume2} iconOff={VolumeX} />
         </div>
       </div>
 
-      {/* Metrics Strip */}
-      <div className="border-t border-stone-800/80 bg-stone-900/90 px-4 py-1.5">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 overflow-x-auto text-xs">
-          {metricItems.map((item) => {
-            const Icon = item.icon;
+      {/* Показники держави */}
+      <div className="border-t border-stone-800/80 bg-stone-900/90 px-3 sm:px-4 py-1.5">
+        <div className="mx-auto grid max-w-7xl grid-cols-5 gap-2 sm:gap-4 text-xs">
+          {METRIC_META.map((m) => {
+            const value = metrics[m.key];
+            const low = value < 25;
             return (
-              <div
-                key={item.id}
-                title={item.fullName}
-                className="flex items-center gap-2 whitespace-nowrap min-w-[120px]"
-              >
-                <Icon className={`h-3.5 w-3.5 ${item.textColor}`} />
-                <span className="text-stone-400 text-[11px] font-medium">{item.label}:</span>
-                <span className="font-mono font-bold text-stone-100 tabular-nums text-xs">
-                  {item.value}%
+              <div key={m.key} title={`${m.fullName}: ${m.kidHint}`} className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-2 min-w-0">
+                <span className="flex items-center gap-1 whitespace-nowrap">
+                  <span aria-hidden>{m.emoji}</span>
+                  <span className="hidden md:inline text-stone-400 text-[11px]">{m.label}</span>
+                  <motion.span
+                    key={value}
+                    initial={{ scale: 1.4 }}
+                    animate={{ scale: 1 }}
+                    className={`font-mono font-bold tabular-nums ${low ? 'text-rose-400' : 'text-stone-100'}`}
+                  >
+                    {value}
+                  </motion.span>
                 </span>
-                <div className="h-1.5 w-16 bg-stone-800 overflow-hidden rounded-xs">
-                  <div
-                    className={`h-full ${item.color} transition-all duration-300`}
-                    style={{ width: `${item.value}%` }}
-                  />
+                <div className="h-1.5 w-full bg-stone-800 overflow-hidden">
+                  <motion.div className={`h-full ${m.bar}`} animate={{ width: `${value}%` }} transition={{ duration: 0.6 }} />
                 </div>
               </div>
             );
@@ -227,3 +197,22 @@ export const MetricsBar: React.FC<MetricsBarProps> = ({
     </header>
   );
 };
+
+const IconToggle: React.FC<{
+  on: boolean;
+  onClick: () => void;
+  labelOn: string;
+  labelOff: string;
+  iconOn: React.ElementType;
+  iconOff: React.ElementType;
+}> = ({ on, onClick, labelOn, labelOff, iconOn: On, iconOff: Off }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    aria-label={on ? labelOn : labelOff}
+    title={on ? labelOn : labelOff}
+    className="flex h-8 w-8 items-center justify-center border border-stone-700 bg-stone-900 text-stone-300 hover:border-amber-500 hover:text-amber-300"
+  >
+    {on ? <On className="h-4 w-4" /> : <Off className="h-4 w-4" />}
+  </button>
+);

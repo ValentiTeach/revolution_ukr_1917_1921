@@ -125,3 +125,68 @@ test('determineGameEnding falls back to historical tragic when metrics are low',
   const ending = determineGameEnding(state);
   assert.equal(ending.type, 'HISTORICAL_TRAGIC');
 });
+
+// ---------------------------------------------------------------------------
+// Прогрес героя, міграція збережень та досягнення
+// ---------------------------------------------------------------------------
+import { migrateGameState, getRank, getNextRank, evaluateAchievements, HERO_RANKS, STATE_VERSION } from './rules';
+
+test('createInitialGameState starts at a real dialogue step with empty progress', () => {
+  const state = createInitialGameState();
+  assert.equal(state.currentStepId, 'step_ch1_1');
+  assert.equal(state.stars, 0);
+  assert.deepEqual(state.artifacts, []);
+  assert.equal(state.version, STATE_VERSION);
+});
+
+test('migrateGameState upgrades a v1 save without losing progress', () => {
+  const legacy = {
+    chapter: 'CH3_FIRST_UNIVERSAL',
+    currentStepId: 'step_ch3_1',
+    metrics: { nationalUnity: 70, armyReadiness: 40, diplomacy: 40, popularTrust: 60, treasury: 50 },
+    reputation: { socialists: 80 },
+    decisionHistory: [{ id: 'd1', chapterId: 'CH1_RADA_CREATION', title: 't', year: '1917', chosenOptionText: 'x', wasCanon: true, consequences: 'y' }],
+    unlockedChapters: ['CH1_RADA_CREATION'],
+    isAlternateHistory: false,
+    activeUniversalClauses: [],
+  };
+  const migrated = migrateGameState(legacy);
+  assert.equal(migrated.chapter, 'CH3_FIRST_UNIVERSAL');
+  assert.equal(migrated.metrics.nationalUnity, 70);
+  assert.equal(migrated.reputation.socialists, 80);
+  assert.equal(migrated.reputation.military, 50); // заповнено за замовчуванням
+  assert.equal(migrated.decisionHistory.length, 1);
+  assert.equal(migrated.stars, 0);
+  assert.deepEqual(migrated.completedChapters, []);
+});
+
+test('migrateGameState fixes the old broken start step and tolerates garbage', () => {
+  assert.equal(migrateGameState({ currentStepId: 'rada_birth_1' }).currentStepId, 'step_ch1_1');
+  assert.equal(migrateGameState(null).chapter, 'CH1_RADA_CREATION');
+  assert.equal(migrateGameState('oops').stars, 0);
+});
+
+test('getRank and getNextRank follow the star ladder', () => {
+  assert.equal(getRank(0).title, 'Джура');
+  assert.equal(getRank(6).title, 'Козак');
+  assert.equal(getRank(1000).id, HERO_RANKS[HERO_RANKS.length - 1].id);
+  assert.equal(getNextRank(0)?.title, 'Козак');
+  assert.equal(getNextRank(1000), null);
+});
+
+test('evaluateAchievements unlocks medals once', () => {
+  const choice: DialogueChoice = {
+    id: 'c',
+    text: 't',
+    factionEffects: {},
+    metricEffects: {},
+    historicalCanon: false,
+    reflection: 'r',
+  };
+  const s1 = applyChoiceToState(createInitialGameState(), choice, 'T', '1917');
+  const first = evaluateAchievements(s1, 10);
+  assert.ok(first.newlyUnlocked.includes('first_choice'));
+  assert.ok(first.newlyUnlocked.includes('alt_history'));
+  const second = evaluateAchievements(first.state, 10);
+  assert.equal(second.newlyUnlocked.length, 0);
+});

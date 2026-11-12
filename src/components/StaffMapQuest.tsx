@@ -8,18 +8,37 @@ import { MapPin, ShieldAlert, Swords, Flag, AlertTriangle, CheckCircle2 } from '
 import { CityNode } from '../game/types';
 import { CITIES_DATA } from '../game/historicalData';
 import { resolveStaffBattle } from '../game/rules';
+import { BG_IMAGES } from '../game/assets';
 import { sound } from '../game/sound';
 
 interface StaffMapQuestProps {
   armyReadiness: number;
-  onBattleResolved: (gainedArmy: number, gainedUnity: number) => void;
+  usedOperations: string[];
+  onBattleResolved: (opId: string, victory: boolean) => void;
 }
+
+type Tactic = 'defend' | 'flank' | 'scout';
+
+const TACTICS: { id: Tactic; emoji: string; label: string; hint: string }[] = [
+  { id: 'defend', emoji: '🛡️', label: 'Окопатися', hint: 'Сильні укріплення: +1 до оборони.' },
+  { id: 'flank', emoji: '🐎', label: 'Обхід кіннотою', hint: 'Удар збоку: +25% до сили війська.' },
+  { id: 'scout', emoji: '🔭', label: 'Розвідка', hint: 'Знаєш, де ворог: його сила -20%.' },
+];
 
 export const StaffMapQuest: React.FC<StaffMapQuestProps> = ({
   armyReadiness,
+  usedOperations,
   onBattleResolved,
 }) => {
-  const [cities, setCities] = useState<CityNode[]>(CITIES_DATA);
+  const [tactics, setTactics] = useState<Record<string, Tactic>>({});
+  const [fightingOp, setFightingOp] = useState<string | null>(null);
+  const [cities, setCities] = useState<CityNode[]>(() =>
+    CITIES_DATA.map((c) => {
+      const opCity = { op_kruty: 'kruty', op_poltava: 'poltava', op_kyiv_campaign: 'kyiv' } as Record<string, string>;
+      const won = usedOperations.some((op) => op.endsWith(':win') && opCity[op.split(':')[0]] === c.id);
+      return won ? { ...c, controlledBy: 'UNR' } : c;
+    }),
+  );
   const [selectedCity, setSelectedCity] = useState<CityNode | null>(CITIES_DATA[0]);
   const [activeOperation, setActiveOperation] = useState<{
     cityId: string;
@@ -41,7 +60,7 @@ export const StaffMapQuest: React.FC<StaffMapQuestProps> = ({
       cityName: 'Станція Крути',
       cityId: 'kruty',
       title: 'Оборона залізничного вузла Крути (Січень 1918)',
-      desc: 'Більшовицькі загони Муравйова наступають на Київ ешелонами. Потрібно затримати ворога, розібравши колії та давши бій.',
+      desc: 'Більшовицькі загони Муравйова наступають на Київ ешелонами. Сили дуже нерівні, як і насправді: перемогти майже неможливо, але кожна година бою — це час для Києва.',
       enemyPower: 4000,
       friendlyTroops: 1200,
       fortificationLevel: 2,
@@ -69,13 +88,20 @@ export const StaffMapQuest: React.FC<StaffMapQuestProps> = ({
   ];
 
   const handleExecuteOperation = (op: typeof operations[0]) => {
-    sound.playMarch();
-    const result = resolveStaffBattle(
-      op.friendlyTroops,
-      op.enemyPower,
-      op.fortificationLevel,
-      armyReadiness
-    );
+    if (fightingOp) return;
+    const tactic = tactics[op.id] ?? 'defend';
+    setFightingOp(op.id);
+    setLastBattleResult(null);
+    [0, 350, 700, 1050].forEach((t) => setTimeout(() => sound.playMarch(), t));
+    setTimeout(() => resolveOperation(op, tactic), 1500);
+  };
+
+  const resolveOperation = (op: typeof operations[0], tactic: Tactic) => {
+    setFightingOp(null);
+    const troops = tactic === 'flank' ? Math.round(op.friendlyTroops * 1.25) : op.friendlyTroops;
+    const enemy = tactic === 'scout' ? Math.round(op.enemyPower * 0.8) : op.enemyPower;
+    const fort = tactic === 'defend' ? op.fortificationLevel + 1 : op.fortificationLevel;
+    const result = resolveStaffBattle(troops, enemy, fort, armyReadiness);
 
     setLastBattleResult({
       victory: result.victory,
@@ -90,9 +116,10 @@ export const StaffMapQuest: React.FC<StaffMapQuestProps> = ({
       setCities((prev) =>
         prev.map((c) => (c.id === op.cityId ? { ...c, controlledBy: 'UNR' } : c))
       );
-      onBattleResolved(10, 8);
+      onBattleResolved(op.id, true);
     } else {
-      onBattleResolved(-5, -2);
+      sound.playWrong();
+      onBattleResolved(op.id, false);
     }
   };
 
@@ -109,7 +136,7 @@ export const StaffMapQuest: React.FC<StaffMapQuestProps> = ({
               </h2>
             </div>
             <p className="mt-1 text-xs text-stone-400 max-w-xl">
-              Залізничні вузли, гарнізони та лінії фронтів. Відправляйте підкріплення до ключових вузлів, щоб стримати інтервенцію більшовиків та білогвардійців.
+              Обери тактику і веди війська! Кожну операцію можна провести лише раз, тож думай наперед: що вища боєздатність армії, то більше шансів. Натискай на міста, щоб дізнатися їхню історію.
             </p>
           </div>
 
@@ -129,7 +156,7 @@ export const StaffMapQuest: React.FC<StaffMapQuestProps> = ({
         <div className="lg:col-span-2 border border-amber-950/90 bg-stone-950 overflow-hidden shadow-xl">
           <div className="relative aspect-16/9 w-full bg-stone-900 select-none">
             <img
-              src="/src/assets/images/pixel_map_ukraine_1918_1794394445811.jpg"
+              src={BG_IMAGES.map}
               alt="Воєнна карта України 1917-1921"
               referrerPolicy="no-referrer"
               className="h-full w-full object-cover filter contrast-105"
@@ -240,27 +267,63 @@ export const StaffMapQuest: React.FC<StaffMapQuestProps> = ({
             </h4>
 
             <div className="space-y-2.5">
-              {operations.map((op) => (
-                <div
-                  key={op.id}
-                  className="border border-stone-800 bg-stone-950/80 p-3 hover:border-stone-700 transition-colors"
-                >
-                  <h5 className="font-semibold text-amber-200 text-xs">{op.title}</h5>
-                  <p className="mt-1 text-[11px] text-stone-400 leading-relaxed">{op.desc}</p>
-                  <div className="mt-2 flex items-center justify-between pt-2 border-t border-stone-800/60">
-                    <span className="text-[10px] text-stone-500">
-                      Сили ворога: ~{op.enemyPower}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => handleExecuteOperation(op)}
-                      className="border border-amber-600 bg-amber-950/80 px-3 py-1 text-xs font-medium text-amber-200 hover:bg-amber-900 transition-colors"
-                    >
-                      Відправити війська
-                    </button>
+              {operations.map((op) => {
+                const done = usedOperations.find((u) => u.startsWith(op.id + ':'));
+                const chosen = tactics[op.id] ?? 'defend';
+                const isFighting = fightingOp === op.id;
+                return (
+                  <div
+                    key={op.id}
+                    className={`border-2 p-3 transition-colors ${
+                      done ? 'border-stone-800 bg-stone-950/50 opacity-80' : 'border-stone-700 bg-stone-950/80 hover:border-stone-600'
+                    }`}
+                  >
+                    <h5 className="font-semibold text-amber-200 text-sm">{op.title}</h5>
+                    <p className="mt-1 text-xs text-stone-400 leading-relaxed">{op.desc}</p>
+                    {!done && (
+                      <div className="mt-2 grid grid-cols-3 gap-1.5">
+                        {TACTICS.map((t) => (
+                          <button
+                            key={t.id}
+                            type="button"
+                            title={t.hint}
+                            onClick={() => {
+                              sound.playBlip(520);
+                              setTactics((prev) => ({ ...prev, [op.id]: t.id }));
+                            }}
+                            aria-pressed={chosen === t.id}
+                            className={`border px-1 py-1.5 text-[11px] leading-tight ${
+                              chosen === t.id ? 'border-amber-400 bg-amber-950 text-amber-100' : 'border-stone-700 text-stone-400 hover:border-stone-500'
+                            }`}
+                          >
+                            <span className="block text-base">{t.emoji}</span>
+                            {t.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    <div className="mt-2 flex items-center justify-between pt-2 border-t border-stone-800/60">
+                      <span className="text-[11px] text-stone-500">
+                        Ворог: ~{op.enemyPower} · Наші: ~{op.friendlyTroops}
+                      </span>
+                      {done ? (
+                        <span className={`text-xs font-bold ${done.endsWith(':win') ? 'text-emerald-400' : 'text-rose-400'}`}>
+                          {done.endsWith(':win') ? '✅ Перемога' : '🕯️ Відступ'}
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleExecuteOperation(op)}
+                          disabled={fightingOp !== null}
+                          className="pixel-btn border-2 border-amber-500 bg-amber-600 px-3 py-1.5 text-xs font-bold text-stone-950 hover:bg-amber-500 disabled:opacity-60"
+                        >
+                          {isFighting ? '⚔️ Бій триває…' : 'В атаку!'}
+                        </button>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 

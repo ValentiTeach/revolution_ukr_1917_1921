@@ -5,19 +5,25 @@
 
 import React, { useState } from 'react';
 import { Scroll, CheckSquare, Square, Award, Sparkles, AlertCircle } from 'lucide-react';
-import { UniversalClause } from '../game/types';
+import { GameMetrics } from '../game/types';
 import { UNIVERSALS_CLAUSES_POOL, FACTIONS } from '../game/historicalData';
 import { evaluateUniversalDraft } from '../game/rules';
 import { sound } from '../game/sound';
 import confetti from 'canvas-confetti';
 
 interface UniversalDraftingRoomProps {
-  onUniversalEnacted: (metricsGained: any, textTitle: string) => void;
+  proclaimedCount: number;
+  onUniversalEnacted: (metricsGained: Partial<GameMetrics>, textTitle: string) => void;
 }
 
+export const MAX_UNIVERSALS = 3;
+const PASS_THRESHOLD = 10;
+
 export const UniversalDraftingRoom: React.FC<UniversalDraftingRoomProps> = ({
+  proclaimedCount,
   onUniversalEnacted,
 }) => {
+  const [rejected, setRejected] = useState(false);
   const [selectedClauseIds, setSelectedClauseIds] = useState<string[]>([
     'clause_autonomy_proclaim',
     'clause_land_socialization',
@@ -28,6 +34,7 @@ export const UniversalDraftingRoom: React.FC<UniversalDraftingRoomProps> = ({
   const toggleClause = (id: string) => {
     sound.playSelect();
     setHasProclaimed(false);
+    setRejected(false);
     setSelectedClauseIds((prev) =>
       prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
     );
@@ -39,9 +46,18 @@ export const UniversalDraftingRoom: React.FC<UniversalDraftingRoomProps> = ({
 
   const draftEvaluation = evaluateUniversalDraft(selectedClauses);
 
+  const limitReached = proclaimedCount >= MAX_UNIVERSALS;
+
   const handleProclaim = () => {
+    if (limitReached || hasProclaimed) return;
+    if (draftEvaluation.totalSupport < PASS_THRESHOLD) {
+      sound.playWrong();
+      setRejected(true);
+      return;
+    }
     sound.playFanfare();
     setHasProclaimed(true);
+    setRejected(false);
 
     try {
       confetti({
@@ -77,7 +93,7 @@ export const UniversalDraftingRoom: React.FC<UniversalDraftingRoomProps> = ({
               </h2>
             </div>
             <p className="mt-1 text-xs text-stone-400 max-w-xl">
-              Сформуйте власний доленосний Універсал! Обирайте статті, балансуючи вимоги селян, офіцерів, соціалістів та консерваторів, щоб здобути максимальну підтримку нації.
+              Склади власний Універсал! Обирай статті так, щоб за нього проголосувала більшість. Якщо загальна підтримка менша за +{PASS_THRESHOLD}%, Рада проєкт провалить. Можна проголосити до {MAX_UNIVERSALS} Універсалів (уже: {proclaimedCount}).
             </p>
           </div>
 
@@ -166,7 +182,7 @@ export const UniversalDraftingRoom: React.FC<UniversalDraftingRoomProps> = ({
           <div className="border border-stone-800 bg-stone-900/90 p-5 space-y-4 text-xs text-stone-300">
             <h3 className="font-serif text-sm font-bold text-stone-100 flex items-center gap-2">
               <Award className="h-4 w-4 text-amber-400" />
-              <span>Реакція Фракцій на Проект</span>
+              <span>Як голосуватимуть фракції</span>
             </h3>
 
             <div className="space-y-2.5">
@@ -200,13 +216,22 @@ export const UniversalDraftingRoom: React.FC<UniversalDraftingRoomProps> = ({
               <button
                 type="button"
                 onClick={handleProclaim}
-                disabled={selectedClauseIds.length === 0}
+                disabled={selectedClauseIds.length === 0 || limitReached || hasProclaimed}
                 className="w-full flex items-center justify-center gap-2 border border-amber-500 bg-amber-600 px-4 py-2.5 text-xs font-bold text-stone-950 uppercase tracking-wider hover:bg-amber-500 transition-colors disabled:opacity-50"
               >
                 <Sparkles className="h-4 w-4" />
-                <span>Урочисто Проголосити</span>
+                <span>{limitReached ? 'Ліміт Універсалів вичерпано' : 'Винести на голосування'}</span>
               </button>
             </div>
+
+            {rejected && (
+              <div className="border border-rose-700 bg-rose-950/60 p-3 text-rose-200 text-xs space-y-1 animate-shake">
+                <div className="font-bold">🗳️ Рада проголосувала «проти»!</div>
+                <p className="text-[11px] text-rose-300">
+                  Підтримка лише {draftEvaluation.totalSupport}%. Подивись, які фракції незадоволені (червоні цифри), і заміни статті, що їх сердять.
+                </p>
+              </div>
+            )}
 
             {hasProclaimed && (
               <div className="border border-emerald-700 bg-emerald-950/60 p-3 text-emerald-200 text-xs space-y-1">

@@ -123,3 +123,74 @@ export interface EndingResult {
   achievements: string[];
   historicalComparison: string;
 }
+
+// ---------------------------------------------------------------------------
+// Лор, прогрес героя та інтерактивні елементи
+// ---------------------------------------------------------------------------
+
+export type HeroSprite = 'hero_boy' | 'hero_girl';
+
+export type BgKey = 'hero' | 'rada' | 'map' | 'kruty';
+
+export interface HeroRank {
+  id: string;
+  title: string;      // Джура, Козак, Хорунжий...
+  minStars: number;
+  description: string;
+}
+
+export interface Artifact {
+  id: string;
+  name: string;
+  emoji: string;
+  bgKey: BgKey;       // на якій сцені захований
+  x: number;          // % координати маркера на картині
+  y: number;
+  fact: string;       // цікавий факт простими словами
+  stars: number;
+}
+
+export interface QuizQuestion {
+  id: string;
+  chapterId: ChapterId;
+  question: string;
+  options: string[];
+  correctIndex: number;
+  explanation: string;
+}
+
+export interface DiaryEntry {
+  chapterId: ChapterId;
+  date: string;
+  title: string;
+  text: string;       // запис від першої особи героя
+}
+
+export type MinigameKind = 'telegram' | 'rail' | 'memory';
+
+export interface MinigameConfig {
+  chapterId: ChapterId;
+  kind: MinigameKind;
+  title: string;
+  intro: string;
+  // telegram: слова, які треба скласти у правильному порядку
+  sentence?: string;
+  // memory: пари символів
+  pairs?: { emoji: string; label: string }[];
+  // rail: скільки шпал треба розібрати та за скільки секунд
+  railTarget?: number;
+  railSeconds?: number;
+  rewardStars: number;
+}
+
+export interface AchievementDef {
+  id: string;
+  title: string;
+  emoji: string;
+  description: string;
+}
+
+export interface CompanionHint {
+  stepId: string;
+  text: string;       // підказка голуба простими словами
+}

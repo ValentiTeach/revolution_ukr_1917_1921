@@ -3,9 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React from 'react';
-import { Award, RotateCcw, GitBranch, CheckCircle2, ShieldCheck } from 'lucide-react';
-import { EndingResult, GameMetrics } from '../game/types';
+import React, { useEffect } from 'react';
+import confetti from 'canvas-confetti';
+import { Award, RotateCcw, GitBranch, CheckCircle2, Backpack } from 'lucide-react';
+import { EndingResult, GameMetrics, HeroSprite } from '../game/types';
+import { getRank } from '../game/rules';
+import { ARTIFACTS, ACHIEVEMENTS } from '../game/lore';
+import { PixelAvatar } from './PixelAvatar';
 import { sound } from '../game/sound';
 
 interface EndingViewProps {
@@ -13,6 +17,12 @@ interface EndingViewProps {
   metrics: GameMetrics;
   onRestart: () => void;
   onViewTree: () => void;
+  onViewSatchel: () => void;
+  heroName: string;
+  heroSprite: HeroSprite;
+  stars: number;
+  artifactsCount: number;
+  achievementsCount: number;
 }
 
 export const EndingView: React.FC<EndingViewProps> = ({
@@ -20,7 +30,24 @@ export const EndingView: React.FC<EndingViewProps> = ({
   metrics,
   onRestart,
   onViewTree,
+  onViewSatchel,
+  heroName,
+  heroSprite,
+  stars,
+  artifactsCount,
+  achievementsCount,
 }) => {
+  const rank = getRank(stars);
+
+  useEffect(() => {
+    sound.playFanfare();
+    try {
+      confetti({ particleCount: 140, spread: 90, origin: { y: 0.5 }, colors: ['#1d6fd1', '#f7c948', '#ffffff'] });
+    } catch {
+      // Ignore
+    }
+  }, []);
+
   const getBannerColor = () => {
     switch (ending.type) {
       case 'SOBORNA_VICTORY':
@@ -77,6 +104,29 @@ export const EndingView: React.FC<EndingViewProps> = ({
           <strong className="text-stone-300">Історична паралель: </strong>
           {ending.historicalComparison}
         </div>
+      </div>
+
+      {/* Картка героя */}
+      <div className="flex flex-col sm:flex-row items-center gap-4 bg-stone-900 pixel-frame p-5">
+        <PixelAvatar id={heroSprite} size="lg" className="animate-float" />
+        <div className="flex-1 text-center sm:text-left">
+          <div className="font-pixel text-[10px] text-amber-400">ДЖУРА РЕВОЛЮЦІЇ</div>
+          <div className="font-serif text-2xl font-bold text-amber-200">{heroName}</div>
+          <div className="text-sm text-stone-300">
+            Звання: <strong className="text-amber-300">{rank.title}</strong> · {stars} ⭐ · знахідок {artifactsCount}/{ARTIFACTS.length} · медалей{' '}
+            {achievementsCount}/{ACHIEVEMENTS.length}
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            sound.playSelect();
+            onViewSatchel();
+          }}
+          className="pixel-btn flex items-center gap-2 border-2 border-amber-500 bg-stone-950 px-4 py-2 text-sm font-bold text-amber-300"
+        >
+          <Backpack className="h-4 w-4" /> Торба
+        </button>
       </div>
 
       {/* Final Metrics overview */}
