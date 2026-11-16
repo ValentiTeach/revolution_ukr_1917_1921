@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { Scroll, CheckSquare, Square, Award, Sparkles, AlertCircle } from 'lucide-react';
+import { Scroll, CheckSquare, Square, Award, Sparkles, AlertCircle } from './icons';
 import { GameMetrics } from '../game/types';
 import { UNIVERSALS_CLAUSES_POOL, FACTIONS } from '../game/historicalData';
 import { evaluateUniversalDraft } from '../game/rules';

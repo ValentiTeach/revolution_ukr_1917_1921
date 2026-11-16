@@ -5,12 +5,14 @@
 
 import React from 'react';
 import { motion } from 'motion/react';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight } from './icons';
 import { Modal } from './Modal';
 import { DialogueChoice, FactionId, GameMetrics } from '../game/types';
 import { FACTIONS } from '../game/historicalData';
 import { METRIC_META } from '../game/metricsMeta';
 import { sound } from '../game/sound';
+import { PixelEmoji } from './PixelEmoji';
+import { pxEase } from '../game/motion';
 
 export interface PendingOutcome {
   choice: DialogueChoice;
@@ -63,14 +65,15 @@ export const ChoiceOutcome: React.FC<ChoiceOutcomeProps> = ({ outcome, onContinu
                   className="flex items-center gap-3 text-sm"
                 >
                   <span className="w-28 shrink-0">
-                    {m.emoji} {m.label}
+                    <PixelEmoji emoji={m.emoji} size={18} res={12} className="mr-1 align-[-3px]" />
+                    {m.label}
                   </span>
-                  <div className="relative h-3 flex-1 bg-stone-800 overflow-hidden">
+                  <div className="px-bar relative h-4 flex-1 overflow-hidden">
                     <motion.div
                       className={`absolute inset-y-0 left-0 ${m.bar}`}
                       initial={{ width: `${b}%` }}
                       animate={{ width: `${a}%` }}
-                      transition={{ delay: 0.3 + i * 0.08, duration: 0.6 }}
+                      transition={{ delay: 0.3 + i * 0.08, duration: 0.6, ease: pxEase(6) }}
                     />
                   </div>
                   <span className={`w-12 text-right font-mono font-bold ${delta > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>

@@ -6,6 +6,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import { sound } from '../../game/sound';
+import { PixelEmoji } from '../PixelEmoji';
+import { pxEase } from '../../game/motion';
 
 interface MemoryGameProps {
   pairs: { emoji: string; label: string }[];
@@ -93,7 +95,7 @@ export const MemoryGame: React.FC<MemoryGameProps> = ({ pairs, onFinish, allowSk
               aria-label={isUp ? card.label : 'Закрита картка'}
               whileTap={{ scale: 0.95 }}
               animate={{ rotateY: isUp ? 0 : 180 }}
-              transition={{ duration: 0.3 }}
+              transition={{ duration: 0.24, ease: pxEase(3) }}
               className={`relative aspect-square border-2 flex flex-col items-center justify-center gap-1 p-1 ${
                 isUp
                   ? isMatched
@@ -104,11 +106,11 @@ export const MemoryGame: React.FC<MemoryGameProps> = ({ pairs, onFinish, allowSk
             >
               {isUp ? (
                 <>
-                  <span className="text-3xl sm:text-4xl">{card.emoji}</span>
+                  <PixelEmoji emoji={card.emoji} size={44} className="px-pop" />
                   <span className="text-[10px] sm:text-xs text-center leading-tight text-stone-200">{card.label}</span>
                 </>
               ) : (
-                <span className="text-2xl text-amber-400/70">🔱</span>
+                <span className="font-pixel text-lg text-amber-400/80">?</span>
               )}
             </motion.button>
           );

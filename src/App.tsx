@@ -4,8 +4,8 @@
  */
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { motion } from 'motion/react';
-import { BookOpen, Gamepad2, MessageSquare, Play, RotateCcw, Search, Volume2, VolumeX } from 'lucide-react';
+import { MotionConfig } from 'motion/react';
+import { BookOpen, Gamepad2, MessageSquare, Play, RotateCcw, Search, Volume2, VolumeX } from './components/icons';
 import { MetricsBar, GameTab } from './components/MetricsBar';
 import { FactionsPanel } from './components/FactionsPanel';
 import { RpgAdventureView } from './components/RpgAdventureView';
@@ -23,13 +23,18 @@ import { Modal } from './components/Modal';
 import { MissionRunner } from './components/MissionRunner';
 import { MissionsBoard } from './components/MissionsBoard';
 import { PixelAvatar } from './components/PixelAvatar';
+import { PixelEmoji } from './components/PixelEmoji';
+import { PixelWipe } from './components/PixelWipe';
+import { PX_TRANSITION } from './game/motion';
 import { Artifact, ChapterId, DialogueChoice, GameMetrics, HeroSprite, Mission } from './game/types';
 import {
   createInitialGameState,
   applyChoiceToState,
   determineGameEnding,
   evaluateAchievements,
+  getPreviousChapter,
   getRank,
+  isChapterUnlocked,
   isRequirementMet,
   migrateGameState,
   unlockAchievement,
@@ -67,7 +72,16 @@ function loadHintsPref(): boolean {
   }
 }
 
+/** Уся гра рухається «кадрами»: ступінчасті переходи за замовчуванням. */
 export default function App() {
+  return (
+    <MotionConfig transition={PX_TRANSITION} reducedMotion="user">
+      <AppInner />
+    </MotionConfig>
+  );
+}
+
+function AppInner() {
   const [gameState, setGameState] = useState<GameState>(loadSavedState);
   const [screen, setScreen] = useState<Screen>(() => {
     try {
@@ -195,12 +209,26 @@ export default function App() {
     enterGame('rpg');
   };
 
+  /** Повідомляє, що акт ще закритий. Повертає true, якщо перехід заборонено. */
+  const blockLockedChapter = (chapterId: ChapterId): boolean => {
+    if (isChapterUnlocked(gameState, chapterId)) return false;
+    sound.playWrong();
+    const prev = getPreviousChapter(chapterId);
+    pushToast({
+      emoji: '🔒',
+      title: 'Цей акт ще закритий',
+      text: prev ? `Спершу пройди «${CHAPTER_CONFIG[prev].title.split(':')[0]}».` : undefined,
+      tone: 'info',
+    });
+    return true;
+  };
+
   const handleStartFromChapter = (chapterId: ChapterId) => {
+    if (blockLockedChapter(chapterId)) return;
     sound.playSelect();
     setGameState((prev) => ({
       ...prev,
       heroName: prev.heroName || 'Джура',
-      unlockedChapters: prev.unlockedChapters.includes(chapterId) ? prev.unlockedChapters : [...prev.unlockedChapters, chapterId],
       chapter: chapterId,
       currentStepId: CHAPTER_CONFIG[chapterId].startStepId,
     }));
@@ -250,9 +278,9 @@ export default function App() {
   };
 
   const handleJumpToChapter = (chapterId: ChapterId) => {
+    if (blockLockedChapter(chapterId)) return;
     setGameState((prev) => ({
       ...prev,
-      unlockedChapters: prev.unlockedChapters.includes(chapterId) ? prev.unlockedChapters : [...prev.unlockedChapters, chapterId],
       chapter: chapterId,
       currentStepId: CHAPTER_CONFIG[chapterId]?.startStepId || 'step_ch1_1',
     }));
@@ -391,6 +419,7 @@ export default function App() {
             enterGame(tab);
           }}
           onStartChapter={handleStartFromChapter}
+          isChapterOpen={(c) => isChapterUnlocked(gameState, c)}
           onReset={handleFullReset}
           completedChapters={gameState.completedChapters}
         />
@@ -401,6 +430,7 @@ export default function App() {
   if (screen === 'prologue') {
     return (
       <div className="min-h-screen flex flex-col text-stone-100">
+        <PixelWipe key="prologue" />
         <PrologueView
           initialName={gameState.heroName}
           initialSprite={gameState.heroSprite}
@@ -427,6 +457,7 @@ export default function App() {
         stars={gameState.stars}
       />
 
+      <PixelWipe key={`${activeTab}-${gameState.chapter}`} />
       <main className="flex-1 mx-auto w-full max-w-7xl px-3 sm:px-4 py-5">
         {activeTab === 'rpg' &&
           (gameState.chapter === 'EPILOGUE' ? (
@@ -453,6 +484,7 @@ export default function App() {
                 currentStepId={gameState.currentStepId}
                 onMakeChoice={handleMakeChoice}
                 onJumpToChapter={handleJumpToChapter}
+                isChapterOpen={(c) => isChapterUnlocked(gameState, c)}
                 heroName={heroName}
                 heroSprite={gameState.heroSprite}
                 foundArtifacts={gameState.artifacts}
@@ -492,6 +524,7 @@ export default function App() {
             currentChapter={gameState.chapter}
             isAlternateHistory={gameState.isAlternateHistory}
             onJumpToChapter={handleJumpToChapter}
+            isChapterOpen={(c) => isChapterUnlocked(gameState, c)}
           />
         )}
 
@@ -593,6 +626,7 @@ interface TitleScreenProps {
   onContinue: () => void;
   onOpen: (tab: GameTab) => void;
   onStartChapter: (chapterId: ChapterId) => void;
+  isChapterOpen: (chapterId: ChapterId) => boolean;
   onReset: () => void;
 }
 
@@ -614,6 +648,7 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
   onContinue,
   onOpen,
   onStartChapter,
+  isChapterOpen,
   onReset,
 }) => {
   const [confirmReset, setConfirmReset] = useState(false);
@@ -622,31 +657,40 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
     <main className="flex-1 flex flex-col items-center justify-center p-3 sm:p-6">
       <div className="w-full max-w-5xl bg-stone-950 pixel-frame overflow-hidden">
         <div className="relative w-full overflow-hidden">
-          <img src={BG_IMAGES.hero} alt="Софійська площа у Києві, 1917 рік" className="h-[300px] sm:h-[420px] w-full object-cover" />
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/50 to-stone-950/10" />
+          <img src={BG_IMAGES.hero} alt="Софійська площа у Києві, 1917 рік" className="px-pan pixelated h-[320px] sm:h-[440px] w-full object-cover" />
+          {/* Піксельні хмари, пил і голуб, що пролітає над площею */}
+          <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
+            <div className="px-cloud top-6" style={{ animationDelay: '-12s' }} />
+            <div className="px-cloud top-20 scale-75" style={{ animationDelay: '-38s', animationDuration: '80s' }} />
+            <div className="px-cloud top-12 scale-50 opacity-60" style={{ animationDelay: '-55s', animationDuration: '100s' }} />
+            <div className="px-fly absolute top-16 left-0">
+              <PixelEmoji emoji="🕊️" size={40} className="animate-flap" />
+            </div>
+            <div className="px-dust" />
+          </div>
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/40 to-transparent" />
+          <div className="px-crt pointer-events-none absolute inset-0" />
 
-          <motion.div
-            className="absolute right-4 top-4 sm:right-10 sm:top-8 flex flex-col items-center gap-1"
-            initial={{ x: 120, y: -60, opacity: 0 }}
-            animate={{ x: 0, y: 0, opacity: 1 }}
-            transition={{ duration: 1.4, ease: 'easeOut' }}
-          >
+          <div className="absolute right-4 top-4 sm:right-10 sm:top-8 flex flex-col items-center gap-1">
             <PixelAvatar id="pigeon" size="md" className="animate-flap border-sky-300" />
-            <span className="bg-sky-700 px-2 py-0.5 text-[10px] font-bold text-white">{COMPANION.name}</span>
-          </motion.div>
+            <span className="px-notch bg-sky-700 px-2 py-0.5 text-[11px] font-bold text-white">{COMPANION.name}</span>
+          </div>
 
           <div className="absolute bottom-5 left-4 right-4 sm:left-8 sm:right-8">
-            <div className="font-pixel text-[9px] sm:text-[11px] text-amber-300 tracking-wider mb-2">
+            <div className="font-pixel text-[9px] sm:text-[11px] text-sky-300 tracking-wider mb-3">
               ПІКСЕЛЬНА ПРИГОДА · 1917–1921
             </div>
-            <motion.h1
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              className="font-display text-4xl sm:text-6xl font-extrabold tracking-tight text-amber-200 drop-shadow-[0_4px_0_rgba(0,0,0,0.8)]"
+            <h1
+              aria-label="Вільна Доля"
+              className="font-display text-[28px] leading-[1.15] sm:text-5xl text-yellow-300 [text-shadow:4px_4px_0_#b45309,8px_8px_0_#0c0a09]"
             >
-              Вільна Доля
-            </motion.h1>
-            <p className="mt-2 max-w-2xl font-serif text-sm sm:text-lg leading-relaxed text-stone-100">
+              {'Вільна Доля'.split('').map((ch, i) => (
+                <span key={i} className="px-drop" style={{ animationDelay: `${i * 70}ms` }} aria-hidden>
+                  {ch === ' ' ? '\u00a0' : ch}
+                </span>
+              ))}
+            </h1>
+            <p className="mt-3 max-w-2xl text-base sm:text-lg leading-snug text-stone-100 [text-shadow:2px_2px_0_#0c0a09]">
               Стань юним джурою Центральної Ради! Разом із поштовим голубом Сизокрилом пройди шлях від перших зборів у Києві до Акту Злуки та Зимового походу. Твої поради змінюватимуть історію.
             </p>
           </div>
@@ -693,12 +737,16 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
             </button>
           </div>
 
+          <p className="px-blink text-center font-pixel text-[10px] text-amber-300" aria-hidden>
+            ▶ НАТИСНИ, ЩОБ ПОЧАТИ ◀
+          </p>
+
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {FEATURES.map((f) => {
               const Icon = f.icon;
               return (
-                <div key={f.title} className="flex gap-3 border border-stone-800 bg-stone-900/70 p-3">
-                  <Icon className="h-6 w-6 shrink-0 text-amber-400" />
+                <div key={f.title} className="px-notch flex gap-3 border-2 border-stone-700 bg-stone-900 p-3 shadow-[inset_3px_3px_0_rgba(255,255,255,0.06)]">
+                  <Icon className="h-7 w-7 shrink-0 text-amber-400" />
                   <div>
                     <div className="text-sm font-bold text-stone-100">{f.title}</div>
                     <div className="text-xs text-stone-400">{f.text}</div>
@@ -710,26 +758,36 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
 
           <details className="group border-t border-stone-800 pt-4">
             <summary className="cursor-pointer text-sm font-semibold text-stone-300 hover:text-amber-300">
-              Для вчителів і батьків: обрати будь-який акт
+              Мапа актів: повернутися до відкритого акту
             </summary>
             <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 text-xs">
-              {ALL_CHAPTERS.map((cid, idx) => (
-                <button
-                  key={cid}
-                  type="button"
-                  onClick={() => onStartChapter(cid)}
-                  className="border border-stone-800 bg-stone-900/60 p-2 text-left hover:border-amber-500"
-                >
-                  <span className="font-mono text-[10px] text-amber-400 block truncate">{CHAPTER_CONFIG[cid].period}</span>
-                  <span className="font-medium text-stone-200 block text-[11px]">
-                    {completedChapters.includes(cid) && '✓ '}
-                    {idx === ALL_CHAPTERS.length - 1 ? 'Епілог' : `Акт ${idx + 1}`}
-                  </span>
-                </button>
-              ))}
+              {ALL_CHAPTERS.map((cid, idx) => {
+                const open = isChapterOpen(cid);
+                return (
+                  <button
+                    key={cid}
+                    type="button"
+                    onClick={() => onStartChapter(cid)}
+                    aria-disabled={!open}
+                    title={open ? CHAPTER_CONFIG[cid].title : 'Відкриється, коли пройдеш попередній акт'}
+                    className={`pixel-btn p-2 text-left border-2 ${
+                      open ? 'border-stone-700 bg-stone-900 hover:border-amber-500' : 'border-stone-900 bg-stone-950 text-stone-600 cursor-not-allowed'
+                    }`}
+                  >
+                    <span className={`font-mono text-[10px] block truncate ${open ? 'text-amber-400' : 'text-stone-600'}`}>
+                      {open ? CHAPTER_CONFIG[cid].period : '???'}
+                    </span>
+                    <span className={`block text-[11px] ${open ? 'text-stone-200' : 'text-stone-600'}`}>
+                      {!open && '🔒 '}
+                      {completedChapters.includes(cid) && '✓ '}
+                      {idx === ALL_CHAPTERS.length - 1 ? 'Епілог' : `Акт ${idx + 1}`}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
             <p className="mt-3 text-xs text-stone-500">
-              У грі {ACHIEVEMENTS.length} медалей, {ARTIFACTS.length} знахідок, {MISSIONS.length} доручень, 9 вікторин і 9 міні-ігор між актами. Позначка «📜 Як було» показує справжній історичний вибір.
+              У грі {ACHIEVEMENTS.length} медалей, {ARTIFACTS.length} знахідок, {MISSIONS.length} доручень, 9 вікторин і 9 міні-ігор між актами. Акти відкриваються по черзі: наступний стане доступним, коли пройдеш попередній. Позначка «📜 Як було» показує справжній історичний вибір.
             </p>
           </details>
 

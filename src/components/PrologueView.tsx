@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { ArrowRight, Shuffle } from 'lucide-react';
+import { ArrowRight, Shuffle } from './icons';
 import { PixelAvatar } from './PixelAvatar';
 import { COMPANION, DEFAULT_HERO_NAMES } from '../game/lore';
 import { BG_IMAGES } from '../game/assets';

@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { BookOpen, User, Calendar, Quote, CheckCircle } from 'lucide-react';
+import { BookOpen, User, Calendar, Quote, CheckCircle } from './icons';
 import { HISTORICAL_FIGURES, HISTORICAL_CHRONOLOGY } from '../game/historicalData';
 import { PixelAvatar } from './PixelAvatar';
 import { sound } from '../game/sound';

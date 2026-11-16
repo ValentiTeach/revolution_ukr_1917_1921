@@ -211,3 +211,17 @@ test('migrateGameState adds mission progress to older saves', () => {
   assert.deepEqual(m.questionsAsked, []);
   assert.equal(m.stars, 5);
 });
+
+import { isChapterUnlocked, getPreviousChapter } from './rules';
+
+test('acts open one by one: only reached acts are playable', () => {
+  const s = createInitialGameState();
+  assert.equal(isChapterUnlocked(s, 'CH1_RADA_CREATION'), true);
+  assert.equal(isChapterUnlocked(s, 'CH2_NATIONAL_CONGRESS'), false);
+  assert.equal(isChapterUnlocked(s, 'EPILOGUE'), false);
+  const reached = { ...s, unlockedChapters: [...s.unlockedChapters, 'CH2_NATIONAL_CONGRESS' as const] };
+  assert.equal(isChapterUnlocked(reached, 'CH2_NATIONAL_CONGRESS'), true);
+  assert.equal(isChapterUnlocked(reached, 'CH3_FIRST_UNIVERSAL'), false);
+  assert.equal(getPreviousChapter('CH3_FIRST_UNIVERSAL'), 'CH2_NATIONAL_CONGRESS');
+  assert.equal(getPreviousChapter('CH1_RADA_CREATION'), null);
+});

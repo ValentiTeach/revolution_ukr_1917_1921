@@ -4,12 +4,13 @@
  */
 
 import React from 'react';
-import { DoorOpen, Lock } from 'lucide-react';
+import { DoorOpen, Lock } from './icons';
 import { PixelAvatar } from './PixelAvatar';
 import { ChapterId, Mission } from '../game/types';
 import { MISSIONS } from '../game/missions';
 import { CHAPTER_CONFIG } from '../game/historicalData';
 import { sound } from '../game/sound';
+import { PixelEmoji } from './PixelEmoji';
 
 interface MissionsBoardProps {
   missionsDone: string[];
@@ -54,12 +55,12 @@ export const MissionsBoard: React.FC<MissionsBoardProps> = ({ missionsDone, avai
                 </div>
                 <h3 className="font-serif text-lg font-bold text-stone-100">{m.title}</h3>
               </div>
-              <span className="text-2xl">{done ? '🏆' : available ? '🚪' : '🔒'}</span>
+              <PixelEmoji emoji={done ? '🏆' : available ? '🚪' : '🔒'} size={36} className={available && !done ? 'px-bob' : ''} />
             </div>
             <div className="flex flex-wrap gap-1">
               {m.stations.map((s) => (
                 <span key={s.id} title={s.title} className="flex h-8 w-8 items-center justify-center border border-stone-700 bg-stone-950 text-base">
-                  {done ? '✓' : s.emoji}
+                  {done ? <span className="font-pixel text-[10px] text-emerald-300">✓</span> : <PixelEmoji emoji={s.emoji} size={24} res={12} />}
                   {s.fork && <span className="sr-only"> (є бічні двері)</span>}
                 </span>
               ))}

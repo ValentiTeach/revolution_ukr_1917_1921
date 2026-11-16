@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { Backpack, BookOpen, Medal, Star } from 'lucide-react';
+import { Backpack, BookOpen, Medal, Star } from './icons';
 import { PixelAvatar } from './PixelAvatar';
 import { Modal } from './Modal';
 import { Artifact, ChapterId, HeroSprite } from '../game/types';
@@ -14,6 +14,7 @@ import { BG_TITLES } from '../game/assets';
 import { HERO_RANKS, getNextRank, getRank } from '../game/rules';
 import { CHAPTER_CONFIG } from '../game/historicalData';
 import { sound } from '../game/sound';
+import { PixelEmoji } from './PixelEmoji';
 
 interface SatchelViewProps {
   heroName: string;
@@ -74,9 +75,9 @@ export const SatchelView: React.FC<SatchelViewProps> = ({
                 </span>
                 <span>{next ? `до звання «${next.title}»: ще ${next.minStars - stars} ⭐` : 'Найвище звання здобуто!'}</span>
               </div>
-              <div className="h-3 bg-stone-800 border border-stone-700 overflow-hidden">
+              <div className="px-bar h-4 overflow-hidden">
                 <motion.div
-                  className="h-full bg-gradient-to-r from-amber-600 to-yellow-300"
+                  className="h-full bg-yellow-400"
                   initial={{ width: 0 }}
                   animate={{ width: `${progressToNext}%` }}
                   transition={{ duration: 0.8 }}
@@ -149,7 +150,11 @@ export const SatchelView: React.FC<SatchelViewProps> = ({
                     has ? 'border-amber-700 bg-stone-900 hover:border-amber-400' : 'border-dashed border-stone-800 bg-stone-950'
                   }`}
                 >
-                  <span className={`text-4xl ${has ? '' : 'grayscale opacity-20'}`}>{has ? a.emoji : '❔'}</span>
+                  {has ? (
+                    <PixelEmoji emoji={a.emoji} size={56} className="px-bob" />
+                  ) : (
+                    <span className="flex h-14 w-14 items-center justify-center font-pixel text-xl text-stone-700">?</span>
+                  )}
                   <span className={`text-xs leading-tight ${has ? 'text-stone-100' : 'text-stone-600'}`}>
                     {has ? a.name : BG_TITLES[a.bgKey]}
                   </span>
@@ -169,10 +174,10 @@ export const SatchelView: React.FC<SatchelViewProps> = ({
                 key={m.id}
                 className={`flex items-center gap-3 border-2 p-3 ${has ? 'border-sky-600 bg-sky-950/40' : 'border-stone-800 bg-stone-950'}`}
               >
-                <span className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-2 text-3xl ${
-                  has ? 'border-yellow-400 bg-amber-900/60' : 'border-stone-700 grayscale opacity-30'
+                <span className={`flex h-16 w-16 shrink-0 items-center justify-center border-4 ${
+                  has ? 'border-yellow-400 bg-amber-900/60 shadow-[4px_4px_0_rgba(0,0,0,0.5)]' : 'border-stone-800 bg-stone-900 opacity-40 grayscale'
                 }`}>
-                  {m.emoji}
+                  <PixelEmoji emoji={m.emoji} size={40} />
                 </span>
                 <div>
                   <div className={`font-bold ${has ? 'text-sky-100' : 'text-stone-500'}`}>{m.title}</div>
@@ -205,7 +210,11 @@ export const SatchelView: React.FC<SatchelViewProps> = ({
       <Modal open={opened !== null} onClose={() => setOpened(null)} title={opened ? `${opened.emoji} ${opened.name}` : ''} maxWidth="max-w-lg">
         {opened && (
           <div className="space-y-3">
-            <div className="text-center text-7xl">{opened.emoji}</div>
+            <div className="flex justify-center">
+              <div className="px-pop border-4 border-amber-600 bg-stone-950 p-3">
+                <PixelEmoji emoji={opened.emoji} size={112} res={20} />
+              </div>
+            </div>
             <div className="text-xs text-stone-400 text-center">Знайдено: {BG_TITLES[opened.bgKey]}</div>
             <p className="text-base leading-relaxed text-stone-200">{opened.fact}</p>
           </div>

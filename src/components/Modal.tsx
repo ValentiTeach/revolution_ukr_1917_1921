@@ -5,7 +5,8 @@
 
 import React, { useEffect } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { X } from 'lucide-react';
+import { X } from './icons';
+import { PX_FAST, pxEase } from '../game/motion';
 
 interface ModalProps {
   open: boolean;
@@ -15,6 +16,8 @@ interface ModalProps {
   maxWidth?: string;
   /** Якщо false — вікно не закривається кліком поза ним (для міні-ігор). */
   dismissible?: boolean;
+  /** Колір піксельної рамки. */
+  frame?: 'amber' | 'violet' | 'sky';
 }
 
 export const Modal: React.FC<ModalProps> = ({
@@ -24,6 +27,7 @@ export const Modal: React.FC<ModalProps> = ({
   children,
   maxWidth = 'max-w-2xl',
   dismissible = true,
+  frame = 'amber',
 }) => {
   useEffect(() => {
     if (!open || !dismissible || !onClose) return;
@@ -38,20 +42,21 @@ export const Modal: React.FC<ModalProps> = ({
     <AnimatePresence>
       {open && (
         <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-3 sm:p-6 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-3 sm:p-6"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
+          transition={PX_FAST}
           onClick={() => dismissible && onClose?.()}
         >
           <motion.div
             role="dialog"
             aria-modal="true"
-            className={`relative w-full ${maxWidth} max-h-[92vh] overflow-y-auto bg-stone-900 text-stone-100 pixel-frame`}
-            initial={{ scale: 0.9, y: 20, opacity: 0 }}
-            animate={{ scale: 1, y: 0, opacity: 1 }}
-            exit={{ scale: 0.95, y: 10, opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 320, damping: 26 }}
+            className={`relative w-full ${maxWidth} max-h-[92vh] overflow-y-auto bg-stone-900 text-stone-100 pixel-frame ${frame === 'violet' ? 'pixel-frame-violet' : frame === 'sky' ? 'pixel-frame-sky' : ''}`}
+            initial={{ scaleY: 0.05, scaleX: 0.9, opacity: 0 }}
+            animate={{ scaleY: 1, scaleX: 1, opacity: 1 }}
+            exit={{ scaleY: 0.05, opacity: 0 }}
+            transition={{ duration: 0.3, ease: pxEase(5) }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flag-strip" />

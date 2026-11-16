@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { Delete } from 'lucide-react';
+import { Delete } from '../icons';
 import { sound } from '../../game/sound';
 import { StationGameProps } from './shared';
 

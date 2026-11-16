@@ -1,46 +1,173 @@
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* ==========================================================================
+   «Вільна Доля» — піксельна дизайн-система
+   Повний опис: docs/VISUAL_STYLE.md
+   ========================================================================== */
+
 @theme {
+  --font-sans: 'Pixelify Sans', ui-monospace, system-ui, sans-serif;
+  --font-serif: 'Pixelify Sans', ui-monospace, serif;
+  --font-mono: 'Pixelify Sans', ui-monospace, monospace;
   --font-pixel: 'Press Start 2P', ui-monospace, monospace;
-  --font-serif: 'Playfair Display', Georgia, serif;
-  --font-display: 'Cinzel', 'Playfair Display', serif;
+  --font-display: 'Press Start 2P', ui-monospace, monospace;
+
+  /* Палітра «Вишиванка-16»: обмежений набір кольорів, як у 8-бітних консолях */
+  --color-px-ink: #0c0a09;
+  --color-px-night: #1c1917;
+  --color-px-stone: #44403c;
+  --color-px-ash: #a8a29e;
+  --color-px-paper: #f3e4c1;
+  --color-px-blue: #1d6fd1;
+  --color-px-sky: #7dd3fc;
+  --color-px-yellow: #f7c948;
+  --color-px-amber: #f59e0b;
+  --color-px-rust: #b45309;
+  --color-px-red: #c0262d;
+  --color-px-rose: #fb7185;
+  --color-px-green: #22c55e;
+  --color-px-violet: #8b5cf6;
+
   --color-ukr-blue: #1d6fd1;
   --color-ukr-yellow: #f7c948;
   --color-parchment: #f3e4c1;
-  --color-parchment-dark: #d9c08c;
   --color-ink: #3b2a16;
-  --color-embroidery: #c0262d;
 }
 
 @layer base {
+  html {
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: grayscale;
+    font-smooth: never;
+  }
+
   body {
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    font-family: 'Pixelify Sans', ui-monospace, system-ui, sans-serif;
+    font-size: 17px;
+    letter-spacing: 0.01em;
     background-color: #0c0a09;
+    /* Піксельна «підлога»: шахова сітка 4×4 з легким градієнтом неба */
     background-image:
-      radial-gradient(ellipse at top, rgba(29, 111, 209, 0.12), transparent 60%),
-      radial-gradient(ellipse at bottom, rgba(247, 201, 72, 0.07), transparent 60%);
+      linear-gradient(to bottom, rgba(29, 111, 209, 0.14), transparent 40%, rgba(247, 201, 72, 0.06)),
+      conic-gradient(from 90deg at 2px 2px, rgba(255, 255, 255, 0.025) 25%, transparent 0 50%, rgba(255, 255, 255, 0.025) 0 75%, transparent 0);
+    background-size: 100% 100%, 8px 8px;
     background-attachment: fixed;
   }
 
   h1, h2, h3, h4, .font-serif {
-    font-family: 'Playfair Display', Georgia, serif;
+    font-family: 'Pixelify Sans', ui-monospace, serif;
+    letter-spacing: 0.02em;
+  }
+
+  /* Жодних заокруглень: у піксельному світі все квадратне */
+  *, ::before, ::after {
+    border-radius: 0 !important;
+  }
+
+  img {
+    image-rendering: pixelated;
   }
 
   button:focus-visible,
   a:focus-visible,
-  input:focus-visible {
+  input:focus-visible,
+  summary:focus-visible {
     outline: 3px solid var(--color-ukr-yellow);
     outline-offset: 2px;
   }
 }
 
-/* Crisp rendering for pixel-art assets */
+@layer utilities {
+  /* Товстіші рамки — «піксельна» вага ліній */
+  .border { border-width: 2px; }
+  .border-t { border-top-width: 2px; }
+  .border-b { border-bottom-width: 2px; }
+  .border-l { border-left-width: 2px; }
+  .border-r { border-right-width: 2px; }
+}
+
 .pixelated {
   image-rendering: -moz-crisp-edges;
   image-rendering: -webkit-crisp-edges;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
+}
+
+.handwriting {
+  font-family: 'Caveat', 'Pixelify Sans', cursive;
+}
+
+/* --------------------------------------------------------------------------
+   Рамки та панелі
+   -------------------------------------------------------------------------- */
+
+/* 9-зрізна піксельна рамка: темний контур, світлий скіс, бурштин, тінь */
+.pixel-frame {
+  border-style: solid;
+  border-width: 8px;
+  border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' shape-rendering='crispEdges'%3E%3Cpath fill='%23b45309' d='M1 1h10v10H1z'/%3E%3Cpath fill='%23fbbf24' d='M1 1h10v1H1zM1 1h1v10H1z'/%3E%3Cpath fill='%2378350f' d='M1 10h10v1H1zM10 1h1v10h-1z'/%3E%3Cpath fill='%230c0a09' d='M1 0h10v1H1zM0 1h1v10H0zM11 1h1v10h-1zM1 11h10v1H1zM3 3h6v6H3z'/%3E%3C/svg%3E") 4 / 8px / 0 stretch;
+  image-rendering: pixelated;
+  box-shadow: 0 8px 0 rgba(0, 0, 0, 0.45);
+}
+.pixel-frame-violet { border-image-source: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' shape-rendering='crispEdges'%3E%3Cpath fill='%236d28d9' d='M1 1h10v10H1z'/%3E%3Cpath fill='%23c4b5fd' d='M1 1h10v1H1zM1 1h1v10H1z'/%3E%3Cpath fill='%233b0764' d='M1 10h10v1H1zM10 1h1v10h-1z'/%3E%3Cpath fill='%230c0a09' d='M1 0h10v1H1zM0 1h1v10H0zM11 1h1v10h-1zM1 11h10v1H1zM3 3h6v6H3z'/%3E%3C/svg%3E"); }
+.pixel-frame-sky { border-image-source: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' shape-rendering='crispEdges'%3E%3Cpath fill='%231d6fd1' d='M1 1h10v10H1z'/%3E%3Cpath fill='%2393c5fd' d='M1 1h10v1H1zM1 1h1v10H1z'/%3E%3Cpath fill='%231e3a8a' d='M1 10h10v1H1zM10 1h1v10h-1z'/%3E%3Cpath fill='%230c0a09' d='M1 0h10v1H1zM0 1h1v10H0zM11 1h1v10h-1zM1 11h10v1H1zM3 3h6v6H3z'/%3E%3C/svg%3E"); }
+
+/* Зрізані кути (2–4 px) для карток і кнопок */
+.px-notch {
+  --n: 4px;
+  clip-path: polygon(
+    0 var(--n), var(--n) var(--n), var(--n) 0,
+    calc(100% - var(--n)) 0, calc(100% - var(--n)) var(--n), 100% var(--n),
+    100% calc(100% - var(--n)), calc(100% - var(--n)) calc(100% - var(--n)), calc(100% - var(--n)) 100%,
+    var(--n) 100%, var(--n) calc(100% - var(--n)), 0 calc(100% - var(--n))
+  );
+}
+
+/* Об'ємна кнопка: світлий верх-ліво, темний низ-право; натиснення інвертує скіс */
+.pixel-btn {
+  --n: 3px;
+  position: relative;
+  clip-path: polygon(
+    0 var(--n), var(--n) var(--n), var(--n) 0,
+    calc(100% - var(--n)) 0, calc(100% - var(--n)) var(--n), 100% var(--n),
+    100% calc(100% - var(--n)), calc(100% - var(--n)) calc(100% - var(--n)), calc(100% - var(--n)) 100%,
+    var(--n) 100%, var(--n) calc(100% - var(--n)), 0 calc(100% - var(--n))
+  );
+  box-shadow:
+    inset -3px -4px 0 rgba(0, 0, 0, 0.38),
+    inset 3px 3px 0 rgba(255, 255, 255, 0.2);
+  transition: transform 90ms steps(2), filter 90ms steps(2);
+}
+.pixel-btn:hover:not(:disabled):not([aria-disabled='true']) {
+  transform: translateY(-2px);
+  filter: brightness(1.12);
+}
+.pixel-btn:active:not(:disabled):not([aria-disabled='true']) {
+  transform: translateY(2px);
+  box-shadow:
+    inset 3px 4px 0 rgba(0, 0, 0, 0.4),
+    inset -3px -3px 0 rgba(255, 255, 255, 0.1);
+}
+.pixel-btn:focus-visible {
+  outline-offset: -6px;
+}
+
+/* Сегментована смужка (HP-бар): поверх заливки накладаються «щілини» */
+.px-bar {
+  position: relative;
+  background-color: #1c1917;
+  box-shadow: inset 0 0 0 1px #0c0a09, inset 0 2px 0 rgba(0, 0, 0, 0.5);
+}
+.px-bar > * {
+  transition: width 0.6s steps(6) !important;
+}
+.px-bar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(90deg, transparent 0 6px, rgba(12, 10, 9, 0.75) 6px 8px);
 }
 
 /* Піксельна стрічка-вишиванка: червоно-чорний хрестиковий орнамент */
@@ -56,102 +183,241 @@
 }
 
 .flag-strip {
-  height: 6px;
-  background: linear-gradient(to bottom, var(--color-ukr-blue) 50%, var(--color-ukr-yellow) 50%);
+  height: 8px;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 8px, rgba(0, 0, 0, 0.18) 8px 9px),
+    linear-gradient(to bottom, var(--color-ukr-blue) 50%, var(--color-ukr-yellow) 50%);
 }
 
 /* Пергамент для щоденника */
 .parchment {
   background-color: var(--color-parchment);
   background-image:
-    radial-gradient(circle at 20% 30%, rgba(160, 120, 60, 0.18), transparent 40%),
-    radial-gradient(circle at 80% 70%, rgba(160, 120, 60, 0.15), transparent 45%),
-    repeating-linear-gradient(0deg, transparent 0, transparent 27px, rgba(59, 42, 22, 0.12) 28px);
+    conic-gradient(from 90deg at 2px 2px, rgba(120, 80, 30, 0.08) 25%, transparent 0 50%, rgba(120, 80, 30, 0.08) 0 75%, transparent 0),
+    repeating-linear-gradient(0deg, transparent 0, transparent 26px, rgba(59, 42, 22, 0.16) 26px 28px);
+  background-size: 6px 6px, 100% 100%;
   color: var(--color-ink);
-  box-shadow: inset 0 0 40px rgba(120, 80, 30, 0.35);
+  box-shadow: inset 0 0 0 3px rgba(120, 80, 30, 0.35), inset 6px 6px 0 rgba(255, 255, 255, 0.3), inset -6px -6px 0 rgba(120, 80, 30, 0.2);
 }
 
-.handwriting {
-  font-family: 'Caveat', 'Playfair Display', cursive;
+/* ЕПТ-ефект старого монітора: рядки розгортки та віньєтка */
+.px-crt {
+  position: relative;
+}
+.px-crt::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.18) 0 2px, transparent 2px 4px),
+    radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, 0.55) 100%);
+  mix-blend-mode: multiply;
 }
 
-/* Піксельна рамка у стилі старих RPG */
-.pixel-frame {
-  box-shadow:
-    0 0 0 2px #0c0a09,
-    0 0 0 4px #b45309,
-    0 0 0 6px #0c0a09,
-    0 8px 30px rgba(0, 0, 0, 0.6);
-}
+/* --------------------------------------------------------------------------
+   Анімації. Правило: рух ступінчастий (steps), як у старих іграх.
+   -------------------------------------------------------------------------- */
 
-.pixel-btn {
-  box-shadow: 0 4px 0 0 rgba(0, 0, 0, 0.55);
-  transition: transform 80ms ease, box-shadow 80ms ease, background-color 150ms ease;
-}
-.pixel-btn:hover {
-  transform: translateY(-1px);
-}
-.pixel-btn:active {
-  transform: translateY(3px);
-  box-shadow: 0 1px 0 0 rgba(0, 0, 0, 0.55);
-}
-
-/* Анімації */
-@keyframes float-y {
+@keyframes px-bob {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
+  50% { transform: translateY(-3px); }
 }
-.animate-float { animation: float-y 3s ease-in-out infinite; }
+.animate-float, .px-bob { animation: px-bob 1.4s steps(2, jump-none) infinite; }
 
-@keyframes flap {
-  0%, 100% { transform: rotate(-4deg) translateY(0); }
-  50% { transform: rotate(4deg) translateY(-4px); }
+@keyframes px-flap {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-4px) rotate(-6deg); }
+  75% { transform: translateY(-2px) rotate(6deg); }
 }
-.animate-flap { animation: flap 1.6s ease-in-out infinite; }
+.animate-flap { animation: px-flap 0.9s steps(4) infinite; }
+
+@keyframes px-blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+.px-blink { animation: px-blink 1s steps(1) infinite; }
+
+@keyframes px-cursor {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(3px); }
+}
+.px-cursor { animation: px-cursor 0.6s steps(2, jump-none) infinite; }
 
 @keyframes sparkle {
-  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(247, 201, 72, 0.7); }
-  50% { transform: scale(1.12); box-shadow: 0 0 0 10px rgba(247, 201, 72, 0); }
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(247, 201, 72, 0.9); }
+  50% { transform: scale(1.15); box-shadow: 0 0 0 4px rgba(247, 201, 72, 0.5), 0 0 0 8px rgba(247, 201, 72, 0.2); }
 }
-.animate-sparkle { animation: sparkle 1.8s ease-in-out infinite; }
+.animate-sparkle { animation: sparkle 1.2s steps(3) infinite; }
 
 @keyframes shake-x {
   0%, 100% { transform: translateX(0); }
-  20%, 60% { transform: translateX(-6px); }
-  40%, 80% { transform: translateX(6px); }
+  25% { transform: translateX(-6px); }
+  50% { transform: translateX(6px); }
+  75% { transform: translateX(-3px); }
 }
-.animate-shake { animation: shake-x 0.4s ease-in-out; }
+.animate-shake { animation: shake-x 0.32s steps(4); }
 
-@keyframes snow-fall {
-  from { transform: translateY(-10%); }
-  to { transform: translateY(110%); }
+@keyframes px-pop {
+  0% { transform: scale(0); }
+  60% { transform: scale(1.3); }
+  100% { transform: scale(1); }
 }
-.snow-layer {
-  background-image:
-    radial-gradient(2px 2px at 20px 30px, #fff, transparent),
-    radial-gradient(2px 2px at 80px 120px, #fff, transparent),
-    radial-gradient(1.5px 1.5px at 150px 60px, #fff, transparent),
-    radial-gradient(2px 2px at 220px 160px, #fff, transparent),
-    radial-gradient(1.5px 1.5px at 300px 90px, #fff, transparent);
-  background-size: 320px 200px;
-  animation: snow-fall 9s linear infinite;
-  opacity: 0.7;
+.px-pop { animation: px-pop 0.3s steps(3) both; }
+
+@keyframes px-rise {
+  0% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(-22px); opacity: 0; }
+}
+.px-rise { animation: px-rise 0.9s steps(6) forwards; }
+
+@keyframes px-open {
+  0% { clip-path: inset(50% 0 50% 0); }
+  100% { clip-path: inset(0 0 0 0); }
+}
+.px-open { animation: px-open 0.28s steps(5) both; }
+
+@keyframes px-reveal {
+  0% { clip-path: inset(0 100% 0 0); }
+  100% { clip-path: inset(0 0 0 0); }
+}
+.px-reveal { animation: px-reveal 0.5s steps(8) both; }
+
+@keyframes px-pan {
+  0% { transform: scale(1.08) translateX(-1.5%); }
+  100% { transform: scale(1.08) translateX(1.5%); }
+}
+.px-pan { animation: px-pan 24s steps(48) infinite alternate; }
+
+@keyframes px-flicker {
+  0%, 100% { opacity: 0.12; }
+  20% { opacity: 0.22; }
+  40% { opacity: 0.1; }
+  60% { opacity: 0.2; }
+  80% { opacity: 0.14; }
+}
+.px-flicker {
+  background: radial-gradient(ellipse at 50% 15%, rgba(253, 224, 71, 0.9), transparent 55%);
+  animation: px-flicker 2.4s steps(5) infinite;
 }
 
-@keyframes train-move {
-  from { transform: translateX(0); }
-  to { transform: translateX(var(--train-distance, 0px)); }
+/* Квадратний сніг і пил: сотні пікселів із box-shadow */
+@keyframes px-fall {
+  from { transform: translateY(-500px); }
+  to { transform: translateY(0); }
 }
+@keyframes px-drift {
+  0% { transform: translate(0, 0); }
+  50% { transform: translate(14px, -10px); }
+  100% { transform: translate(0, 0); }
+}
+.snow-layer, .px-snow {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.snow-layer::before, .px-snow::before,
+.snow-layer::after, .px-snow::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 3px;
+  background: transparent;
+}
+.snow-layer::before, .px-snow::before {
+  box-shadow: 663px 485px 0 #f8fafc, 308px 202px 0 #f8fafc, 1333px 24px 0 #f8fafc, 148px 420px 0 #f8fafc, 1097px 48px 0 #f8fafc, 748px 298px 0 #f8fafc, 118px 465px 0 #f8fafc, 1039px 109px 0 #f8fafc, 76px 44px 0 #f8fafc, 888px 214px 0 #f8fafc, 143px 123px 0 #f8fafc, 185px 282px 0 #f8fafc, 869px 30px 0 #f8fafc, 1158px 63px 0 #f8fafc, 457px 322px 0 #f8fafc, 1284px 298px 0 #f8fafc, 126px 295px 0 #f8fafc, 1199px 203px 0 #f8fafc, 101px 499px 0 #f8fafc, 452px 23px 0 #f8fafc, 1140px 439px 0 #f8fafc, 272px 148px 0 #f8fafc, 858px 73px 0 #f8fafc, 1107px 60px 0 #f8fafc, 1169px 157px 0 #f8fafc, 1147px 417px 0 #f8fafc, 1396px 92px 0 #f8fafc, 211px 297px 0 #f8fafc, 1169px 327px 0 #f8fafc, 384px 190px 0 #f8fafc, 199px 280px 0 #f8fafc, 128px 288px 0 #f8fafc, 122px 316px 0 #f8fafc, 421px 254px 0 #f8fafc, 1393px 272px 0 #f8fafc, 875px 397px 0 #f8fafc, 643px 238px 0 #f8fafc, 1199px 472px 0 #f8fafc, 928px 185px 0 #f8fafc, 613px 127px 0 #f8fafc, 368px 357px 0 #f8fafc, 499px 41px 0 #f8fafc, 1176px 153px 0 #f8fafc, 1075px 253px 0 #f8fafc, 703px 373px 0 #f8fafc, 919px 147px 0 #f8fafc, 1247px 37px 0 #f8fafc, 241px 262px 0 #f8fafc, 856px 84px 0 #f8fafc, 700px 77px 0 #f8fafc, 1001px 215px 0 #f8fafc, 80px 492px 0 #f8fafc, 1368px 39px 0 #f8fafc, 1142px 293px 0 #f8fafc, 642px 174px 0 #f8fafc, 717px 304px 0 #f8fafc, 1017px 296px 0 #f8fafc, 934px 35px 0 #f8fafc, 191px 483px 0 #f8fafc, 552px 242px 0 #f8fafc, 663px 985px 0 #f8fafc, 308px 702px 0 #f8fafc, 1333px 524px 0 #f8fafc, 148px 920px 0 #f8fafc, 1097px 548px 0 #f8fafc, 748px 798px 0 #f8fafc, 118px 965px 0 #f8fafc, 1039px 609px 0 #f8fafc, 76px 544px 0 #f8fafc, 888px 714px 0 #f8fafc, 143px 623px 0 #f8fafc, 185px 782px 0 #f8fafc, 869px 530px 0 #f8fafc, 1158px 563px 0 #f8fafc, 457px 822px 0 #f8fafc, 1284px 798px 0 #f8fafc, 126px 795px 0 #f8fafc, 1199px 703px 0 #f8fafc, 101px 999px 0 #f8fafc, 452px 523px 0 #f8fafc, 1140px 939px 0 #f8fafc, 272px 648px 0 #f8fafc, 858px 573px 0 #f8fafc, 1107px 560px 0 #f8fafc, 1169px 657px 0 #f8fafc, 1147px 917px 0 #f8fafc, 1396px 592px 0 #f8fafc, 211px 797px 0 #f8fafc, 1169px 827px 0 #f8fafc, 384px 690px 0 #f8fafc, 199px 780px 0 #f8fafc, 128px 788px 0 #f8fafc, 122px 816px 0 #f8fafc, 421px 754px 0 #f8fafc, 1393px 772px 0 #f8fafc, 875px 897px 0 #f8fafc, 643px 738px 0 #f8fafc, 1199px 972px 0 #f8fafc, 928px 685px 0 #f8fafc, 613px 627px 0 #f8fafc, 368px 857px 0 #f8fafc, 499px 541px 0 #f8fafc, 1176px 653px 0 #f8fafc, 1075px 753px 0 #f8fafc, 703px 873px 0 #f8fafc, 919px 647px 0 #f8fafc, 1247px 537px 0 #f8fafc, 241px 762px 0 #f8fafc, 856px 584px 0 #f8fafc, 700px 577px 0 #f8fafc, 1001px 715px 0 #f8fafc, 80px 992px 0 #f8fafc, 1368px 539px 0 #f8fafc, 1142px 793px 0 #f8fafc, 642px 674px 0 #f8fafc, 717px 804px 0 #f8fafc, 1017px 796px 0 #f8fafc, 934px 535px 0 #f8fafc, 191px 983px 0 #f8fafc, 552px 742px 0 #f8fafc;
+  animation: px-fall 9s steps(90) infinite;
+}
+.snow-layer::after, .px-snow::after {
+  width: 2px;
+  height: 2px;
+  box-shadow: 1360px 33px 0 rgba(248,250,252,0.6), 124px 374px 0 rgba(248,250,252,0.6), 634px 331px 0 rgba(248,250,252,0.6), 1183px 348px 0 rgba(248,250,252,0.6), 912px 145px 0 rgba(248,250,252,0.6), 790px 454px 0 rgba(248,250,252,0.6), 1369px 177px 0 rgba(248,250,252,0.6), 46px 481px 0 rgba(248,250,252,0.6), 945px 181px 0 rgba(248,250,252,0.6), 344px 312px 0 rgba(248,250,252,0.6), 239px 252px 0 rgba(248,250,252,0.6), 120px 111px 0 rgba(248,250,252,0.6), 588px 66px 0 rgba(248,250,252,0.6), 507px 203px 0 rgba(248,250,252,0.6), 800px 469px 0 rgba(248,250,252,0.6), 1016px 41px 0 rgba(248,250,252,0.6), 340px 229px 0 rgba(248,250,252,0.6), 822px 281px 0 rgba(248,250,252,0.6), 569px 452px 0 rgba(248,250,252,0.6), 280px 419px 0 rgba(248,250,252,0.6), 881px 442px 0 rgba(248,250,252,0.6), 1126px 142px 0 rgba(248,250,252,0.6), 850px 183px 0 rgba(248,250,252,0.6), 1398px 452px 0 rgba(248,250,252,0.6), 779px 490px 0 rgba(248,250,252,0.6), 472px 77px 0 rgba(248,250,252,0.6), 169px 90px 0 rgba(248,250,252,0.6), 309px 118px 0 rgba(248,250,252,0.6), 1348px 119px 0 rgba(248,250,252,0.6), 24px 248px 0 rgba(248,250,252,0.6), 1206px 93px 0 rgba(248,250,252,0.6), 538px 144px 0 rgba(248,250,252,0.6), 8px 74px 0 rgba(248,250,252,0.6), 858px 273px 0 rgba(248,250,252,0.6), 756px 312px 0 rgba(248,250,252,0.6), 1159px 163px 0 rgba(248,250,252,0.6), 257px 353px 0 rgba(248,250,252,0.6), 1055px 486px 0 rgba(248,250,252,0.6), 1264px 335px 0 rgba(248,250,252,0.6), 1384px 378px 0 rgba(248,250,252,0.6), 1360px 533px 0 rgba(248,250,252,0.6), 124px 874px 0 rgba(248,250,252,0.6), 634px 831px 0 rgba(248,250,252,0.6), 1183px 848px 0 rgba(248,250,252,0.6), 912px 645px 0 rgba(248,250,252,0.6), 790px 954px 0 rgba(248,250,252,0.6), 1369px 677px 0 rgba(248,250,252,0.6), 46px 981px 0 rgba(248,250,252,0.6), 945px 681px 0 rgba(248,250,252,0.6), 344px 812px 0 rgba(248,250,252,0.6), 239px 752px 0 rgba(248,250,252,0.6), 120px 611px 0 rgba(248,250,252,0.6), 588px 566px 0 rgba(248,250,252,0.6), 507px 703px 0 rgba(248,250,252,0.6), 800px 969px 0 rgba(248,250,252,0.6), 1016px 541px 0 rgba(248,250,252,0.6), 340px 729px 0 rgba(248,250,252,0.6), 822px 781px 0 rgba(248,250,252,0.6), 569px 952px 0 rgba(248,250,252,0.6), 280px 919px 0 rgba(248,250,252,0.6), 881px 942px 0 rgba(248,250,252,0.6), 1126px 642px 0 rgba(248,250,252,0.6), 850px 683px 0 rgba(248,250,252,0.6), 1398px 952px 0 rgba(248,250,252,0.6), 779px 990px 0 rgba(248,250,252,0.6), 472px 577px 0 rgba(248,250,252,0.6), 169px 590px 0 rgba(248,250,252,0.6), 309px 618px 0 rgba(248,250,252,0.6), 1348px 619px 0 rgba(248,250,252,0.6), 24px 748px 0 rgba(248,250,252,0.6), 1206px 593px 0 rgba(248,250,252,0.6), 538px 644px 0 rgba(248,250,252,0.6), 8px 574px 0 rgba(248,250,252,0.6), 858px 773px 0 rgba(248,250,252,0.6), 756px 812px 0 rgba(248,250,252,0.6), 1159px 663px 0 rgba(248,250,252,0.6), 257px 853px 0 rgba(248,250,252,0.6), 1055px 986px 0 rgba(248,250,252,0.6), 1264px 835px 0 rgba(248,250,252,0.6), 1384px 878px 0 rgba(248,250,252,0.6);
+  animation: px-fall 14s steps(140) infinite;
+}
+.px-dust {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.px-dust::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2px;
+  height: 2px;
+  box-shadow: 110px 233px 0 rgba(253,230,138,0.55), 1393px 408px 0 rgba(253,230,138,0.55), 1145px 200px 0 rgba(253,230,138,0.55), 815px 204px 0 rgba(253,230,138,0.55), 807px 53px 0 rgba(253,230,138,0.55), 986px 324px 0 rgba(253,230,138,0.55), 820px 31px 0 rgba(253,230,138,0.55), 390px 34px 0 rgba(253,230,138,0.55), 427px 225px 0 rgba(253,230,138,0.55), 332px 56px 0 rgba(253,230,138,0.55), 696px 307px 0 rgba(253,230,138,0.55), 107px 52px 0 rgba(253,230,138,0.55), 0px 290px 0 rgba(253,230,138,0.55), 309px 274px 0 rgba(253,230,138,0.55), 207px 186px 0 rgba(253,230,138,0.55), 1256px 13px 0 rgba(253,230,138,0.55), 144px 447px 0 rgba(253,230,138,0.55), 425px 314px 0 rgba(253,230,138,0.55), 770px 76px 0 rgba(253,230,138,0.55), 1299px 129px 0 rgba(253,230,138,0.55), 711px 308px 0 rgba(253,230,138,0.55), 745px 242px 0 rgba(253,230,138,0.55), 251px 59px 0 rgba(253,230,138,0.55), 999px 238px 0 rgba(253,230,138,0.55), 983px 247px 0 rgba(253,230,138,0.55), 638px 43px 0 rgba(253,230,138,0.55), 295px 52px 0 rgba(253,230,138,0.55), 701px 379px 0 rgba(253,230,138,0.55);
+  animation: px-drift 8s steps(16) infinite;
+}
+
+/* Політ голуба над титулом */
+@keyframes px-fly {
+  0% { transform: translateX(-120px) translateY(0); }
+  25% { transform: translateX(25vw) translateY(-12px); }
+  50% { transform: translateX(50vw) translateY(4px); }
+  75% { transform: translateX(75vw) translateY(-10px); }
+  100% { transform: translateX(calc(100vw + 120px)) translateY(0); }
+}
+.px-fly { animation: px-fly 16s steps(160) infinite; }
+
+@keyframes px-cloud {
+  from { transform: translateX(-30%); }
+  to { transform: translateX(130%); }
+}
+.px-cloud {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: transparent;
+  box-shadow:
+    16px 0 0 #f8fafc, 24px 0 0 #f8fafc, 32px 0 0 #f8fafc,
+    8px 8px 0 #f8fafc, 16px 8px 0 #f8fafc, 24px 8px 0 #f8fafc, 32px 8px 0 #f8fafc, 40px 8px 0 #f8fafc,
+    0 16px 0 #e2e8f0, 8px 16px 0 #e2e8f0, 16px 16px 0 #e2e8f0, 24px 16px 0 #e2e8f0, 32px 16px 0 #e2e8f0, 40px 16px 0 #e2e8f0, 48px 16px 0 #e2e8f0;
+  opacity: 0.85;
+  animation: px-cloud 60s steps(240) infinite;
+}
+
+/* Заголовок: літери падають по черзі */
+@keyframes px-drop {
+  0% { transform: translateY(-40px); opacity: 0; }
+  60% { transform: translateY(4px); opacity: 1; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+.px-drop { display: inline-block; animation: px-drop 0.45s steps(4) both; }
+
+/* Перехід між вкладками: «розсипання» на квадрати */
+@keyframes px-wipe {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+.px-wipe-cell { animation: px-wipe 0.01s steps(1) forwards; }
+
+/* Двері відчиняються */
+@keyframes px-door {
+  0% { transform: perspective(60px) rotateY(0deg); }
+  100% { transform: perspective(60px) rotateY(-55deg); }
+}
+.px-door-open { transform-origin: left center; animation: px-door 0.4s steps(3) forwards; }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-float,
-  .animate-flap,
-  .animate-sparkle,
-  .animate-shake,
-  .snow-layer {
+  .animate-float, .px-bob, .animate-flap, .animate-sparkle, .animate-shake,
+  .px-cursor, .px-pan, .px-flicker, .px-fly, .px-cloud, .px-drop, .px-pop, .px-rise,
+  .px-open, .px-reveal, .px-door-open,
+  .snow-layer::before, .snow-layer::after, .px-snow::before, .px-snow::after, .px-dust::before {
     animation: none !important;
   }
+  .px-wipe-cell { display: none; }
+  .pixel-btn { transition: none; }
 }
 
 .scrollbar-none::-webkit-scrollbar { display: none; }
 .scrollbar-none { scrollbar-width: none; }
+
+/* Піксельна смуга прокрутки для решти */
+::-webkit-scrollbar { width: 12px; height: 12px; }
+::-webkit-scrollbar-track { background: #1c1917; }
+::-webkit-scrollbar-thumb { background: #b45309; box-shadow: inset 2px 2px 0 #fbbf24, inset -2px -2px 0 #78350f; }
