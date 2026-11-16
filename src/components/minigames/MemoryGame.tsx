@@ -10,6 +10,7 @@ import { sound } from '../../game/sound';
 interface MemoryGameProps {
   pairs: { emoji: string; label: string }[];
   onFinish: (won: boolean) => void;
+  allowSkip?: boolean;
 }
 
 interface Card {
@@ -33,7 +34,7 @@ function buildDeck(pairs: MemoryGameProps['pairs']): Card[] {
 }
 
 /** Гра «Памʼять»: знайди пари однакових карток. */
-export const MemoryGame: React.FC<MemoryGameProps> = ({ pairs, onFinish }) => {
+export const MemoryGame: React.FC<MemoryGameProps> = ({ pairs, onFinish, allowSkip = true }) => {
   const [deck] = useState(() => buildDeck(pairs));
   const [open, setOpen] = useState<number[]>([]);
   const [matched, setMatched] = useState<number[]>([]);
@@ -116,9 +117,9 @@ export const MemoryGame: React.FC<MemoryGameProps> = ({ pairs, onFinish }) => {
 
       <div className="flex items-center justify-between text-xs text-stone-400 min-h-[1.25rem]">
         <span className="text-emerald-300">{lastFound && `Чудово: «${lastFound}»!`}</span>
-        <button type="button" onClick={() => onFinish(false)} className="underline hover:text-stone-200">
+{allowSkip && (<button type="button" onClick={() => onFinish(false)} className="underline hover:text-stone-200">
           Пропустити
-        </button>
+        </button>)}
       </div>
     </div>
   );

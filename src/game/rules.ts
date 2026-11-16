@@ -14,6 +14,7 @@ import {
   DecisionTreeNode,
   HeroRank,
   HeroSprite,
+  ChoiceRequirement,
 } from './types';
 
 export interface GameState {
@@ -38,9 +39,20 @@ export interface GameState {
   minigamesWon: string[];         // chapterId виграних міні-ігор
   usedOperations: string[];       // штабні операції, які вже проведено
   proclaimedUniversals: number;   // скільки Універсалів проголошено
+  missionsDone: string[];         // виконані доручення
+  questionsAsked: string[];       // питання, які джура поставив персонажам
 }
 
-export const STATE_VERSION = 2;
+export const STATE_VERSION = 3;
+
+/** Чи виконано умову, яка відкриває таємний варіант відповіді. */
+export function isRequirementMet(state: GameState, req: ChoiceRequirement | undefined): boolean {
+  if (!req) return true;
+  if (req.mission && !state.missionsDone.includes(req.mission)) return false;
+  if (req.artifact && !state.artifacts.includes(req.artifact)) return false;
+  if (req.faction && (state.reputation[req.faction.id] ?? 0) < req.faction.min) return false;
+  return true;
+}
 
 export const HERO_RANKS: HeroRank[] = [
   { id: 'dzhura', title: 'Джура', minStars: 0, description: 'Юний посильний Центральної Ради. Усе ще попереду!' },
@@ -106,6 +118,8 @@ export function createInitialGameState(): GameState {
     minigamesWon: [],
     usedOperations: [],
     proclaimedUniversals: 0,
+    missionsDone: [],
+    questionsAsked: [],
   };
 }
 
@@ -130,6 +144,8 @@ export function migrateGameState(raw: unknown): GameState {
     quizCorrect: Array.isArray(saved.quizCorrect) ? saved.quizCorrect : [],
     minigamesWon: Array.isArray(saved.minigamesWon) ? saved.minigamesWon : [],
     usedOperations: Array.isArray(saved.usedOperations) ? saved.usedOperations : [],
+    missionsDone: Array.isArray(saved.missionsDone) ? saved.missionsDone : [],
+    questionsAsked: Array.isArray(saved.questionsAsked) ? saved.questionsAsked : [],
   };
   if (!merged.currentStepId || merged.currentStepId === 'rada_birth_1') {
     merged.currentStepId = 'step_ch1_1';
@@ -150,7 +166,7 @@ export function unlockAchievement(state: GameState, id: string): [GameState, boo
 }
 
 /** Перевіряє умови досягнень, які залежать від загального стану. */
-export function evaluateAchievements(state: GameState, totalArtifacts: number): { state: GameState; newlyUnlocked: string[] } {
+export function evaluateAchievements(state: GameState, totalArtifacts: number, totalMissions = 9): { state: GameState; newlyUnlocked: string[] } {
   let next = state;
   const unlocked: string[] = [];
   const tryUnlock = (id: string, condition: boolean) => {
@@ -171,6 +187,9 @@ export function evaluateAchievements(state: GameState, totalArtifacts: number): 
   tryUnlock('unity_builder', state.metrics.nationalUnity >= 80);
   tryUnlock('soborna', state.chapter === 'EPILOGUE');
   tryUnlock('otaman', state.stars >= 50);
+  tryUnlock('mission_first', state.missionsDone.length >= 1);
+  tryUnlock('mission_all', totalMissions > 0 && state.missionsDone.length >= totalMissions);
+  tryUnlock('curious', state.questionsAsked.length >= 10);
 
   return { state: next, newlyUnlocked: unlocked };
 }

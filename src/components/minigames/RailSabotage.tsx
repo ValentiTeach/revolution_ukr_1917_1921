@@ -10,6 +10,7 @@ interface RailSabotageProps {
   target: number;
   seconds: number;
   onFinish: (won: boolean) => void;
+  allowSkip?: boolean;
 }
 
 const SLEEPERS = 12;
@@ -18,7 +19,7 @@ const SLEEPERS = 12;
  * Гра «Затримай ешелон»: натискай на шпали, що світяться, доки потяг не доїхав.
  * Кожна розібрана шпала відштовхує потяг трохи назад.
  */
-export const RailSabotage: React.FC<RailSabotageProps> = ({ target, seconds, onFinish }) => {
+export const RailSabotage: React.FC<RailSabotageProps> = ({ target, seconds, onFinish, allowSkip = true }) => {
   const [phase, setPhase] = useState<'ready' | 'play' | 'won' | 'lost'>('ready');
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(seconds);
@@ -157,7 +158,7 @@ export const RailSabotage: React.FC<RailSabotageProps> = ({ target, seconds, onF
             </div>
           </div>
         )}
-        {phase !== 'won' && phase !== 'lost' && (
+        {allowSkip && phase !== 'won' && phase !== 'lost' && (
           <button type="button" onClick={() => onFinish(false)} className="text-xs text-stone-400 underline">
             Пропустити
           </button>

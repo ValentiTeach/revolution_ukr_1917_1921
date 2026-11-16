@@ -190,3 +190,24 @@ test('evaluateAchievements unlocks medals once', () => {
   const second = evaluateAchievements(first.state, 10);
   assert.equal(second.newlyUnlocked.length, 0);
 });
+
+import { isRequirementMet } from './rules';
+
+test('isRequirementMet checks missions, artifacts and faction trust', () => {
+  const s = createInitialGameState();
+  assert.equal(isRequirementMet(s, undefined), true);
+  assert.equal(isRequirementMet(s, { mission: 'm1', label: 'x' }), false);
+  assert.equal(isRequirementMet({ ...s, missionsDone: ['m1'] }, { mission: 'm1', label: 'x' }), true);
+  assert.equal(isRequirementMet(s, { artifact: 'a1', label: 'x' }), false);
+  assert.equal(isRequirementMet({ ...s, artifacts: ['a1'] }, { artifact: 'a1', label: 'x' }), true);
+  assert.equal(isRequirementMet(s, { faction: { id: 'independentists', min: 60 }, label: 'x' }), false);
+  const trusted = { ...s, reputation: { ...s.reputation, independentists: 60 } };
+  assert.equal(isRequirementMet(trusted, { faction: { id: 'independentists', min: 60 }, label: 'x' }), true);
+});
+
+test('migrateGameState adds mission progress to older saves', () => {
+  const m = migrateGameState({ chapter: 'CH2_NATIONAL_CONGRESS', stars: 5 });
+  assert.deepEqual(m.missionsDone, []);
+  assert.deepEqual(m.questionsAsked, []);
+  assert.equal(m.stars, 5);
+});

@@ -540,6 +540,11 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   { id: 'unity_builder', title: 'Будівничий єдності', emoji: '🤝', description: 'Підняти Національну єдність до 80%.' },
   { id: 'soborna', title: 'Дійшов до кінця', emoji: '🏁', description: 'Пройти всі дев’ять актів революції.' },
   { id: 'otaman', title: 'Отаман Долі', emoji: '⭐', description: 'Зібрати 50 зірок.' },
+  { id: 'mission_first', title: 'Перше доручення', emoji: '🚪', description: 'Пройти всі двері хоча б одного доручення.' },
+  { id: 'mission_all', title: 'Майстер дверей', emoji: '🗝️', description: 'Виконати всі девʼять доручень.' },
+  { id: 'fearless', title: 'Без жодної подряпини', emoji: '❤️', description: 'Виконати доручення, не втративши жодного серця.' },
+  { id: 'curious', title: 'Допитливий джура', emoji: '❓', description: 'Поставити персонажам 10 питань.' },
+  { id: 'secret_path', title: 'Таємний шлях', emoji: '🔓', description: 'Обрати таємний варіант відповіді.' },
 ];
 
 export function getAchievement(id: string): AchievementDef | undefined {
