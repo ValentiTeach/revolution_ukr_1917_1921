@@ -185,6 +185,28 @@ class RetroAudioEngine {
     osc.stop(t0 + dur);
   }
 
+  /** Короткий сигнал (для азбуки Морзе та таймерів). */
+  public playBeep(freq = 700, duration = 0.12) {
+    if (this.isMuted) return;
+    this.initContext();
+    try {
+      this.tone(freq, 0, duration, 'square', 0.05);
+    } catch {
+      // Ignore
+    }
+  }
+
+  /** Тривожний звук наближення патруля. */
+  public playAlarm() {
+    if (this.isMuted) return;
+    this.initContext();
+    try {
+      [0, 0.18, 0.36].forEach((t) => this.tone(220, t, 0.14, 'sawtooth', 0.05, 180));
+    } catch {
+      // Ignore
+    }
+  }
+
   /** Дзвінкий звук отримання зірки. */
   public playStar() {
     if (this.isMuted) return;

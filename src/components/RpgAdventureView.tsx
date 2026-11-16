@@ -7,13 +7,13 @@ import React, { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { PixelAvatar } from './PixelAvatar';
 import { Modal } from './Modal';
-import { Artifact, ChapterId, DialogueChoice, DialogueStep, FactionId, GameMetrics, HeroSprite } from '../game/types';
+import { Artifact, ChapterId, Mission, DialogueChoice, DialogueStep, FactionId, GameMetrics, HeroSprite } from '../game/types';
 import { CHAPTER_CONFIG, DIALOGUE_STEPS, FACTIONS } from '../game/historicalData';
 import { BG_IMAGES, BG_TITLES } from '../game/assets';
 import { COMPANION, getArtifactsForScene, getCompanionHint } from '../game/lore';
 import { getMetricMeta } from '../game/metricsMeta';
 import { sound } from '../game/sound';
-import { Check, Compass, Lock, Search } from 'lucide-react';
+import { Check, Compass, DoorOpen, HelpCircle, Lock, Search } from 'lucide-react';
 
 interface RpgAdventureViewProps {
   currentChapter: ChapterId;
@@ -26,6 +26,22 @@ interface RpgAdventureViewProps {
   completedChapters: ChapterId[];
   onFindArtifact: (artifact: Artifact) => void;
   showHints: boolean;
+  isChoiceUnlocked: (choice: DialogueChoice) => boolean;
+  mission?: Mission;
+  missionDone: boolean;
+  onOpenMission: () => void;
+  questionsAsked: string[];
+  onAskQuestion: (questionId: string) => void;
+}
+
+/** Позначка типу варіанта відповіді. */
+function ChoiceBadge({ choice }: { choice: DialogueChoice }) {
+  const base = 'shrink-0 text-[10px] uppercase font-mono border px-2 py-0.5';
+  if (choice.historicalCanon) return <span className={`${base} border-stone-600 bg-stone-800 text-stone-200`}>📜 Як було</span>;
+  if (choice.style === 'secret') return <span className={`${base} border-violet-600 bg-violet-950 text-violet-200`}>🔓 Таємний</span>;
+  if (choice.style === 'compromise') return <span className={`${base} border-sky-700 bg-sky-950 text-sky-200`}>🤝 Компроміс</span>;
+  if (choice.style === 'daring') return <span className={`${base} border-rose-700 bg-rose-950 text-rose-200`}>🔥 Сміливо</span>;
+  return <span className={`${base} border-amber-700 bg-amber-950 text-amber-300`}>⚡ А якби?</span>;
 }
 
 const ALL_CHAPTERS = Object.keys(CHAPTER_CONFIG) as ChapterId[];
@@ -58,6 +74,12 @@ export const RpgAdventureView: React.FC<RpgAdventureViewProps> = ({
   completedChapters,
   onFindArtifact,
   showHints,
+  isChoiceUnlocked,
+  mission,
+  missionDone,
+  onOpenMission,
+  questionsAsked,
+  onAskQuestion,
 }) => {
   const step: DialogueStep = DIALOGUE_STEPS[currentStepId] || DIALOGUE_STEPS.step_ch1_1;
   const chapterInfo = CHAPTER_CONFIG[currentChapter];
@@ -74,6 +96,7 @@ export const RpgAdventureView: React.FC<RpgAdventureViewProps> = ({
   const [openedArtifact, setOpenedArtifact] = useState<Artifact | null>(null);
   const [artifactIsNew, setArtifactIsNew] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  const [openAnswer, setOpenAnswer] = useState<string | null>(null);
   const typingTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -81,6 +104,7 @@ export const RpgAdventureView: React.FC<RpgAdventureViewProps> = ({
     setDisplayedText('');
     setIsTyping(true);
     setHintOpen(false);
+    setOpenAnswer(null);
 
     const fullSpeech = step.speech;
     const interval = setInterval(() => {
@@ -110,6 +134,10 @@ export const RpgAdventureView: React.FC<RpgAdventureViewProps> = ({
   };
 
   const handleSelectChoice = (choice: DialogueChoice) => {
+    if (!isChoiceUnlocked(choice)) {
+      sound.playWrong();
+      return;
+    }
     if (isTyping) {
       handleSkipTyping();
       return;
@@ -118,7 +146,7 @@ export const RpgAdventureView: React.FC<RpgAdventureViewProps> = ({
     onMakeChoice(choice, chapterInfo?.title || 'Подія революції', chapterInfo?.period || '1917–1921');
   };
 
-  // Клавіші 1/2/3 для швидкого вибору
+  // Клавіші 1–4 для швидкого вибору
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
@@ -324,70 +352,184 @@ export const RpgAdventureView: React.FC<RpgAdventureViewProps> = ({
             )}
           </button>
 
+          {/* Питання до персонажа */}
+          {step.questions && step.questions.length > 0 && (
+            <div className="mt-4 space-y-2">
+              <div className="flex items-center gap-2 text-sm font-semibold text-stone-300">
+                <HelpCircle className="h-4 w-4 text-sky-400" />
+                <span>Розпитати перед рішенням:</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {step.questions.map((q) => {
+                  const asked = questionsAsked.includes(q.id);
+                  return (
+                    <button
+                      key={q.id}
+                      type="button"
+                      onClick={() => {
+                        sound.playBlip(560);
+                        setOpenAnswer(openAnswer === q.id ? null : q.id);
+                        if (!asked) onAskQuestion(q.id);
+                      }}
+                      aria-expanded={openAnswer === q.id}
+                      className={`border-2 px-3 py-1.5 text-left text-sm ${
+                        openAnswer === q.id
+                          ? 'border-sky-400 bg-sky-900 text-white'
+                          : asked
+                          ? 'border-stone-700 bg-stone-900 text-stone-400'
+                          : 'border-sky-800 bg-sky-950/60 text-sky-100 hover:border-sky-400'
+                      }`}
+                    >
+                      {asked ? '✓ ' : '❓ '}
+                      {q.q}
+                    </button>
+                  );
+                })}
+              </div>
+              <AnimatePresence mode="wait">
+                {openAnswer && (
+                  <motion.div
+                    key={openAnswer}
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="flex gap-3 border-l-4 border-sky-500 bg-stone-900 p-3"
+                  >
+                    <PixelAvatar id={step.avatar} size="sm" />
+                    <p className="font-serif text-sm sm:text-base leading-relaxed text-stone-100">
+                      «{step.questions.find((q) => q.id === openAnswer)?.a}»
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
+
+          {/* Доручення акту */}
+          {mission && (
+            <div
+              className={`mt-4 flex flex-col sm:flex-row sm:items-center gap-3 border-2 p-3 ${
+                missionDone ? 'border-emerald-800 bg-emerald-950/30' : 'border-violet-700 bg-violet-950/30'
+              }`}
+            >
+              <span className="text-3xl" aria-hidden>
+                {missionDone ? '🏆' : '🚪'}
+              </span>
+              <div className="flex-1">
+                <div className="text-xs font-bold uppercase tracking-wider text-violet-300">Доручення акту · {mission.stations.length} дверей</div>
+                <div className="font-serif text-base font-bold text-stone-100">{mission.title}</div>
+                <div className="text-xs text-stone-400">
+                  {missionDone ? 'Виконано! Таємний варіант відповіді відкрито.' : `Пройди всі двері — відкриєш таємний варіант відповіді та +${mission.rewardStars} ⭐`}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  sound.playSelect();
+                  onOpenMission();
+                }}
+                className={`pixel-btn flex items-center justify-center gap-2 border-2 px-4 py-2 text-sm font-bold ${
+                  missionDone ? 'border-stone-600 bg-stone-800 text-stone-200' : 'border-violet-300 bg-violet-600 text-white hover:bg-violet-500'
+                }`}
+              >
+                <DoorOpen className="h-4 w-4" /> {missionDone ? 'Пройти ще раз' : 'Виконати'}
+              </button>
+            </div>
+          )}
+
           <div className="mt-5 space-y-3">
             <div className="flex items-center gap-2 text-sm font-semibold text-stone-300">
               <Compass className="h-4 w-4 text-amber-400" />
-              <span>{heroName}, що порадиш? Обери рішення:</span>
+              <span>
+                {heroName}, що порадиш? Обери рішення ({step.choices.filter(isChoiceUnlocked).length} з {step.choices.length} доступно):
+              </span>
             </div>
 
-            <div className={`grid grid-cols-1 gap-3 transition-opacity ${isTyping ? 'opacity-50' : 'opacity-100'}`}>
-              {step.choices.map((choice, idx) => (
-                <motion.button
-                  key={choice.id}
-                  type="button"
-                  onClick={() => handleSelectChoice(choice)}
-                  whileHover={{ x: isTyping ? 0 : 4 }}
-                  className="pixel-btn group relative flex flex-col text-left border-2 border-stone-700 bg-stone-900 p-3.5 sm:p-4 hover:border-amber-400 hover:bg-stone-800"
-                >
-                  <div className="flex items-start gap-3">
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center bg-amber-500 font-pixel text-[10px] text-stone-950">
-                      {isTyping ? <Lock className="h-3.5 w-3.5" /> : idx + 1}
-                    </span>
-                    <span className="flex-1 font-semibold text-sm sm:text-base text-stone-100 group-hover:text-amber-100 leading-snug">
-                      {choice.text}
-                    </span>
-                    {choice.historicalCanon ? (
-                      <span className="shrink-0 text-[10px] uppercase font-mono border border-stone-600 bg-stone-800 px-2 py-0.5 text-stone-200">
-                        📜 Як було
+            <div className={`grid grid-cols-1 gap-3 transition-opacity ${isTyping ? 'opacity-60' : 'opacity-100'}`}>
+              {step.choices.map((choice, idx) => {
+                const unlocked = isChoiceUnlocked(choice);
+                if (!unlocked) {
+                  return (
+                    <div
+                      key={choice.id}
+                      className="flex flex-col sm:flex-row sm:items-center gap-3 border-2 border-dashed border-violet-800 bg-stone-950 p-3.5 text-left"
+                    >
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center bg-violet-900 text-violet-200">
+                        <Lock className="h-3.5 w-3.5" />
                       </span>
-                    ) : (
-                      <span className="shrink-0 text-[10px] uppercase font-mono border border-amber-700 bg-amber-950 px-2 py-0.5 text-amber-300">
-                        ⚡ А якби?
-                      </span>
-                    )}
-                  </div>
-
-                  {showHints && choice.ideologicalHint && (
-                    <p className="mt-2 pl-10 text-xs sm:text-sm text-stone-400 leading-normal">{choice.ideologicalHint}</p>
-                  )}
-
-                  {showHints && (
-                    <div className="mt-2.5 pl-10 flex flex-wrap items-center gap-1.5 text-xs">
-                      {(Object.entries(choice.metricEffects) as [keyof GameMetrics, number][]).map(([k, v]) => {
-                        const meta = getMetricMeta(k);
-                        return (
-                          <span
-                            key={k}
-                            title={meta.kidHint}
-                            className={`border px-1.5 py-0.5 font-mono ${
-                              v > 0 ? 'border-emerald-800 bg-emerald-950/60 text-emerald-300' : 'border-rose-800 bg-rose-950/60 text-rose-300'
-                            }`}
-                          >
-                            {meta.emoji} {meta.label} {v > 0 ? `+${v}` : v}
-                          </span>
-                        );
-                      })}
-                      {(Object.entries(choice.factionEffects) as [FactionId, number][])
-                        .filter(([, v]) => Math.abs(v) >= 15)
-                        .map(([fid, v]) => (
-                          <span key={fid} className="text-stone-500" title={FACTIONS[fid].name}>
-                            {v > 0 ? '😊' : '😠'} {FACTIONS[fid].name.split(' ')[0]}
-                          </span>
-                        ))}
+                      <div className="flex-1">
+                        <div className="text-sm font-semibold text-violet-200">🔒 Таємний варіант</div>
+                        <div className="text-xs text-stone-400">Щоб відкрити: {choice.requires?.label}</div>
+                      </div>
+                      {choice.requires?.mission && mission && choice.requires.mission === mission.id && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            sound.playSelect();
+                            onOpenMission();
+                          }}
+                          className="pixel-btn flex items-center gap-1.5 border-2 border-violet-400 bg-violet-700 px-3 py-1.5 text-xs font-bold text-white"
+                        >
+                          <DoorOpen className="h-4 w-4" /> До дверей
+                        </button>
+                      )}
                     </div>
-                  )}
-                </motion.button>
-              ))}
+                  );
+                }
+                return (
+                  <motion.button
+                    key={choice.id}
+                    type="button"
+                    onClick={() => handleSelectChoice(choice)}
+                    whileHover={{ x: isTyping ? 0 : 4 }}
+                    className={`pixel-btn group relative flex flex-col text-left border-2 p-3.5 sm:p-4 hover:bg-stone-800 ${
+                      choice.style === 'secret'
+                        ? 'border-violet-500 bg-violet-950/40 hover:border-violet-300'
+                        : 'border-stone-700 bg-stone-900 hover:border-amber-400'
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center bg-amber-500 font-pixel text-[10px] text-stone-950">
+                        {isTyping ? <Lock className="h-3.5 w-3.5" /> : idx + 1}
+                      </span>
+                      <span className="flex-1 font-semibold text-sm sm:text-base text-stone-100 group-hover:text-amber-100 leading-snug">
+                        {choice.text}
+                      </span>
+                      <ChoiceBadge choice={choice} />
+                    </div>
+
+                    {showHints && choice.ideologicalHint && (
+                      <p className="mt-2 pl-10 text-xs sm:text-sm text-stone-400 leading-normal">{choice.ideologicalHint}</p>
+                    )}
+
+                    {showHints && (
+                      <div className="mt-2.5 pl-10 flex flex-wrap items-center gap-1.5 text-xs">
+                        {(Object.entries(choice.metricEffects) as [keyof GameMetrics, number][]).map(([k, v]) => {
+                          const meta = getMetricMeta(k);
+                          return (
+                            <span
+                              key={k}
+                              title={meta.kidHint}
+                              className={`border px-1.5 py-0.5 font-mono ${
+                                v > 0 ? 'border-emerald-800 bg-emerald-950/60 text-emerald-300' : 'border-rose-800 bg-rose-950/60 text-rose-300'
+                              }`}
+                            >
+                              {meta.emoji} {meta.label} {v > 0 ? `+${v}` : v}
+                            </span>
+                          );
+                        })}
+                        {(Object.entries(choice.factionEffects) as [FactionId, number][])
+                          .filter(([, v]) => Math.abs(v) >= 15)
+                          .map(([fid, v]) => (
+                            <span key={fid} className="text-stone-500" title={FACTIONS[fid].name}>
+                              {v > 0 ? '😊' : '😠'} {FACTIONS[fid].name.split(' ')[0]}
+                            </span>
+                          ))}
+                      </div>
+                    )}
+                  </motion.button>
+                );
+              })}
             </div>
           </div>
         </div>

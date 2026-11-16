@@ -8,6 +8,7 @@ import { motion } from 'motion/react';
 import {
   Backpack,
   BookOpen,
+  DoorOpen,
   GitBranch,
   Lightbulb,
   LightbulbOff,
@@ -25,7 +26,7 @@ import { getRank } from '../game/rules';
 import { sound } from '../game/sound';
 import { PixelAvatar } from './PixelAvatar';
 
-export type GameTab = 'rpg' | 'satchel' | 'tree' | 'map' | 'universals' | 'archive';
+export type GameTab = 'rpg' | 'missions' | 'satchel' | 'tree' | 'map' | 'universals' | 'archive';
 
 interface MetricsBarProps {
   metrics: GameMetrics;
@@ -44,6 +45,7 @@ interface MetricsBarProps {
 
 const TABS: { id: GameTab; label: string; icon: React.ElementType }[] = [
   { id: 'rpg', label: 'Пригода', icon: MessageSquare },
+  { id: 'missions', label: 'Доручення', icon: DoorOpen },
   { id: 'satchel', label: 'Торба', icon: Backpack },
   { id: 'map', label: 'Штаб', icon: MapIcon },
   { id: 'universals', label: 'Універсали', icon: Scroll },

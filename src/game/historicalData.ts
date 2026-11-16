@@ -12,6 +12,7 @@ import {
   HistoricalFigure,
   UniversalClause,
 } from './types';
+import { EXTRA_CHOICES, STEP_QUESTIONS } from './dialogueExtras';
 
 export const FACTIONS: Record<FactionId, FactionInfo> = {
   socialists: {
@@ -826,6 +827,16 @@ export const DIALOGUE_STEPS: Record<string, DialogueStep> = {
     ],
   },
 };
+
+// Додаємо компромісні й таємні варіанти та питання до персонажів.
+for (const [stepId, extra] of Object.entries(EXTRA_CHOICES)) {
+  const step = DIALOGUE_STEPS[stepId];
+  if (step) step.choices = [...step.choices, ...extra];
+}
+for (const [stepId, questions] of Object.entries(STEP_QUESTIONS)) {
+  const step = DIALOGUE_STEPS[stepId];
+  if (step) step.questions = questions;
+}
 
 export const CITIES_DATA: CityNode[] = [
   {

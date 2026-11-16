@@ -10,6 +10,7 @@ import { sound } from '../../game/sound';
 interface TelegramPuzzleProps {
   sentence: string;
   onFinish: (won: boolean) => void;
+  allowSkip?: boolean;
 }
 
 function shuffle<T>(arr: T[]): T[] {
@@ -22,7 +23,7 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 /** Гра «Телеграма»: склади слова у правильному порядку. */
-export const TelegramPuzzle: React.FC<TelegramPuzzleProps> = ({ sentence, onFinish }) => {
+export const TelegramPuzzle: React.FC<TelegramPuzzleProps> = ({ sentence, onFinish, allowSkip = true }) => {
   const words = useMemo(() => sentence.split(' '), [sentence]);
   const [pool, setPool] = useState(() => {
     let s = shuffle(words.map((w, i) => ({ w, i })));
@@ -105,9 +106,9 @@ export const TelegramPuzzle: React.FC<TelegramPuzzleProps> = ({ sentence, onFini
           <button type="button" onClick={reset} className="flex items-center gap-1 hover:text-amber-300">
             <RotateCcw className="h-3.5 w-3.5" /> Почати знову
           </button>
-          <button type="button" onClick={() => onFinish(false)} className="hover:text-stone-200 underline">
+{allowSkip && (<button type="button" onClick={() => onFinish(false)} className="hover:text-stone-200 underline">
             Пропустити
-          </button>
+          </button>)}
         </div>
       </div>
     </div>

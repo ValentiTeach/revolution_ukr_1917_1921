@@ -43,9 +43,26 @@ export type ChapterId =
   | 'CH9_TRIANGLE_OF_DEATH'
   | 'EPILOGUE';
 
+export interface ChoiceRequirement {
+  mission?: string;                              // треба виконати доручення
+  artifact?: string;                             // треба мати знахідку
+  faction?: { id: FactionId; min: number };      // треба мати довіру фракції
+  label: string;                                 // підказка: як відкрити
+}
+
+export type ChoiceStyle = 'compromise' | 'secret' | 'daring';
+
+export interface DialogueQuestion {
+  id: string;
+  q: string;   // що питає джура
+  a: string;   // що відповідає персонаж
+}
+
 export interface DialogueChoice {
   id: string;
   text: string;
+  style?: ChoiceStyle;
+  requires?: ChoiceRequirement;
   ideologicalHint?: string;
   factionEffects: Partial<Record<FactionId, number>>;
   metricEffects: Partial<GameMetrics>;
@@ -63,6 +80,7 @@ export interface DialogueStep {
   speech: string;
   contextNote?: string;
   choices: DialogueChoice[];
+  questions?: DialogueQuestion[];
 }
 
 export interface UniversalClause {
@@ -193,4 +211,64 @@ export interface AchievementDef {
 export interface CompanionHint {
   stepId: string;
   text: string;       // підказка голуба простими словами
+}
+
+// ---------------------------------------------------------------------------
+// Доручення: ланцюжки «дверей» з міні-іграми (у дусі DOORS / Forsaken)
+// ---------------------------------------------------------------------------
+
+export type StationKind =
+  | 'telegram'
+  | 'memory'
+  | 'rail'
+  | 'wires'
+  | 'skillcheck'
+  | 'hide'
+  | 'drawers'
+  | 'codelock'
+  | 'morse'
+  | 'sorting';
+
+export interface StationParams {
+  sentence?: string;
+  pairs?: { emoji: string; label: string }[];
+  railTarget?: number;
+  railSeconds?: number;
+  wires?: number;                                  // wires: скільки дротів
+  hits?: number;                                   // skillcheck: скільки влучань
+  speed?: number;                                  // skillcheck: швидкість стрілки
+  work?: number;                                   // hide: скільки разів «працювати»
+  patrols?: number;                                // hide: скільки разів пройде патруль
+  drawers?: number;                                // drawers: кількість шухляд
+  item?: string;                                   // drawers: що шукаємо
+  code?: string;                                   // codelock: правильний код
+  clues?: string[];                                // codelock: підказки
+  word?: string;                                   // morse: слово
+  sortItems?: { item: string; target: string }[];  // sorting
+  sortTargets?: string[];
+}
+
+export interface MissionStation {
+  id: string;
+  title: string;
+  place: string;
+  emoji: string;
+  kind: StationKind;
+  intro: string;
+  params: StationParams;
+  /** Бічні двері: можна обрати інший, складніший шлях за бонус. */
+  fork?: { label: string; bonusStars: number; station: Omit<MissionStation, 'fork'> };
+}
+
+export interface Mission {
+  id: string;
+  chapterId: ChapterId;
+  title: string;
+  giver: string;        // аватар
+  giverName: string;
+  brief: string;
+  finale: string;
+  rewardStars: number;
+  rewardMetrics: Partial<GameMetrics>;
+  stations: MissionStation[];
 }

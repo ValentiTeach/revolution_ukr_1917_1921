@@ -20,21 +20,26 @@ import { ChoiceOutcome, PendingOutcome } from './components/ChoiceOutcome';
 import { SatchelView } from './components/SatchelView';
 import { Toast, Toasts } from './components/Toasts';
 import { Modal } from './components/Modal';
+import { MissionRunner } from './components/MissionRunner';
+import { MissionsBoard } from './components/MissionsBoard';
 import { PixelAvatar } from './components/PixelAvatar';
-import { Artifact, ChapterId, DialogueChoice, GameMetrics, HeroSprite } from './game/types';
+import { Artifact, ChapterId, DialogueChoice, GameMetrics, HeroSprite, Mission } from './game/types';
 import {
   createInitialGameState,
   applyChoiceToState,
   determineGameEnding,
   evaluateAchievements,
   getRank,
+  isRequirementMet,
   migrateGameState,
+  unlockAchievement,
   GameState,
   clamp,
 } from './game/rules';
 import { CHAPTER_CONFIG, DIALOGUE_STEPS } from './game/historicalData';
 import { ACHIEVEMENTS, ARTIFACTS, COMPANION, getAchievement } from './game/lore';
 import { BG_IMAGES } from './game/assets';
+import { MISSIONS, getMission, getMissionForChapter } from './game/missions';
 import { sound } from './game/sound';
 
 const STORAGE_KEY = 'vilna_dolia_rpg_state_v2';
@@ -80,6 +85,7 @@ export default function App() {
   const [queuedInterlude, setQueuedInterlude] = useState<ChapterId | null>(null);
   const [activeInterlude, setActiveInterlude] = useState<ChapterId | null>(null);
   const [renameOpen, setRenameOpen] = useState(false);
+  const [activeMission, setActiveMission] = useState<Mission | null>(null);
   const [renameDraft, setRenameDraft] = useState('');
   const toastId = useRef(0);
   const prevRankId = useRef(getRank(gameState.stars).id);
@@ -126,7 +132,7 @@ export default function App() {
 
   // --- Досягнення та звання ---
   useEffect(() => {
-    const { state, newlyUnlocked } = evaluateAchievements(gameState, ARTIFACTS.length);
+    const { state, newlyUnlocked } = evaluateAchievements(gameState, ARTIFACTS.length, MISSIONS.length);
     if (newlyUnlocked.length > 0) {
       setGameState(state);
       newlyUnlocked.forEach((id) => {
@@ -145,6 +151,21 @@ export default function App() {
       }
     }
   }, [gameState, pushToast]);
+
+  /** Вручну відкриває медаль (для подій, яких не видно зі стану). */
+  const unlockMedal = useCallback(
+    (id: string) => {
+      setGameState((s) => {
+        const [next, isNew] = unlockAchievement(s, id);
+        if (isNew) {
+          const a = getAchievement(id);
+          if (a) pushToast({ emoji: a.emoji, title: `Медаль: ${a.title}`, text: a.description, tone: 'medal' });
+        }
+        return next;
+      });
+    },
+    [pushToast],
+  );
 
   // --- Керування ---
   const handleToggleMute = () => {
@@ -165,6 +186,7 @@ export default function App() {
     setPendingOutcome(null);
     setQueuedInterlude(null);
     setActiveInterlude(null);
+    setActiveMission(null);
     setScreen('prologue');
   };
 
@@ -178,6 +200,7 @@ export default function App() {
     setGameState((prev) => ({
       ...prev,
       heroName: prev.heroName || 'Джура',
+      unlockedChapters: prev.unlockedChapters.includes(chapterId) ? prev.unlockedChapters : [...prev.unlockedChapters, chapterId],
       chapter: chapterId,
       currentStepId: CHAPTER_CONFIG[chapterId].startStepId,
     }));
@@ -200,7 +223,7 @@ export default function App() {
       if (matchingChapter) nextChapter = matchingChapter;
     }
 
-    const starsGained = 1;
+    const starsGained = choice.style === 'secret' ? 2 : 1;
     setGameState({
       ...updated,
       stars: updated.stars + starsGained,
@@ -210,6 +233,7 @@ export default function App() {
         ? updated.unlockedChapters
         : [...updated.unlockedChapters, nextChapter],
     });
+    if (choice.style === 'secret') unlockMedal('secret_path');
     setPendingOutcome({ choice, before: prev.metrics, after: updated.metrics, starsGained });
 
     if (nextChapter !== prev.chapter && prev.chapter !== 'EPILOGUE' && !prev.completedChapters.includes(prev.chapter)) {
@@ -228,6 +252,7 @@ export default function App() {
   const handleJumpToChapter = (chapterId: ChapterId) => {
     setGameState((prev) => ({
       ...prev,
+      unlockedChapters: prev.unlockedChapters.includes(chapterId) ? prev.unlockedChapters : [...prev.unlockedChapters, chapterId],
       chapter: chapterId,
       currentStepId: CHAPTER_CONFIG[chapterId]?.startStepId || 'step_ch1_1',
     }));
@@ -287,6 +312,28 @@ export default function App() {
     grantStars(2, `Універсал «${title}» проголошено`);
   };
 
+  // --- Доручення ---
+  const handleMissionComplete = (missionId: string, bonusStars: number, flawless: boolean) => {
+    const mission = getMission(missionId);
+    if (!mission) return;
+    if (flawless) unlockMedal('fearless');
+    if (gameState.missionsDone.includes(missionId)) return;
+    setGameState((prev) => {
+      const metrics = { ...prev.metrics };
+      (Object.keys(mission.rewardMetrics) as (keyof GameMetrics)[]).forEach((k) => {
+        metrics[k] = clamp(metrics[k] + (mission.rewardMetrics[k] ?? 0));
+      });
+      return { ...prev, metrics, missionsDone: [...prev.missionsDone, missionId] };
+    });
+    grantStars(mission.rewardStars + bonusStars, `Доручення «${mission.title}»`);
+  };
+
+  const handleAskQuestion = (questionId: string) => {
+    setGameState((s) => (s.questionsAsked.includes(questionId) ? s : { ...s, questionsAsked: [...s.questionsAsked, questionId] }));
+  };
+
+  const availableChapters = Array.from(new Set([...gameState.unlockedChapters, ...gameState.completedChapters, gameState.chapter]));
+
   // --- Інтерлюдія ---
   const handleDiaryRead = () => grantStars(1, 'Новий запис у щоденнику');
 
@@ -316,6 +363,7 @@ export default function App() {
 
   const currentEnding = determineGameEnding(gameState);
   const modalsBusy = pendingOutcome !== null || activeInterlude !== null || queuedInterlude !== null;
+  const chapterMission = getMissionForChapter(gameState.chapter);
   const heroName = gameState.heroName || 'Джура';
 
   // ------------------------------------------------------------------------
@@ -411,10 +459,20 @@ export default function App() {
                 completedChapters={gameState.completedChapters}
                 onFindArtifact={handleFindArtifact}
                 showHints={showHints}
+                isChoiceUnlocked={(c) => isRequirementMet(gameState, c.requires)}
+                mission={chapterMission}
+                missionDone={chapterMission ? gameState.missionsDone.includes(chapterMission.id) : false}
+                onOpenMission={() => chapterMission && setActiveMission(chapterMission)}
+                questionsAsked={gameState.questionsAsked}
+                onAskQuestion={handleAskQuestion}
               />
               <FactionsPanel reputation={gameState.reputation} />
             </div>
           ))}
+
+        {activeTab === 'missions' && (
+          <MissionsBoard missionsDone={gameState.missionsDone} availableChapters={availableChapters} onOpen={setActiveMission} />
+        )}
 
         {activeTab === 'satchel' && (
           <SatchelView
@@ -462,6 +520,12 @@ export default function App() {
         </div>
       </footer>
 
+      <MissionRunner
+        mission={activeMission}
+        alreadyDone={activeMission ? gameState.missionsDone.includes(activeMission.id) : false}
+        onClose={() => setActiveMission(null)}
+        onComplete={handleMissionComplete}
+      />
       <ChoiceOutcome outcome={pendingOutcome} onContinue={handleOutcomeContinue} />
       <ChapterInterlude
         chapterId={activeInterlude}
@@ -535,7 +599,7 @@ interface TitleScreenProps {
 const FEATURES = [
   { icon: MessageSquare, title: 'Розмовляй з героями', text: 'Грушевський, Петлюра, Скоропадський чекають на твою пораду.' },
   { icon: Search, title: 'Шукай знахідки', text: `${ARTIFACTS.length} таємниць сховано на картинах доби.` },
-  { icon: Gamepad2, title: 'Грай і вчися', text: 'Міні-ігри, вікторини та щоденник після кожного акту.' },
+  { icon: Gamepad2, title: 'Відчиняй двері', text: `${MISSIONS.length} доручень-коридорів із десятьма видами міні-ігор.` },
 ];
 
 const TitleScreen: React.FC<TitleScreenProps> = ({
@@ -665,7 +729,7 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
               ))}
             </div>
             <p className="mt-3 text-xs text-stone-500">
-              У грі {ACHIEVEMENTS.length} медалей, {ARTIFACTS.length} знахідок, 9 вікторин і 9 міні-ігор. Позначка «📜 Як було» показує справжній історичний вибір.
+              У грі {ACHIEVEMENTS.length} медалей, {ARTIFACTS.length} знахідок, {MISSIONS.length} доручень, 9 вікторин і 9 міні-ігор між актами. Позначка «📜 Як було» показує справжній історичний вибір.
             </p>
           </details>
 
