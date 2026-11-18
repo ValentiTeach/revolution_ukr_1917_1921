@@ -26,6 +26,7 @@ import { PixelAvatar } from './components/PixelAvatar';
 import { PixelEmoji } from './components/PixelEmoji';
 import { PixelWipe } from './components/PixelWipe';
 import { PX_TRANSITION } from './game/motion';
+import { readHeroName } from './game/heroCookie';
 import { Artifact, ChapterId, DialogueChoice, GameMetrics, HeroSprite, Mission } from './game/types';
 import {
   createInitialGameState,
@@ -432,7 +433,7 @@ function AppInner() {
       <div className="min-h-screen flex flex-col text-stone-100">
         <PixelWipe key="prologue" />
         <PrologueView
-          initialName={gameState.heroName}
+          initialName={gameState.heroName || readHeroName()}
           initialSprite={gameState.heroSprite}
           onComplete={handlePrologueComplete}
         />
@@ -546,10 +547,16 @@ function AppInner() {
       <footer className="border-t border-stone-800 bg-stone-950 px-4 py-3 text-xs text-stone-500">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-2">
           <span>«Вільна Доля: 1917–1921» · Пригода юного джури Центральної Ради</span>
-          <button type="button" onClick={handleRestart} className="flex items-center gap-1 text-stone-400 hover:text-amber-300">
-            <RotateCcw className="h-3 w-3" />
-            <span>Головне меню</span>
-          </button>
+          <span className="flex items-center gap-4">
+            <button type="button" onClick={handleRestart} className="flex items-center gap-1 text-stone-400 hover:text-amber-300">
+              <RotateCcw className="h-3 w-3" />
+              <span>Головне меню</span>
+            </button>
+            {/* Забути вхід за запрошенням на цьому пристрої (працює на Vercel) */}
+            <a href="/logout" className="text-stone-500 hover:text-rose-300">
+              Вийти з гри
+            </a>
+          </span>
         </div>
       </footer>
 
