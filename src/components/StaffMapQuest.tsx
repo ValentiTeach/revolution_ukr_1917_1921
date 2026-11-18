@@ -4,12 +4,13 @@
  */
 
 import React, { useState } from 'react';
-import { MapPin, ShieldAlert, Swords, Flag, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { MapPin, ShieldAlert, Swords, Flag, AlertTriangle, CheckCircle2 } from './icons';
 import { CityNode } from '../game/types';
 import { CITIES_DATA } from '../game/historicalData';
 import { resolveStaffBattle } from '../game/rules';
 import { BG_IMAGES } from '../game/assets';
 import { sound } from '../game/sound';
+import { PixelEmoji } from './PixelEmoji';
 
 interface StaffMapQuestProps {
   armyReadiness: number;
@@ -296,7 +297,7 @@ export const StaffMapQuest: React.FC<StaffMapQuestProps> = ({
                               chosen === t.id ? 'border-amber-400 bg-amber-950 text-amber-100' : 'border-stone-700 text-stone-400 hover:border-stone-500'
                             }`}
                           >
-                            <span className="block text-base">{t.emoji}</span>
+                            <span className="flex justify-center"><PixelEmoji emoji={t.emoji} size={24} res={12} /></span>
                             {t.label}
                           </button>
                         ))}

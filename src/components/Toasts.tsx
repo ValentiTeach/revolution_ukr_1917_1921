@@ -5,6 +5,8 @@
 
 import React, { useEffect } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
+import { PixelEmoji } from './PixelEmoji';
+import { pxEase } from '../game/motion';
 
 export interface Toast {
   id: number;
@@ -35,15 +37,14 @@ const ToastItem: React.FC<{ toast: Toast; onDismiss: (id: number) => void }> = (
     <motion.button
       type="button"
       layout
-      initial={{ x: 80, opacity: 0, scale: 0.9 }}
-      animate={{ x: 0, opacity: 1, scale: 1 }}
+      initial={{ x: 96, opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      transition={{ duration: 0.24, ease: pxEase(4) }}
       exit={{ x: 80, opacity: 0 }}
       onClick={() => onDismiss(toast.id)}
-      className={`pointer-events-auto flex w-72 items-center gap-3 border-2 px-3 py-2.5 text-left shadow-xl ${TONE_CLASSES[toast.tone]}`}
+      className={`pixel-btn pointer-events-auto flex w-72 items-center gap-3 border-2 px-3 py-2.5 text-left shadow-xl ${TONE_CLASSES[toast.tone]}`}
     >
-      <span className="text-3xl leading-none" aria-hidden>
-        {toast.emoji}
-      </span>
+      <PixelEmoji emoji={toast.emoji} size={36} className={toast.tone === 'medal' ? 'px-pop' : ''} />
       <span>
         <span className="block text-sm font-bold">{toast.title}</span>
         {toast.text && <span className="block text-xs opacity-80">{toast.text}</span>}

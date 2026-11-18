@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { ArrowRight, BookOpen, Gamepad2, HelpCircle, Star } from 'lucide-react';
+import { ArrowRight, BookOpen, Gamepad2, HelpCircle, Star } from './icons';
 import { Modal } from './Modal';
 import { PixelAvatar } from './PixelAvatar';
 import { TelegramPuzzle } from './minigames/TelegramPuzzle';
@@ -15,6 +15,7 @@ import { ChapterId, HeroSprite } from '../game/types';
 import { CHAPTER_CONFIG } from '../game/historicalData';
 import { getDiaryEntry, getMinigameForChapter, getQuizForChapter, COMPANION } from '../game/lore';
 import { sound } from '../game/sound';
+import { PixelEmoji } from './PixelEmoji';
 
 interface ChapterInterludeProps {
   chapterId: ChapterId | null;
@@ -222,7 +223,11 @@ const InterludeBody: React.FC<ChapterInterludeProps & { chapterId: ChapterId }> 
 
       {stage === 'done' && (
         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-center space-y-4 py-2">
-          <div className="text-6xl">{earned > 0 ? '🌟' : '📜'}</div>
+          <div className="flex justify-center">
+            <span className="px-pop animate-sparkle inline-block">
+              <PixelEmoji emoji={earned > 0 ? '🌟' : '📜'} size={88} />
+            </span>
+          </div>
           <h3 className="font-serif text-2xl font-bold text-amber-300">Акт завершено!</h3>
           <p className="text-stone-300">
             За цей перепочинок ти здобув(-ла) <strong className="text-amber-300">{earned} ⭐</strong>

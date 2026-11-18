@@ -13,13 +13,16 @@ import { BG_IMAGES, BG_TITLES } from '../game/assets';
 import { COMPANION, getArtifactsForScene, getCompanionHint } from '../game/lore';
 import { getMetricMeta } from '../game/metricsMeta';
 import { sound } from '../game/sound';
-import { Check, Compass, DoorOpen, HelpCircle, Lock, Search } from 'lucide-react';
+import { Check, Compass, DoorOpen, HelpCircle, Lock, Search } from './icons';
+import { PixelEmoji } from './PixelEmoji';
+import { pxEase } from '../game/motion';
 
 interface RpgAdventureViewProps {
   currentChapter: ChapterId;
   currentStepId: string;
   onMakeChoice: (choice: DialogueChoice, stepTitle: string, year: string) => void;
   onJumpToChapter: (chapterId: ChapterId) => void;
+  isChapterOpen: (chapterId: ChapterId) => boolean;
   heroName: string;
   heroSprite: HeroSprite;
   foundArtifacts: string[];
@@ -68,6 +71,7 @@ export const RpgAdventureView: React.FC<RpgAdventureViewProps> = ({
   currentStepId,
   onMakeChoice,
   onJumpToChapter,
+  isChapterOpen,
   heroName,
   heroSprite,
   foundArtifacts,
@@ -180,23 +184,25 @@ export const RpgAdventureView: React.FC<RpgAdventureViewProps> = ({
           const cfg = CHAPTER_CONFIG[cid];
           const isActive = cid === currentChapter;
           const isDone = completedChapters.includes(cid);
+          const isOpen = isChapterOpen(cid);
           return (
             <button
               key={cid}
               type="button"
-              onClick={() => {
-                sound.playSelect();
-                onJumpToChapter(cid);
-              }}
-              title={`${cfg.period} — ${cfg.title}`}
-              className={`flex items-center gap-1 whitespace-nowrap px-2.5 py-1.5 text-xs border-2 transition-colors ${
+              onClick={() => onJumpToChapter(cid)}
+              aria-disabled={!isOpen}
+              title={isOpen ? `${cfg.period} — ${cfg.title}` : 'Відкриється, коли пройдеш попередній акт'}
+              className={`pixel-btn flex items-center gap-1 whitespace-nowrap px-2.5 py-1.5 text-xs border-2 ${
                 isActive
-                  ? 'border-amber-400 bg-amber-500 text-stone-950 font-bold'
+                  ? 'border-amber-300 bg-amber-500 text-stone-950 font-bold'
+                  : !isOpen
+                  ? 'border-stone-900 bg-stone-950 text-stone-600 cursor-not-allowed'
                   : isDone
                   ? 'border-emerald-700 bg-emerald-950/60 text-emerald-200 hover:border-emerald-500'
-                  : 'border-stone-800 bg-stone-900/70 text-stone-400 hover:border-stone-600 hover:text-stone-200'
+                  : 'border-stone-700 bg-stone-900 text-stone-300 hover:border-amber-500'
               }`}
             >
+              {!isOpen && <Lock className="h-3 w-3" />}
               {isDone && !isActive && <Check className="h-3 w-3" />}
               {idx === ALL_CHAPTERS.length - 1 ? 'Епілог' : `Акт ${idx + 1}`}
             </button>
@@ -212,16 +218,19 @@ export const RpgAdventureView: React.FC<RpgAdventureViewProps> = ({
               key={bgKey}
               src={BG_IMAGES[bgKey]}
               alt={BG_TITLES[bgKey]}
-              className="absolute inset-0 h-full w-full object-cover object-center"
-              initial={{ opacity: 0, scale: 1.06 }}
-              animate={{ opacity: 1, scale: 1 }}
+              className="px-pan pixelated absolute inset-0 h-full w-full object-cover object-center"
+              initial={{ opacity: 0, clipPath: 'inset(0 100% 0 0)' }}
+              animate={{ opacity: 1, clipPath: 'inset(0 0% 0 0)' }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.7 }}
+              transition={{ duration: 0.5, ease: pxEase(8) }}
             />
           </AnimatePresence>
-          {bgKey === 'kruty' && <div className="snow-layer pointer-events-none absolute inset-0" />}
+          {/* Атмосфера сцени */}
+          {bgKey === 'kruty' && <div className="px-snow" />}
+          {bgKey === 'rada' && <div className="px-flicker pointer-events-none absolute inset-0" />}
+          {(bgKey === 'hero' || bgKey === 'rada') && <div className="px-dust" />}
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/20 to-transparent" />
-          <div className="pointer-events-none absolute inset-0 opacity-10 [background:repeating-linear-gradient(0deg,#000_0px,#000_2px,transparent_2px,transparent_4px)]" />
+          <div className="px-crt pointer-events-none absolute inset-0" />
 
           {/* Знахідки на картині */}
           {showSearch &&
@@ -235,13 +244,13 @@ export const RpgAdventureView: React.FC<RpgAdventureViewProps> = ({
                   aria-label={found ? `Знахідка: ${a.name}` : 'Таємнича знахідка'}
                   title={found ? a.name : 'Що це сяє?'}
                   style={{ left: `${a.x}%`, top: `${a.y}%` }}
-                  className={`absolute z-10 -translate-x-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full border-2 text-xl ${
+                  className={`absolute z-10 -translate-x-1/2 -translate-y-1/2 flex h-11 w-11 items-center justify-center border-2 ${
                     found
-                      ? 'border-emerald-400/70 bg-stone-950/70'
-                      : 'border-amber-300 bg-amber-400/30 animate-sparkle'
+                      ? 'border-emerald-400 bg-stone-950/80'
+                      : 'border-yellow-300 bg-amber-500/40 animate-sparkle'
                   }`}
                 >
-                  {found ? a.emoji : '✨'}
+                  <PixelEmoji emoji={found ? a.emoji : '✨'} size={30} />
                 </button>
               );
             })}
@@ -279,9 +288,9 @@ export const RpgAdventureView: React.FC<RpgAdventureViewProps> = ({
           {/* Персонажі */}
           <div className="absolute bottom-3 left-3 sm:left-6 flex items-end gap-3">
             <motion.div key={step.avatar} initial={{ x: -30, opacity: 0 }} animate={{ x: 0, opacity: 1 }}>
-              <PixelAvatar id={step.avatar} size="lg" className="border-amber-400 shadow-2xl" />
+              <PixelAvatar id={step.avatar} size="lg" className="px-bob border-amber-400 shadow-[6px_6px_0_rgba(0,0,0,0.6)]" />
             </motion.div>
-            <div className="bg-stone-950/90 border-2 border-amber-800 px-3 py-2 max-w-[11rem] sm:max-w-xs">
+            <div className="px-notch bg-stone-950/95 border-2 border-amber-700 px-3 py-2 max-w-[11rem] sm:max-w-xs">
               <div className="font-serif text-sm sm:text-base font-bold text-amber-200 leading-tight">{step.speaker}</div>
               <div className="text-[11px] sm:text-xs text-stone-400 leading-tight">{step.role}</div>
             </div>
@@ -304,7 +313,7 @@ export const RpgAdventureView: React.FC<RpgAdventureViewProps> = ({
               </button>
             )}
             <div className="hidden sm:flex flex-col items-center gap-1">
-              <PixelAvatar id={heroSprite} size="md" />
+              <PixelAvatar id={heroSprite} size="md" className="px-bob" />
               <span className="bg-stone-950/90 px-1.5 py-0.5 text-[10px] text-stone-200">{heroName}</span>
             </div>
           </div>
@@ -320,9 +329,7 @@ export const RpgAdventureView: React.FC<RpgAdventureViewProps> = ({
               className="overflow-hidden border-t-2 border-sky-700 bg-sky-950/80"
             >
               <div className="flex gap-3 p-4">
-                <span className="text-2xl" aria-hidden>
-                  🕊️
-                </span>
+                <PixelEmoji emoji="🕊️" size={32} className="animate-flap" />
                 <p className="text-sm sm:text-base text-sky-50 leading-relaxed">
                   <strong className="text-sky-300">{COMPANION.name}: </strong>
                   {hint}
@@ -333,7 +340,7 @@ export const RpgAdventureView: React.FC<RpgAdventureViewProps> = ({
         </AnimatePresence>
 
         {/* Діалог і вибір */}
-        <div className="border-t-2 border-amber-900/80 bg-stone-950 p-4 sm:p-6 text-stone-200">
+        <div key={step.id} className="px-open border-t-4 border-amber-800 bg-stone-950 p-4 sm:p-6 text-stone-200">
           {step.contextNote && (
             <div className="mb-3 border-l-4 border-amber-600 bg-stone-900/70 px-3 py-2 text-xs sm:text-sm text-stone-300 italic">
               📍 {step.contextNote}
@@ -343,7 +350,11 @@ export const RpgAdventureView: React.FC<RpgAdventureViewProps> = ({
           <button type="button" onClick={handleSkipTyping} className="w-full text-left cursor-pointer group">
             <p className="font-serif text-base sm:text-xl leading-relaxed text-stone-50 min-h-[5rem]">
               «{displayedText}»
-              {isTyping && <span className="inline-block w-2 h-5 bg-amber-400 ml-1 animate-pulse align-middle" />}
+              {isTyping ? (
+                <span className="px-blink ml-1 inline-block h-5 w-3 bg-amber-400 align-middle" />
+              ) : (
+                <span className="px-cursor ml-2 inline-block text-amber-400">▼</span>
+              )}
             </p>
             {isTyping && (
               <span className="text-xs text-stone-500 group-hover:text-amber-400 transition-colors">
@@ -412,9 +423,7 @@ export const RpgAdventureView: React.FC<RpgAdventureViewProps> = ({
                 missionDone ? 'border-emerald-800 bg-emerald-950/30' : 'border-violet-700 bg-violet-950/30'
               }`}
             >
-              <span className="text-3xl" aria-hidden>
-                {missionDone ? '🏆' : '🚪'}
-              </span>
+              <PixelEmoji emoji={missionDone ? '🏆' : '🚪'} size={44} className={missionDone ? '' : 'px-bob'} />
               <div className="flex-1">
                 <div className="text-xs font-bold uppercase tracking-wider text-violet-300">Доручення акту · {mission.stations.length} дверей</div>
                 <div className="font-serif text-base font-bold text-stone-100">{mission.title}</div>
@@ -481,7 +490,6 @@ export const RpgAdventureView: React.FC<RpgAdventureViewProps> = ({
                     key={choice.id}
                     type="button"
                     onClick={() => handleSelectChoice(choice)}
-                    whileHover={{ x: isTyping ? 0 : 4 }}
                     className={`pixel-btn group relative flex flex-col text-left border-2 p-3.5 sm:p-4 hover:bg-stone-800 ${
                       choice.style === 'secret'
                         ? 'border-violet-500 bg-violet-950/40 hover:border-violet-300'
@@ -489,7 +497,10 @@ export const RpgAdventureView: React.FC<RpgAdventureViewProps> = ({
                     }`}
                   >
                     <div className="flex items-start gap-3">
-                      <span className="flex h-7 w-7 shrink-0 items-center justify-center bg-amber-500 font-pixel text-[10px] text-stone-950">
+                      <span className="px-cursor absolute left-1 top-4 hidden text-amber-300 group-hover:inline group-focus-visible:inline" aria-hidden>
+                        ▶
+                      </span>
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center bg-amber-500 font-pixel text-[10px] text-stone-950 shadow-[inset_-2px_-2px_0_rgba(0,0,0,0.35)]">
                         {isTyping ? <Lock className="h-3.5 w-3.5" /> : idx + 1}
                       </span>
                       <span className="flex-1 font-semibold text-sm sm:text-base text-stone-100 group-hover:text-amber-100 leading-snug">
@@ -544,14 +555,11 @@ export const RpgAdventureView: React.FC<RpgAdventureViewProps> = ({
       >
         {openedArtifact && (
           <div className="space-y-4 text-center">
-            <motion.div
-              initial={{ scale: 0, rotate: -30 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ type: 'spring', stiffness: 260, damping: 14 }}
-              className="text-7xl"
-            >
-              {openedArtifact.emoji}
-            </motion.div>
+            <div className="flex justify-center">
+              <div className="px-pop border-4 border-amber-600 bg-stone-950 p-3 shadow-[6px_6px_0_rgba(0,0,0,0.6)]">
+                <PixelEmoji emoji={openedArtifact.emoji} size={112} res={20} />
+              </div>
+            </div>
             <p className="text-base leading-relaxed text-stone-200 text-left">{openedArtifact.fact}</p>
             <div className="text-sm text-amber-300">
               {artifactIsNew

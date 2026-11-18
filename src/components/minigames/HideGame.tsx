@@ -7,6 +7,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { sound } from '../../game/sound';
 import { StationGameProps } from './shared';
+import { PixelEmoji } from '../PixelEmoji';
+import { pxEase } from '../../game/motion';
 
 type Phase = 'calm' | 'warning' | 'passing';
 
@@ -117,26 +119,27 @@ export const HideGame: React.FC<StationGameProps & { work: number; patrols: numb
         </div>
 
         {/* Схованка */}
-        <div className="absolute bottom-3 left-6 text-5xl" aria-hidden>
-          {hidden ? '🛢️' : '🧺'}
+        <div className="absolute bottom-3 left-6">
+          <PixelEmoji emoji={hidden ? '🛢️' : '🧺'} size={56} />
         </div>
+        <div className="absolute inset-x-0 bottom-0 h-3 bg-stone-800 shadow-[inset_0_2px_0_#57534e]" />
         {/* Джура */}
         <motion.div
-          className="absolute bottom-3 text-4xl"
+          className="absolute bottom-3"
           animate={{ left: hidden ? '6%' : '38%', opacity: hidden ? 0.15 : 1 }}
-          transition={{ duration: 0.2 }}
+          transition={{ duration: 0.2, ease: pxEase(3) }}
           aria-hidden
         >
-          🧒
+          <PixelEmoji emoji="🧒" size={48} className={hidden ? '' : 'px-bob'} />
         </motion.div>
 
         <AnimatePresence>
           {phase === 'warning' && (
             <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-x-0 top-8 text-center text-lg font-bold text-amber-300"
+              className="px-blink absolute inset-x-0 top-8 text-center font-pixel text-[11px] sm:text-xs text-amber-300"
             >
               👣 Чути кроки… ХОВАЙСЯ!
             </motion.div>
@@ -145,11 +148,13 @@ export const HideGame: React.FC<StationGameProps & { work: number; patrols: numb
             <motion.div
               initial={{ left: '110%' }}
               animate={{ left: '-30%' }}
-              transition={{ duration: PASSING_MS / 1000, ease: 'linear' }}
-              className="absolute bottom-3 text-5xl"
+              transition={{ duration: PASSING_MS / 1000, ease: pxEase(18) }}
+              className="absolute bottom-3 flex items-end"
               aria-hidden
             >
-              🕵️🔦
+              <span className="sr-only">🕵️🔦</span>
+              <PixelEmoji emoji="🔦" size={36} className="-scale-x-100" />
+              <PixelEmoji emoji="🕵️" size={56} className="px-bob" />
             </motion.div>
           )}
         </AnimatePresence>
@@ -173,7 +178,7 @@ export const HideGame: React.FC<StationGameProps & { work: number; patrols: numb
             {Math.min(progress, work)}/{work}
           </span>
         </div>
-        <div className="h-3 border border-stone-700 bg-stone-900">
+        <div className="px-bar h-4 overflow-hidden">
           <div className="h-full bg-amber-500 transition-all" style={{ width: `${(Math.min(progress, work) / work) * 100}%` }} />
         </div>
       </div>

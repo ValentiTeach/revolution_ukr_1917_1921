@@ -5,6 +5,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { sound } from '../../game/sound';
+import { PixelEmoji } from '../PixelEmoji';
 
 interface RailSabotageProps {
   target: number;
@@ -81,17 +82,17 @@ export const RailSabotage: React.FC<RailSabotageProps> = ({ target, seconds, onF
         <div className="absolute left-0 right-0 bottom-10 h-1 bg-stone-500" />
         <div className="absolute left-0 right-0 bottom-6 h-1 bg-stone-500" />
         {/* Станція */}
-        <div className="absolute right-2 bottom-12 text-4xl" aria-hidden>
-          🏚️
+        <div className="absolute right-2 bottom-11" aria-hidden>
+          <PixelEmoji emoji="🏚️" size={52} />
         </div>
         <div className="absolute right-1 bottom-24 font-pixel text-[8px] text-amber-200 bg-stone-950/80 px-1">КРУТИ</div>
         {/* Потяг */}
         <div
-          className="absolute bottom-8 text-5xl transition-[left] duration-100 ease-linear"
-          style={{ left: `calc(${trainPos * 0.78}% - 10px)` }}
+          className="absolute bottom-7"
+          style={{ left: `calc(${Math.round(trainPos / 2) * 2 * 0.78}% - 10px)` }}
           aria-hidden
         >
-          🚂
+          <PixelEmoji emoji="🚂" size={60} className={phase === 'play' ? 'px-bob' : ''} />
         </div>
         <div className="absolute top-2 left-2 right-2 flex justify-between font-pixel text-[9px] sm:text-[10px] text-amber-200">
           <span>⏱ {timeLeft.toFixed(1)}с</span>

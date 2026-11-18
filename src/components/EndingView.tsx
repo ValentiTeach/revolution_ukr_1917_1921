@@ -5,7 +5,7 @@
 
 import React, { useEffect } from 'react';
 import confetti from 'canvas-confetti';
-import { Award, RotateCcw, GitBranch, CheckCircle2, Backpack } from 'lucide-react';
+import { Award, RotateCcw, GitBranch, CheckCircle2, Backpack } from './icons';
 import { EndingResult, GameMetrics, HeroSprite } from '../game/types';
 import { getRank } from '../game/rules';
 import { ARTIFACTS, ACHIEVEMENTS } from '../game/lore';

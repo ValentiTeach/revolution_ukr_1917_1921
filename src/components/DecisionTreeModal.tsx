@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { GitBranch, CheckCircle2, Circle, Clock, Info, ArrowRight } from 'lucide-react';
+import { GitBranch, CheckCircle2, Circle, Clock, Info, ArrowRight, Lock } from './icons';
 import { ChapterId, DecisionTreeNode } from '../game/types';
 import { CHAPTER_CONFIG } from '../game/historicalData';
 import { sound } from '../game/sound';
@@ -14,6 +14,7 @@ interface DecisionTreeModalProps {
   currentChapter: ChapterId;
   isAlternateHistory: boolean;
   onJumpToChapter: (chapterId: ChapterId) => void;
+  isChapterOpen: (chapterId: ChapterId) => boolean;
 }
 
 export const DecisionTreeModal: React.FC<DecisionTreeModalProps> = ({
@@ -21,6 +22,7 @@ export const DecisionTreeModal: React.FC<DecisionTreeModalProps> = ({
   currentChapter,
   isAlternateHistory,
   onJumpToChapter,
+  isChapterOpen,
 }) => {
   const [selectedNode, setSelectedNode] = useState<DecisionTreeNode | null>(
     decisionHistory.length > 0 ? decisionHistory[decisionHistory.length - 1] : null
@@ -164,18 +166,24 @@ export const DecisionTreeModal: React.FC<DecisionTreeModalProps> = ({
                       <p className="text-stone-400 text-[11px] truncate max-w-sm">
                         {cfg.summary}
                       </p>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          sound.playSelect();
-                          onJumpToChapter(cid);
-                        }}
-                        className="flex items-center gap-1 text-[11px] text-amber-400 hover:text-amber-300 hover:underline shrink-0"
-                      >
-                        <span>Перейти</span>
-                        <ArrowRight className="h-3 w-3" />
-                      </button>
+                      {isChapterOpen(cid) ? (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            sound.playSelect();
+                            onJumpToChapter(cid);
+                          }}
+                          className="flex items-center gap-1 text-[11px] text-amber-400 hover:text-amber-300 hover:underline shrink-0"
+                        >
+                          <span>Перейти</span>
+                          <ArrowRight className="h-3 w-3" />
+                        </button>
+                      ) : (
+                        <span className="flex items-center gap-1 text-[11px] text-stone-600 shrink-0">
+                          <Lock className="h-3 w-3" /> Закрито
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>

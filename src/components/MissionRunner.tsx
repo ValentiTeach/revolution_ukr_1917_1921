@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { ArrowRight, DoorOpen, RotateCcw } from 'lucide-react';
+import { ArrowRight, DoorOpen, RotateCcw } from './icons';
 import { Modal } from './Modal';
 import { PixelAvatar } from './PixelAvatar';
 import { TelegramPuzzle } from './minigames/TelegramPuzzle';
@@ -22,6 +22,7 @@ import { Mission, MissionStation } from '../game/types';
 import { MISSION_HEARTS } from '../game/missions';
 import { COMPANION } from '../game/lore';
 import { sound } from '../game/sound';
+import { PixelEmoji } from './PixelEmoji';
 
 type Station = Omit<MissionStation, 'fork'>;
 
@@ -157,7 +158,7 @@ const MissionBody: React.FC<Omit<MissionRunnerProps, 'mission'> & { mission: Mis
             return (
               <div key={s.id} className="flex flex-col items-center gap-0.5">
                 <div
-                  className={`flex h-12 w-9 items-center justify-center border-2 text-lg ${
+                  className={`flex h-14 w-10 items-center justify-center border-2 text-lg ${
                     state === 'open'
                       ? 'border-emerald-500 bg-emerald-950/60'
                       : state === 'here'
@@ -166,24 +167,28 @@ const MissionBody: React.FC<Omit<MissionRunnerProps, 'mission'> & { mission: Mis
                   }`}
                   title={s.title}
                 >
-                  {state === 'open' ? '✓' : state === 'here' ? s.emoji : '🚪'}
+                  {state === 'open' ? (
+                    <span className="px-pop font-pixel text-xs text-emerald-300">✓</span>
+                  ) : (
+                    <PixelEmoji emoji={state === 'here' ? s.emoji : '🚪'} size={28} res={14} />
+                  )}
                 </div>
                 <span className="font-pixel text-[7px] text-stone-400">{doorNo(i)}</span>
               </div>
             );
           })}
           <div className="flex flex-col items-center gap-0.5">
-            <div className={`flex h-12 w-9 items-center justify-center border-2 text-lg ${stage === 'complete' ? 'border-yellow-300 bg-yellow-700' : 'border-stone-700 bg-stone-900'}`}>
-              🏁
+            <div className={`flex h-14 w-10 items-center justify-center border-2 ${stage === 'complete' ? 'border-yellow-300 bg-yellow-700 animate-sparkle' : 'border-stone-700 bg-stone-900'}`}>
+              <PixelEmoji emoji="🏁" size={28} res={14} />
             </div>
             <span className="font-pixel text-[7px] text-stone-400">ФІНІШ</span>
           </div>
         </div>
         <div className="flex shrink-0 gap-0.5 text-xl" aria-label={`Серця: ${hearts}`}>
           {Array.from({ length: MISSION_HEARTS }).map((_, i) => (
-            <motion.span key={i} animate={{ scale: i < hearts ? 1 : 0.7, opacity: i < hearts ? 1 : 0.25 }}>
-              {i < hearts ? '❤️' : '🖤'}
-            </motion.span>
+            <span key={`${i}-${i < hearts}`} className={i < hearts ? 'px-pop' : 'animate-shake opacity-40'}>
+              <PixelEmoji emoji={i < hearts ? '❤️' : '🖤'} size={28} res={12} />
+            </span>
           ))}
         </div>
       </div>
@@ -246,7 +251,7 @@ const MissionBody: React.FC<Omit<MissionRunnerProps, 'mission'> & { mission: Mis
                 }}
                 className="pixel-btn flex flex-col items-center gap-2 border-2 border-amber-800 bg-gradient-to-b from-amber-900 to-stone-950 p-4 hover:border-amber-400"
               >
-                <span className="text-5xl">🚪</span>
+                <PixelEmoji emoji="🚪" size={72} className="px-bob" />
                 <span className="font-bold">{base.title}</span>
                 <span className="text-xs text-stone-400">Звичайний шлях</span>
               </button>
@@ -259,7 +264,10 @@ const MissionBody: React.FC<Omit<MissionRunnerProps, 'mission'> & { mission: Mis
                 }}
                 className="pixel-btn flex flex-col items-center gap-2 border-2 border-violet-600 bg-gradient-to-b from-violet-950 to-stone-950 p-4 hover:border-violet-300"
               >
-                <span className="text-5xl">🚪✨</span>
+                <span className="flex items-end">
+                  <PixelEmoji emoji="🚪" size={72} className="px-bob" />
+                  <PixelEmoji emoji="✨" size={32} className="animate-sparkle" />
+                </span>
                 <span className="font-bold">{base.fork.label}</span>
                 <span className="text-xs text-violet-300">Важче · +{base.fork.bonusStars} ⭐</span>
               </button>
@@ -286,7 +294,11 @@ const MissionBody: React.FC<Omit<MissionRunnerProps, 'mission'> & { mission: Mis
 
         {stage === 'won' && (
           <motion.div key={`won-${index}`} initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4 text-center">
-            <div className="text-6xl">🚪✨</div>
+            <div className="flex justify-center">
+              <span className="px-door-open inline-block">
+                <PixelEmoji emoji="🚪" size={88} />
+              </span>
+            </div>
             <p className="text-lg font-bold text-emerald-300">Двері {doorNo(index)} пройдено!</p>
             <p className="text-sm text-stone-300">
               Далі: {mission.stations[index + 1].emoji} {mission.stations[index + 1].title}
@@ -304,7 +316,9 @@ const MissionBody: React.FC<Omit<MissionRunnerProps, 'mission'> & { mission: Mis
 
         {stage === 'lost' && (
           <motion.div key={`lost-${index}-${attempt}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4 text-center">
-            <div className="text-6xl">💔</div>
+            <div className="flex justify-center animate-shake">
+              <PixelEmoji emoji="💔" size={80} />
+            </div>
             <p className="text-lg font-bold text-rose-300">Не вийшло… мінус одне серце.</p>
             {pigeonGift && (
               <p className="border-l-4 border-sky-500 bg-sky-950/50 p-2 text-sm text-sky-100">
@@ -349,7 +363,11 @@ const MissionBody: React.FC<Omit<MissionRunnerProps, 'mission'> & { mission: Mis
 
         {stage === 'complete' && (
           <motion.div key="complete" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="space-y-4 text-center">
-            <div className="text-6xl">🏆</div>
+            <div className="flex justify-center">
+              <span className="px-pop animate-sparkle inline-block border-4 border-yellow-400 bg-amber-900 p-2">
+                <PixelEmoji emoji="🏆" size={88} />
+              </span>
+            </div>
             <h3 className="font-serif text-2xl font-bold text-amber-300">Доручення виконано!</h3>
             <p className="font-serif text-base text-stone-200">{mission.finale}</p>
             <div className="flex flex-wrap justify-center gap-2 text-sm">
@@ -387,6 +405,7 @@ export const MissionRunner: React.FC<MissionRunnerProps> = ({ mission, ...rest }
     open={mission !== null}
     onClose={rest.onClose}
     dismissible={false}
+    frame="violet"
     maxWidth="max-w-3xl"
     title={mission ? `📜 Доручення: ${mission.title}` : ''}
   >

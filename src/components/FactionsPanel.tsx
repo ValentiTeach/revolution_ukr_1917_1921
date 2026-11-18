@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { ChevronDown, ChevronUp, Users, Info } from 'lucide-react';
+import { ChevronDown, ChevronUp, Users, Info } from './icons';
 import { FactionId, FactionReputation } from '../game/types';
 import { FACTIONS } from '../game/historicalData';
 
@@ -76,7 +76,7 @@ export const FactionsPanel: React.FC<FactionsPanelProps> = ({ reputation }) => {
                   {val}%
                 </span>
               </div>
-              <div className="h-1.5 w-full bg-stone-800 rounded-xs overflow-hidden mb-1">
+              <div className="px-bar h-2.5 w-full overflow-hidden mb-1">
                 <div
                   className="h-full transition-all duration-300"
                   style={{

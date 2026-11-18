@@ -7,6 +7,7 @@ import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { sound } from '../../game/sound';
 import { StationGameProps } from './shared';
+import { PixelEmoji } from '../PixelEmoji';
 
 const JUNK = ['🧦', '📎', '🪶', '🕯️', '🧵', '🪙', '🗝️', '📮', '🧽', '🥄', '🍂', '🕸️'];
 
@@ -89,17 +90,17 @@ export const DrawersGame: React.FC<StationGameProps & { drawers: number; item: s
             >
               {isOpen ? (
                 isTarget ? (
-                  <span className="text-3xl">{item.split(' ')[0]}</span>
+                  <PixelEmoji emoji={item.split(' ')[0]} size={44} className="px-pop" />
                 ) : (
                   <>
-                    <span className="text-lg">{JUNK[i % JUNK.length]}</span>
+                    <PixelEmoji emoji={JUNK[i % JUNK.length]} size={24} res={12} />
                     <span className={`text-[11px] font-bold ${h.cls}`}>
                       {h.emoji} {h.text}
                     </span>
                   </>
                 )
               ) : (
-                <span className="h-1.5 w-6 rounded-full bg-amber-300/70" aria-hidden />
+                <span className="h-2 w-8 bg-amber-300 shadow-[0_2px_0_#78350f]" aria-hidden />
               )}
             </motion.button>
           );

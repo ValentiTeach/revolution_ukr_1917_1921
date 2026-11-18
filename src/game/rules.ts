@@ -45,6 +45,34 @@ export interface GameState {
 
 export const STATE_VERSION = 3;
 
+const CHAPTER_ORDER: ChapterId[] = [
+  'CH1_RADA_CREATION',
+  'CH2_NATIONAL_CONGRESS',
+  'CH3_FIRST_UNIVERSAL',
+  'CH4_SECOND_UNIVERSAL',
+  'CH5_THIRD_UNIVERSAL',
+  'CH6_FOURTH_UNIVERSAL_KRUTY',
+  'CH7_HETMANATE_ORDER',
+  'CH8_DIRECTORY_AND_ZLUKA',
+  'CH9_TRIANGLE_OF_DEATH',
+  'EPILOGUE',
+];
+
+/**
+ * Акт відкритий, лише якщо гравець дійшов до нього, пройшовши попередній.
+ * Перший акт відкритий завжди. Повертатися до пройдених актів можна.
+ */
+export function isChapterUnlocked(state: Pick<GameState, 'unlockedChapters' | 'chapter'>, chapterId: ChapterId): boolean {
+  if (chapterId === CHAPTER_ORDER[0]) return true;
+  return state.unlockedChapters.includes(chapterId) || state.chapter === chapterId;
+}
+
+/** Попередній акт (щоб підказати, що треба пройти). */
+export function getPreviousChapter(chapterId: ChapterId): ChapterId | null {
+  const i = CHAPTER_ORDER.indexOf(chapterId);
+  return i > 0 ? CHAPTER_ORDER[i - 1] : null;
+}
+
 /** Чи виконано умову, яка відкриває таємний варіант відповіді. */
 export function isRequirementMet(state: GameState, req: ChoiceRequirement | undefined): boolean {
   if (!req) return true;

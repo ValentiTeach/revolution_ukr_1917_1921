@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import {
   Backpack,
@@ -18,13 +18,15 @@ import {
   Star,
   Volume2,
   VolumeX,
-} from 'lucide-react';
+} from './icons';
 import { GameMetrics, ChapterId, HeroSprite } from '../game/types';
 import { CHAPTER_CONFIG } from '../game/historicalData';
 import { METRIC_META } from '../game/metricsMeta';
 import { getRank } from '../game/rules';
 import { sound } from '../game/sound';
 import { PixelAvatar } from './PixelAvatar';
+import { PixelEmoji } from './PixelEmoji';
+import { pxEase } from '../game/motion';
 
 export type GameTab = 'rpg' | 'missions' | 'satchel' | 'tree' | 'map' | 'universals' | 'archive';
 
@@ -69,6 +71,18 @@ export const MetricsBar: React.FC<MetricsBarProps> = ({
 }) => {
   const chapterInfo = CHAPTER_CONFIG[currentChapter];
   const rank = getRank(stars);
+  const prevStars = useRef(stars);
+  const [gain, setGain] = useState<{ n: number; key: number } | null>(null);
+
+  useEffect(() => {
+    const diff = stars - prevStars.current;
+    prevStars.current = stars;
+    if (diff > 0) {
+      setGain({ n: diff, key: Date.now() });
+      const t = setTimeout(() => setGain(null), 950);
+      return () => clearTimeout(t);
+    }
+  }, [stars]);
 
   return (
     <header className="sticky top-0 z-40 w-full border-b-2 border-amber-900/80 bg-stone-950/95 text-stone-200 backdrop-blur-md">
@@ -90,15 +104,17 @@ export const MetricsBar: React.FC<MetricsBarProps> = ({
               <div className="font-serif text-sm sm:text-base font-bold text-amber-200 leading-tight">{heroName}</div>
               <div className="flex items-center gap-2 text-[11px] text-stone-400">
                 <span>{rank.title}</span>
-                <motion.span
-                  key={stars}
-                  initial={{ scale: 1.6, color: '#fde047' }}
-                  animate={{ scale: 1, color: '#fcd34d' }}
-                  className="flex items-center gap-0.5 font-bold"
-                >
-                  <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-                  {stars}
-                </motion.span>
+                <span className="relative flex items-center gap-0.5 font-bold text-amber-300">
+                  <Star className="h-3.5 w-3.5 text-amber-400" />
+                  <span key={stars} className="px-pop inline-block">
+                    {stars}
+                  </span>
+                  {gain && (
+                    <span key={gain.key} className="px-rise absolute -top-1 left-full ml-1 whitespace-nowrap font-pixel text-[9px] text-yellow-300">
+                      +{gain.n}
+                    </span>
+                  )}
+                </span>
                 <span className="hidden sm:inline">· {chapterInfo?.period}</span>
               </div>
             </div>
@@ -176,8 +192,8 @@ export const MetricsBar: React.FC<MetricsBarProps> = ({
             const low = value < 25;
             return (
               <div key={m.key} title={`${m.fullName}: ${m.kidHint}`} className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-2 min-w-0">
-                <span className="flex items-center gap-1 whitespace-nowrap">
-                  <span aria-hidden>{m.emoji}</span>
+                <span className="flex shrink-0 items-center gap-1 whitespace-nowrap">
+                  <PixelEmoji emoji={m.emoji} size={18} res={12} />
                   <span className="hidden md:inline text-stone-400 text-[11px]">{m.label}</span>
                   <motion.span
                     key={value}
@@ -188,8 +204,8 @@ export const MetricsBar: React.FC<MetricsBarProps> = ({
                     {value}
                   </motion.span>
                 </span>
-                <div className="h-1.5 w-full bg-stone-800 overflow-hidden">
-                  <motion.div className={`h-full ${m.bar}`} animate={{ width: `${value}%` }} transition={{ duration: 0.6 }} />
+                <div className="px-bar h-2.5 w-full overflow-hidden">
+                  <motion.div className={`h-full ${m.bar}`} animate={{ width: `${value}%` }} transition={{ duration: 0.6, ease: pxEase(6) }} />
                 </div>
               </div>
             );

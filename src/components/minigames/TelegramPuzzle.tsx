@@ -4,7 +4,7 @@
  */
 
 import React, { useMemo, useState } from 'react';
-import { RotateCcw } from 'lucide-react';
+import { RotateCcw } from '../icons';
 import { sound } from '../../game/sound';
 
 interface TelegramPuzzleProps {
