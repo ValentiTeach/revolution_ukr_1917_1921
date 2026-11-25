@@ -20,12 +20,14 @@ import {
   MinigameConfig,
   QuizQuestion,
 } from './types';
+import { NEW_COMPANION_HINTS, NEW_DIARY_ENTRIES, NEW_QUIZ_QUESTIONS } from './story1919_1921';
+import { NEW_ARTIFACTS, NEW_MINIGAMES } from './missions1919_1921';
 
 export const COMPANION = {
   name: 'Сизокрил',
   species: 'поштовий голуб',
   intro:
-    'Курли! Я — Сизокрил, поштовий голуб Центральної Ради. Я літаю швидше за телеграму й бачив усе згори: і Київ, і Львів, і засніжені Крути. Тримайся мене — я пояснюватиму, що тут відбувається, простими словами.',
+    'Курли! Я — Сизокрил, поштовий голуб Центральної Ради. Я літаю швидше за телеграму й бачив усе згори: і Київ, і Львів, і засніжені Крути, і Холодний Яр, і Сиваш. Тримайся мене — я пояснюватиму, що тут відбувається, простими словами.',
 };
 
 export const DEFAULT_HERO_NAMES = ['Тарас', 'Орися', 'Левко', 'Ярина', 'Данило', 'Соломія'];
@@ -94,6 +96,7 @@ export const COMPANION_HINTS: CompanionHint[] = [
     stepId: 'step_ch9_2',
     text: 'Камʼянець став маленькою столицею. Тут друкували гроші, відкрили університет і приймали послів. Навіть у найважчі часи люди думали про школи та книжки!',
   },
+  ...NEW_COMPANION_HINTS,
   {
     stepId: 'step_epilogue',
     text: 'Ми дійшли до кінця шляху. Поглянь у свою Торбу — скільки ти зібрав знахідок і зірок! Кожне твоє рішення змінило історію. Курли!',
@@ -262,6 +265,7 @@ export const ARTIFACTS: Artifact[] = [
     fact: 'На воєнних картах фронт позначали червоним пунктиром, а залізниці — чорними лініями. Хто тримав залізницю, той і контролював край.',
     stars: 1,
   },
+  ...NEW_ARTIFACTS,
 ];
 
 export function getArtifactsForScene(bgKey: Artifact['bgKey']): Artifact[] {
@@ -322,15 +326,16 @@ export const DIARY_ENTRIES: DiaryEntry[] = [
   },
   {
     chapterId: 'CH9_TRIANGLE_OF_DEATH',
-    date: 'Кам’янець — Поділля, 1919–1920',
-    title: 'Зимовий похід',
-    text: 'Холод, тиф, по десять набоїв на гвинтівку. І все одно армія йде вперед, бо здатися — значить зрадити тих, хто вже не повернеться. У Камʼянці відкрили університет — уявляєте, посеред війни! Я вирішив: коли все закінчиться, піду вчитися.',
+    date: 'Кам’янець — Поділля, листопад 1919',
+    title: 'Трикутник смерті',
+    text: 'Холод, тиф, по десять набоїв на гвинтівку. Галичани уклали перемирʼя з білими, і ми лишилися самі. Та армія не здається: генерали кажуть, що підемо в похід по ворожих тилах. А в Камʼянці працює університет — уявляєте, посеред війни! Я вирішив: коли все закінчиться, піду вчитися.',
   },
+  ...NEW_DIARY_ENTRIES,
   {
     chapterId: 'EPILOGUE',
     date: 'Багато років потому',
     title: 'Остання сторінка',
-    text: 'Я давно виріс, а Сизокрила вже немає. Але щоразу, коли бачу синьо-жовтий прапор, згадую Педагогічний музей, Софійську площу і сніг на станції Крути. Ми не все встигли. Та ми посіяли зерно — і воно проросло.',
+    text: 'Я давно виріс, а Сизокрила вже немає. Але щоразу, коли бачу синьо-жовтий прапор, згадую Педагогічний музей, Софійську площу, сніг на станції Крути, солону воду Сивашу й поле під Базаром. Ми не все встигли. Та ми посіяли зерно — і 1991 року воно проросло.',
   },
 ];
 
@@ -409,11 +414,12 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
   {
     id: 'q_ch9',
     chapterId: 'CH9_TRIANGLE_OF_DEATH',
-    question: 'Як називався рейд армії УНР тилами ворога взимку 1919–1920 років?',
-    options: ['Перший Зимовий похід', 'Великий Льодовий марш', 'Похід за сіллю'],
+    question: 'Яке місто восени 1919 року стало тимчасовою столицею УНР?',
+    options: ['Камʼянець-Подільський', 'Одеса', 'Чернігів'],
     correctIndex: 0,
-    explanation: 'Перший Зимовий похід очолив генерал Михайло Омелянович-Павленко. Армія пройшла близько 2500 верст і зберегла прапори.',
+    explanation: 'У Камʼянці-Подільському працювали уряд, міністерства, друкарні та університет, заснований Іваном Огієнком.',
   },
+  ...NEW_QUIZ_QUESTIONS,
 ];
 
 export function getQuizForChapter(chapterId: ChapterId): QuizQuestion | undefined {
@@ -429,7 +435,7 @@ export const MINIGAMES: MinigameConfig[] = [
     kind: 'telegram',
     title: 'Телеграма до Полтави',
     intro: 'Телеграфіст переплутав слова! Склади повідомлення Ради у правильному порядку, щоб делегати встигли на Конгрес.',
-    sentence: 'Приїжджайте до Києва на Всеукраїнський конгрес у квітні',
+    params: { sentence: 'Приїжджайте до Києва на Всеукраїнський конгрес у квітні' },
     rewardStars: 2,
   },
   {
@@ -437,14 +443,14 @@ export const MINIGAMES: MinigameConfig[] = [
     kind: 'memory',
     title: 'Хто є хто на Конгресі',
     intro: 'Запамʼятай делегатів! Знайди пари однакових карток — так ти вивчиш обличчя революції.',
-    pairs: [
+    params: { pairs: [
       { emoji: '🧔', label: 'Грушевський' },
       { emoji: '✍️', label: 'Винниченко' },
       { emoji: '⚔️', label: 'Петлюра' },
       { emoji: '📚', label: 'Єфремов' },
       { emoji: '🔱', label: 'Міхновський' },
       { emoji: '🌾', label: 'Селянин-делегат' },
-    ],
+    ] },
     rewardStars: 2,
   },
   {
@@ -452,7 +458,7 @@ export const MINIGAMES: MinigameConfig[] = [
     kind: 'telegram',
     title: 'Слова Універсалу',
     intro: 'Друкар розсипав літери набору! Віднови найвідоміше речення I Універсалу.',
-    sentence: 'Хай буде Україна вільною',
+    params: { sentence: 'Хай буде Україна вільною' },
     rewardStars: 2,
   },
   {
@@ -460,14 +466,14 @@ export const MINIGAMES: MinigameConfig[] = [
     kind: 'memory',
     title: 'Склади речі посильного',
     intro: 'Уночі в Києві тривожно. Швидко збери свою торбу — знайди пари речей, які потрібні джурі.',
-    pairs: [
+    params: { pairs: [
       { emoji: '✉️', label: 'Лист Ради' },
       { emoji: '🕯️', label: 'Свічка' },
       { emoji: '🍞', label: 'Паляниця' },
       { emoji: '🧭', label: 'Компас' },
       { emoji: '🪶', label: 'Перо' },
       { emoji: '🧣', label: 'Шалик' },
-    ],
+    ] },
     rewardStars: 2,
   },
   {
@@ -475,16 +481,15 @@ export const MINIGAMES: MinigameConfig[] = [
     kind: 'telegram',
     title: 'Проголошення Республіки',
     intro: 'Склади головну фразу III Універсалу, яку вигукували на Хрещатику.',
-    sentence: 'Однині Україна стає Українською Народною Республікою',
+    params: { sentence: 'Однині Україна стає Українською Народною Республікою' },
     rewardStars: 2,
   },
   {
     chapterId: 'CH6_FOURTH_UNIVERSAL_KRUTY',
     kind: 'rail',
     title: 'Затримай ешелон!',
-    intro: 'Ворожий потяг наближається до станції. Розбирай шпали швидко, щоб затримати його і дати Києву час!',
-    railTarget: 14,
-    railSeconds: 15,
+    intro: 'Ворожий потяг наближається до станції. Відкручуй гайки на рейках, щоб затримати його і дати Києву час!',
+    params: { railTarget: 10, railSeconds: 20 },
     rewardStars: 3,
   },
   {
@@ -492,14 +497,14 @@ export const MINIGAMES: MinigameConfig[] = [
     kind: 'memory',
     title: 'Скарби Гетьманату',
     intro: 'За кілька місяців Гетьманат створив багато важливого. Знайди пари й запамʼятай ці здобутки.',
-    pairs: [
+    params: { pairs: [
       { emoji: '💰', label: 'Гривня' },
       { emoji: '🔬', label: 'Академія Наук' },
       { emoji: '📖', label: 'Бібліотека' },
       { emoji: '🏛️', label: 'Університет' },
       { emoji: '🎨', label: 'Галерея' },
       { emoji: '🎖️', label: 'Офіцерський корпус' },
-    ],
+    ] },
     rewardStars: 2,
   },
   {
@@ -507,18 +512,18 @@ export const MINIGAMES: MinigameConfig[] = [
     kind: 'telegram',
     title: 'Слова Злуки',
     intro: 'Склади речення з Універсалу Соборності, яке читали на Софійській площі.',
-    sentence: 'Однині воєдино зливаються частини єдиної України',
+    params: { sentence: 'Однині воєдино зливаються частини єдиної України' },
     rewardStars: 2,
   },
   {
     chapterId: 'CH9_TRIANGLE_OF_DEATH',
     kind: 'rail',
     title: 'Прорив із оточення',
-    intro: 'Армія йде у Зимовий похід. Розбери колію за собою, щоб ворожі бронепотяги не наздогнали обоз!',
-    railTarget: 18,
-    railSeconds: 15,
+    intro: 'Армія виходить із трикутника смерті. Розбери колію за собою, щоб ворожі бронепотяги не наздогнали обоз!',
+    params: { railTarget: 12, railSeconds: 22 },
     rewardStars: 3,
   },
+  ...NEW_MINIGAMES,
 ];
 
 export function getMinigameForChapter(chapterId: ChapterId): MinigameConfig | undefined {
@@ -538,13 +543,22 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   { id: 'lawmaker', title: 'Законотворець', emoji: '📜', description: 'Проголосити власний Універсал.' },
   { id: 'strategist', title: 'Стратег', emoji: '🗺️', description: 'Провести операцію на Штабному столі.' },
   { id: 'unity_builder', title: 'Будівничий єдності', emoji: '🤝', description: 'Підняти Національну єдність до 80%.' },
-  { id: 'soborna', title: 'Дійшов до кінця', emoji: '🏁', description: 'Пройти всі дев’ять актів революції.' },
+  { id: 'soborna', title: 'Дійшов до кінця', emoji: '🏁', description: 'Пройти всі шістнадцять актів революції.' },
   { id: 'otaman', title: 'Отаман Долі', emoji: '⭐', description: 'Зібрати 50 зірок.' },
   { id: 'mission_first', title: 'Перше доручення', emoji: '🚪', description: 'Пройти всі двері хоча б одного доручення.' },
-  { id: 'mission_all', title: 'Майстер дверей', emoji: '🗝️', description: 'Виконати всі девʼять доручень.' },
+  { id: 'mission_all', title: 'Майстер дверей', emoji: '🗝️', description: 'Виконати всі доручення всіх актів.' },
   { id: 'fearless', title: 'Без жодної подряпини', emoji: '❤️', description: 'Виконати доручення, не втративши жодного серця.' },
   { id: 'curious', title: 'Допитливий джура', emoji: '❓', description: 'Поставити персонажам 10 питань.' },
   { id: 'secret_path', title: 'Таємний шлях', emoji: '🔓', description: 'Обрати таємний варіант відповіді.' },
+  { id: 'unmasked', title: 'Зірвана маска', emoji: '🎭', description: 'Довести, що «радянський уряд України» створила Москва.' },
+  { id: 'kholodnyi_yar', title: 'Холодноярець', emoji: '🌳', description: 'Стати звʼязковим Холодного Яру.' },
+  { id: 'tachanka_raid', title: 'Рейд тачанок', emoji: '🐎', description: 'Пройти доручення «Рейд тачанок» у тилу Денікіна.' },
+  { id: 'iron_cross', title: 'Залізний хрест', emoji: '🎖️', description: 'Провести колону через Перший Зимовий похід.' },
+  { id: 'zamosc', title: 'Оборонець Замостя', emoji: '🏰', description: 'Втримати Замостя разом із дивізією Безручка.' },
+  { id: 'syvash', title: 'Брід через Сиваш', emoji: '🌊', description: 'Знайти мілину в «Гнилому морі».' },
+  { id: 'memory_keeper', title: 'Хранитель памʼяті', emoji: '🕯️', description: 'Пройти акт про 1921 рік і зберегти імена героїв Базару.' },
+  { id: 'legend', title: 'Легенда Соборності', emoji: '🌟', description: 'Зібрати 100 зірок.' },
+  { id: 'arcade_master', title: 'Майстер ігор', emoji: '🕹️', description: 'Виграти десять різних міні-ігор в Ігротеці.' },
 ];
 
 export function getAchievement(id: string): AchievementDef | undefined {

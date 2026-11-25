@@ -18,7 +18,101 @@ import {
   MINIGAMES,
   QUIZ_QUESTIONS,
 } from './lore';
-import { ChapterId } from './types';
+import { BgKey, ChapterId, StationKind, StationParams } from './types';
+import { CHAPTER_ORDER } from './chapters';
+import { MORSE_UA as MORSE } from './missions';
+import { UA_ALPHABET, canFillShips, fordHasPath, generateFord, guardPose, mulberry32, parseStealth, solveRoute, solveStealth } from './minigameLogic';
+import { NEW_FIGURES } from './story1919_1921';
+
+const BG_KEYS: BgKey[] = ['hero', 'rada', 'map', 'kruty', 'winter', 'steppe', 'forest', 'harbor', 'syvash', 'armored', 'kamianets', 'fortress', 'memorial'];
+
+/** Спільна перевірка параметрів для дверей доручень і міні-ігор привалів. */
+function assertStationParams(kind: StationKind, p: StationParams, id: string) {
+  switch (kind) {
+    case 'codelock':
+      assert.match(p.code ?? '', /^\d{3,6}$/, id);
+      assert.ok((p.clues ?? []).length >= 2, id);
+      break;
+    case 'morse':
+      for (const ch of (p.word ?? '').toUpperCase()) assert.ok(MORSE[ch], `${id}: no morse for ${ch}`);
+      break;
+    case 'sorting': {
+      const targets = new Set(p.sortTargets ?? []);
+      assert.ok(targets.size >= 2, id);
+      assert.ok((p.sortItems ?? []).length >= 4, id);
+      for (const it of p.sortItems ?? []) assert.ok(targets.has(it.target), `${id}: ${it.item}`);
+      break;
+    }
+    case 'wires':
+      assert.ok((p.wires ?? 0) >= 2 && (p.wires ?? 0) <= 6, id);
+      break;
+    case 'hide':
+      assert.ok((p.work ?? 0) > (p.patrols ?? 0) && (p.patrols ?? 0) >= 1, id);
+      break;
+    case 'drawers':
+      assert.ok((p.drawers ?? 0) >= 6 && !!p.item, id);
+      break;
+    case 'skillcheck':
+      assert.ok((p.hits ?? 0) >= 1 && (p.speed ?? 0) > 0, id);
+      break;
+    case 'telegram':
+      assert.ok((p.sentence ?? '').split(' ').length >= 3, id);
+      for (const d of p.decoys ?? []) assert.ok(!(p.sentence ?? '').split(' ').includes(d), `${id}: decoy «${d}» is part of the sentence`);
+      break;
+    case 'memory':
+      assert.ok((p.pairs ?? []).length >= 3, id);
+      break;
+    case 'rail':
+      assert.ok((p.railTarget ?? 0) > 0 && (p.railSeconds ?? 0) >= 10, id);
+      break;
+    case 'tachanka':
+      assert.ok((p.distance ?? 0) >= 200 && (p.distance ?? 0) <= 800, id);
+      break;
+    case 'ford':
+      assert.ok((p.fordCols ?? 7) >= 4 && (p.fordRows ?? 7) >= 4, id);
+      break;
+    case 'ships': {
+      const ships = p.ships ?? [];
+      const groups = p.groups ?? [];
+      assert.ok(ships.length >= 2 && groups.length >= 3, id);
+      assert.ok(canFillShips(groups.map((g) => g.size), ships.map((sh) => sh.capacity)), `${id}: ships cannot be filled exactly`);
+      break;
+    }
+    case 'route': {
+      const map = p.routeMap ?? [];
+      assert.ok(map.length >= 3 && map.every((r) => r.length === map[0].length), `${id}: ragged map`);
+      assert.equal(map.join('').split('S').length - 1, 1, `${id}: one start`);
+      assert.equal(map.join('').split('F').length - 1, 1, `${id}: one finish`);
+      const food = p.routeFood ?? 0;
+      const warmth = p.routeWarmth ?? 0;
+      assert.ok(solveRoute(map, food, warmth) !== null, `${id}: route is impossible`);
+      assert.equal(solveRoute(map.map((r) => r.replace(/V/g, '.')), food, warmth), null, `${id}: villages should matter`);
+      break;
+    }
+    case 'cipher': {
+      const text = (p.cipherText ?? '').toUpperCase();
+      assert.ok(text.length >= 8, id);
+      for (const ch of text) assert.ok(ch === ' ' || UA_ALPHABET.includes(ch), `${id}: «${ch}» is not in the cipher alphabet`);
+      assert.ok((p.cipherShift ?? 0) % UA_ALPHABET.length !== 0, `${id}: shift 0 is no cipher`);
+      break;
+    }
+    case 'stealth': {
+      const map = p.stealthMap ?? [];
+      const guards = p.guards ?? [];
+      const level = parseStealth(map);
+      for (const g of guards) {
+        assert.notEqual(map[g.y][g.x], '#', `${id}: guard inside a wall`);
+        const back = guardPose(level, g, g.path.length);
+        assert.ok(back.x === g.x && back.y === g.y, `${id}: guard route must loop`);
+      }
+      const free = solveStealth(map, []);
+      const withGuards = solveStealth(map, guards);
+      assert.ok(withGuards !== null, `${id}: stealth level is impossible`);
+      assert.ok(withGuards! >= free!, id);
+      break;
+    }
+  }
+}
 
 const CHAPTERS = Object.keys(CHAPTER_CONFIG) as ChapterId[];
 const STORY_CHAPTERS = CHAPTERS.filter((c) => c !== 'EPILOGUE');
@@ -73,18 +167,14 @@ test('quiz answers point to a real option', () => {
 });
 
 test('minigames carry the data their kind needs', () => {
-  for (const m of MINIGAMES) {
-    if (m.kind === 'telegram') assert.ok((m.sentence ?? '').split(' ').length >= 3, m.title);
-    if (m.kind === 'memory') assert.ok((m.pairs ?? []).length >= 4, m.title);
-    if (m.kind === 'rail') assert.ok((m.railTarget ?? 0) > 0 && (m.railSeconds ?? 0) > 0, m.title);
-  }
+  for (const m of MINIGAMES) assertStationParams(m.kind, m.params, m.title);
 });
 
 test('artifacts have unique ids and sit inside the picture', () => {
   assert.equal(new Set(ARTIFACTS.map((a) => a.id)).size, ARTIFACTS.length);
   for (const a of ARTIFACTS) {
     assert.ok(a.x > 0 && a.x < 100 && a.y > 0 && a.y < 100, a.id);
-    assert.ok(['hero', 'rada', 'map', 'kruty'].includes(a.bgKey), a.id);
+    assert.ok(BG_KEYS.includes(a.bgKey), a.id);
   }
 });
 
@@ -176,43 +266,7 @@ test('mission stations carry valid parameters', () => {
     for (const s of all) {
       assert.ok(!ids.has(s.id), `duplicate station ${s.id}`);
       ids.add(s.id);
-      const p = s.params;
-      switch (s.kind) {
-        case 'codelock':
-          assert.match(p.code ?? '', /^\d{3,6}$/, s.id);
-          assert.ok((p.clues ?? []).length >= 2, s.id);
-          break;
-        case 'morse':
-          for (const ch of (p.word ?? '').toUpperCase()) assert.ok(MORSE_UA[ch], `${s.id}: no morse for ${ch}`);
-          break;
-        case 'sorting': {
-          const targets = new Set(p.sortTargets ?? []);
-          assert.ok(targets.size >= 2, s.id);
-          for (const it of p.sortItems ?? []) assert.ok(targets.has(it.target), `${s.id}: ${it.item}`);
-          break;
-        }
-        case 'wires':
-          assert.ok((p.wires ?? 0) >= 2 && (p.wires ?? 0) <= 6, s.id);
-          break;
-        case 'hide':
-          assert.ok((p.work ?? 0) > (p.patrols ?? 0) && (p.patrols ?? 0) >= 1, s.id);
-          break;
-        case 'drawers':
-          assert.ok((p.drawers ?? 0) >= 6 && !!p.item, s.id);
-          break;
-        case 'skillcheck':
-          assert.ok((p.hits ?? 0) >= 1 && (p.speed ?? 0) > 0, s.id);
-          break;
-        case 'telegram':
-          assert.ok((p.sentence ?? '').split(' ').length >= 3, s.id);
-          break;
-        case 'memory':
-          assert.ok((p.pairs ?? []).length >= 3, s.id);
-          break;
-        case 'rail':
-          assert.ok((p.railTarget ?? 0) > 0 && (p.railSeconds ?? 0) > 0, s.id);
-          break;
-      }
+      assertStationParams(s.kind, s.params, s.id);
     }
   }
 });
@@ -220,4 +274,69 @@ test('mission stations carry valid parameters', () => {
 test('mission givers have portraits', () => {
   const avatarSrc = readFileSync(new URL('../components/PixelAvatar.tsx', import.meta.url), 'utf8');
   for (const m of MISSIONS) assert.ok(avatarSrc.includes(`case '${m.giver}'`), m.giver);
+});
+
+// ---------------------------------------------------------------------------
+// Акти 1919–1921
+// ---------------------------------------------------------------------------
+test('chapters run in chronological order with sixteen story acts', () => {
+  assert.deepEqual(CHAPTERS, CHAPTER_ORDER);
+  assert.equal(STORY_CHAPTERS.length, 16);
+  for (const c of ['ACT_RED_MASKS', 'ACT_OTAMANSHCHYNA', 'ACT_AUGUST_1919', 'ACT_FIRST_WINTER_CAMPAIGN', 'ACT_1920_WARSAW', 'ACT_CRIMEA_1920', 'ACT_1921_FALL'] as ChapterId[]) {
+    assert.ok(CHAPTERS.includes(c), c);
+  }
+});
+
+test('the story chain visits every act in order', () => {
+  const visited: ChapterId[] = [];
+  const startOf = new Map(CHAPTERS.map((c) => [CHAPTER_CONFIG[c].startStepId, c]));
+  let id: string | undefined = 'step_ch1_1';
+  const guard = new Set<string>();
+  while (id && !guard.has(id)) {
+    guard.add(id);
+    const c = startOf.get(id);
+    if (c) visited.push(c);
+    if (id === 'step_epilogue') break;
+    id = DIALOGUE_STEPS[id].choices[0].nextStepId;
+  }
+  assert.deepEqual(visited, CHAPTERS);
+});
+
+test('roman numerals in act titles match their position', () => {
+  const roman = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV', 'XVI'];
+  STORY_CHAPTERS.forEach((c, i) => {
+    assert.ok(CHAPTER_CONFIG[c].title.startsWith(`Акт ${roman[i]}:`), `${c}: ${CHAPTER_CONFIG[c].title}`);
+  });
+});
+
+test('every scene used in the story has an image on disk', () => {
+  const used = new Set<BgKey>([...Object.values(DIALOGUE_STEPS).map((s) => s.bgImageKey), ...ARTIFACTS.map((a) => a.bgKey)]);
+  for (const key of used) {
+    assert.ok(BG_KEYS.includes(key), key);
+    if (['hero', 'rada', 'map', 'kruty'].includes(key)) continue;
+    const file = new URL(`../assets/images/scenes/${key}.png`, import.meta.url);
+    assert.ok(readFileSync(file).length > 1000, `missing scene ${key}`);
+  }
+});
+
+test('every new scene hides at least three artifacts', () => {
+  for (const key of BG_KEYS.slice(4)) {
+    assert.ok(ARTIFACTS.filter((a) => a.bgKey === key).length >= 3, key);
+  }
+});
+
+test('the ford generator always leaves a shallow path', () => {
+  for (let seed = 1; seed <= 300; seed++) {
+    const cols = 5 + (seed % 4);
+    const rows = 5 + (seed % 3);
+    const { grid, startCol } = generateFord(cols, rows, mulberry32(seed));
+    assert.equal(grid[rows - 1][startCol], 0, `seed ${seed}: start must be shallow`);
+    assert.ok(fordHasPath(grid, startCol, 0), `seed ${seed}`);
+  }
+});
+
+test('new historical figures carry a real quote or a fact, never an invented quote', () => {
+  for (const f of NEW_FIGURES) {
+    assert.ok(f.quote ? !!f.quoteNote : !!f.fact, f.id);
+  }
 });

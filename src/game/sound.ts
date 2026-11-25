@@ -265,6 +265,154 @@ class RetroAudioEngine {
     }
   }
 
+  /** Шум (вода, лід, вітер): короткий сплеск відфільтрованого шуму. */
+  private noise(dur: number, filterType: BiquadFilterType, freq: number, vol: number) {
+    if (!this.ctx) return;
+    const len = Math.max(1, Math.floor(this.ctx.sampleRate * dur));
+    const buffer = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / len);
+    const src = this.ctx.createBufferSource();
+    const filter = this.ctx.createBiquadFilter();
+    const gain = this.ctx.createGain();
+    filter.type = filterType;
+    filter.frequency.value = freq;
+    gain.gain.value = vol;
+    src.buffer = buffer;
+    src.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.ctx.destination);
+    src.start();
+  }
+
+  private activeTone: { osc: OscillatorNode; gain: GainNode } | null = null;
+
+  /** Неперервний тон, поки тримають телеграфний ключ. */
+  public startTone(freq = 720) {
+    if (this.isMuted) return;
+    this.initContext();
+    if (!this.ctx || this.activeTone) return;
+    try {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'square';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.0001, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.05, this.ctx.currentTime + 0.01);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start();
+      this.activeTone = { osc, gain };
+    } catch {
+      // Ignore
+    }
+  }
+
+  public stopTone() {
+    if (!this.ctx || !this.activeTone) return;
+    try {
+      const { osc, gain } = this.activeTone;
+      gain.gain.setValueAtTime(gain.gain.value, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 0.02);
+      osc.stop(this.ctx.currentTime + 0.03);
+    } catch {
+      // Ignore
+    }
+    this.activeTone = null;
+  }
+
+  /** Сплеск води (брід). */
+  public playSplash() {
+    if (this.isMuted) return;
+    this.initContext();
+    try {
+      this.noise(0.35, 'lowpass', 900, 0.25);
+    } catch {
+      // Ignore
+    }
+  }
+
+  /** Тріск льоду або тріск гілки. */
+  public playCrack() {
+    if (this.isMuted) return;
+    this.initContext();
+    try {
+      this.noise(0.08, 'highpass', 2500, 0.35);
+      this.tone(160, 0.02, 0.12, 'square', 0.04, 90);
+    } catch {
+      // Ignore
+    }
+  }
+
+  /** Стук жердини чи багнета об дно або лід. */
+  public playProbe(depth: number) {
+    if (this.isMuted) return;
+    this.initContext();
+    try {
+      this.tone(depth === 0 ? 520 : depth === 1 ? 340 : 180, 0, 0.09, 'triangle', 0.08, depth === 2 ? 90 : undefined);
+    } catch {
+      // Ignore
+    }
+  }
+
+  /** Гудок пароплава. */
+  public playHorn() {
+    if (this.isMuted) return;
+    this.initContext();
+    try {
+      this.tone(110, 0, 0.9, 'sawtooth', 0.05);
+      this.tone(165, 0, 0.9, 'sawtooth', 0.03);
+    } catch {
+      // Ignore
+    }
+  }
+
+  /** Тупіт копит (один крок). */
+  public playHoof(step = 0) {
+    if (this.isMuted) return;
+    this.initContext();
+    try {
+      this.tone(step % 2 ? 140 : 120, 0, 0.05, 'square', 0.035, 70);
+    } catch {
+      // Ignore
+    }
+  }
+
+  /** Удар об перешкоду. */
+  public playThud() {
+    if (this.isMuted) return;
+    this.initContext();
+    try {
+      this.noise(0.18, 'lowpass', 400, 0.4);
+      this.tone(90, 0, 0.2, 'square', 0.06, 50);
+    } catch {
+      // Ignore
+    }
+  }
+
+  /** Обертання шифрувального кола чи замка: тихе «клац». */
+  public playClick() {
+    if (this.isMuted) return;
+    this.initContext();
+    try {
+      this.tone(1400, 0, 0.025, 'square', 0.03);
+    } catch {
+      // Ignore
+    }
+  }
+
+  /** Гайка відкручується. */
+  public playRatchet(n = 0) {
+    if (this.isMuted) return;
+    this.initContext();
+    try {
+      this.tone(600 + n * 90, 0, 0.04, 'square', 0.035);
+      this.noise(0.03, 'highpass', 3000, 0.12);
+    } catch {
+      // Ignore
+    }
+  }
+
   /** Воркування голуба Сизокрила. */
   public playCoo() {
     if (this.isMuted) return;

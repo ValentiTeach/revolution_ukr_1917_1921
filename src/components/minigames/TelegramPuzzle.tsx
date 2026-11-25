@@ -3,113 +3,131 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { RotateCcw } from '../icons';
 import { sound } from '../../game/sound';
+import { MistakeMeter, shuffle, useTimers } from './shared';
 
 interface TelegramPuzzleProps {
   sentence: string;
+  /** Зайві слова-пастки від цензора. */
+  decoys?: string[];
   onFinish: (won: boolean) => void;
-  allowSkip?: boolean;
 }
 
-function shuffle<T>(arr: T[]): T[] {
-  const copy = [...arr];
-  for (let i = copy.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [copy[i], copy[j]] = [copy[j], copy[i]];
-  }
-  return copy;
-}
+const MAX_MISTAKES = 4;
 
-/** Гра «Телеграма»: склади слова у правильному порядку. */
-export const TelegramPuzzle: React.FC<TelegramPuzzleProps> = ({ sentence, onFinish, allowSkip = true }) => {
+/**
+ * «Телеграма»: набирай слова у правильному порядку — телеграфний апарат
+ * друкує їх на стрічці літера за літерою. Серед набірних брусків є зайві
+ * слова-пастки. Після двох помилок підсвічується наступне слово.
+ */
+export const TelegramPuzzle: React.FC<TelegramPuzzleProps> = ({ sentence, decoys = [], onFinish }) => {
   const words = useMemo(() => sentence.split(' '), [sentence]);
   const [pool, setPool] = useState(() => {
-    let s = shuffle(words.map((w, i) => ({ w, i })));
-    // гарантуємо, що слова дійсно перемішані
-    if (s.every((x, idx) => x.i === idx) && words.length > 1) s = [...s.slice(1), s[0]];
+    const all = [...words.map((w, i) => ({ w, i })), ...decoys.map((w, k) => ({ w, i: -1 - k }))];
+    let s = shuffle(all);
+    if (s.every((x, idx) => x.i === idx) && all.length > 1) s = [...s.slice(1), s[0]];
     return s;
   });
   const [placed, setPlaced] = useState<{ w: string; i: number }[]>([]);
-  const [shake, setShake] = useState(false);
+  const [typed, setTyped] = useState('');
+  const [shake, setShake] = useState<number | null>(null);
   const [mistakes, setMistakes] = useState(0);
+  const [lost, setLost] = useState(false);
+  const later = useTimers();
   const done = placed.length === words.length;
+  const target = placed.map((p) => p.w.toUpperCase()).join(' ');
+
+  // Ефект телеграфного апарата: літери друкуються по одній
+  useEffect(() => {
+    if (typed.length >= target.length) return;
+    const id = setTimeout(() => {
+      setTyped(target.slice(0, typed.length + 1));
+      if (target[typed.length] !== ' ') sound.playBlip(900 + (typed.length % 4) * 40);
+    }, 35);
+    return () => clearTimeout(id);
+  }, [typed, target]);
 
   const pick = (item: { w: string; i: number }) => {
+    if (done || lost) return;
     const expected = words[placed.length];
-    if (item.w === expected) {
-      sound.playBlip(500 + placed.length * 40);
+    if (item.i >= 0 && item.w === expected) {
       const nextPlaced = [...placed, item];
       setPlaced(nextPlaced);
       setPool((p) => p.filter((x) => x !== item));
       if (nextPlaced.length === words.length) {
-        sound.playFanfare();
-        setTimeout(() => onFinish(true), 900);
+        later(() => sound.playFanfare(), 500);
+        later(() => onFinish(true), 1400);
       }
     } else {
       sound.playWrong();
-      setMistakes((m) => m + 1);
-      setShake(true);
-      setTimeout(() => setShake(false), 400);
+      const m = mistakes + 1;
+      setMistakes(m);
+      setShake(item.i);
+      later(() => setShake(null), 400);
+      if (item.i < 0) setPool((p) => p.filter((x) => x !== item)); // пастку викидаємо
+      if (m >= MAX_MISTAKES) {
+        setLost(true);
+        later(() => onFinish(false), 1500);
+      }
     }
   };
 
   const reset = () => {
     sound.playSelect();
-    setPool(shuffle(words.map((w, i) => ({ w, i }))));
+    setPool(shuffle([...words.map((w, i) => ({ w, i })), ...pool.filter((x) => x.i < 0)]));
     setPlaced([]);
+    setTyped('');
   };
+
+  const nextWord = words[placed.length];
 
   return (
     <div className="space-y-4">
-      <div
-        className={`parchment min-h-[96px] border-2 border-amber-800 p-4 font-mono text-base sm:text-lg ${shake ? 'animate-shake' : ''}`}
-      >
+      <div className={`parchment min-h-[96px] border-2 border-amber-800 p-4 font-mono text-base sm:text-lg ${shake !== null ? 'animate-shake' : ''}`}>
         <div className="mb-2 flex items-center justify-between text-[11px] uppercase tracking-widest text-amber-900/80">
           <span>☎ Телеграма · Київ</span>
           <span>
             {placed.length}/{words.length}
           </span>
         </div>
-        <div className="flex flex-wrap gap-2">
-          {placed.map((p) => (
-            <span key={p.i} className="bg-amber-900/15 px-1.5 font-bold">
-              {p.w.toUpperCase()}
-            </span>
-          ))}
+        <p className="break-words font-bold tracking-wider">
+          {typed}
           {!done && <span className="inline-block w-3 animate-pulse bg-amber-900/60">&nbsp;</span>}
-          {done && <span className="font-bold"> СТОП.</span>}
-        </div>
+          {done && typed.length >= target.length && <span> СТОП.</span>}
+        </p>
       </div>
 
       <p className="text-sm text-stone-300">
-        {done ? 'Телеграму відправлено! 🎉' : 'Натискай слова по порядку, щоб скласти речення:'}
+        {done ? 'Телеграму відправлено! 🎉' : lost ? 'Телеграфіст заплутався…' : 'Натискай набірні бруски по порядку. Обережно: серед них можуть бути зайві слова!'}
       </p>
 
       <div className="flex flex-wrap gap-2">
-        {pool.map((item) => (
-          <button
-            key={item.i}
-            type="button"
-            onClick={() => pick(item)}
-            className="pixel-btn border-2 border-sky-700 bg-sky-950 px-3 py-2 text-base font-semibold text-sky-100 hover:border-amber-400 hover:text-amber-200"
-          >
-            {item.w}
-          </button>
-        ))}
+        {pool.map((item, k) => {
+          const isHint = mistakes >= 2 && item.i >= 0 && item.w === nextWord;
+          return (
+            <button
+              key={`${item.i}-${k}`}
+              type="button"
+              onClick={() => pick(item)}
+              disabled={done || lost}
+              className={`pixel-btn border-2 px-3 py-2 font-mono text-base font-semibold ${
+                shake === item.i ? 'animate-shake border-rose-500 bg-rose-950 text-rose-100' : isHint ? 'animate-sparkle border-yellow-300 bg-sky-900 text-yellow-100' : 'border-stone-950 bg-gradient-to-b from-slate-500 to-slate-700 text-white hover:from-amber-500 hover:to-amber-700'
+              }`}
+              style={{ boxShadow: 'inset 2px 2px 0 rgba(255,255,255,0.25), inset -2px -2px 0 rgba(0,0,0,0.35)' }}
+            >
+              {item.w}
+            </button>
+          );
+        })}
       </div>
 
       <div className="flex items-center justify-between text-xs text-stone-400">
-        <span>Помилок: {mistakes} {mistakes >= 3 && '· Підказка: перше слово з великої літери!'}</span>
-        <div className="flex gap-3">
-          <button type="button" onClick={reset} className="flex items-center gap-1 hover:text-amber-300">
-            <RotateCcw className="h-3.5 w-3.5" /> Почати знову
-          </button>
-{allowSkip && (<button type="button" onClick={() => onFinish(false)} className="hover:text-stone-200 underline">
-            Пропустити
-          </button>)}
-        </div>
+        <MistakeMeter mistakes={mistakes} max={MAX_MISTAKES} />
+        <button type="button" onClick={reset} disabled={done || lost} className="flex items-center gap-1 hover:text-amber-300 disabled:opacity-40">
+          <RotateCcw className="h-3.5 w-3.5" /> Почати знову
+        </button>
       </div>
     </div>
   );

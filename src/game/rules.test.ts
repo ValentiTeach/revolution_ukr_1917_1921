@@ -225,3 +225,57 @@ test('acts open one by one: only reached acts are playable', () => {
   assert.equal(getPreviousChapter('CH3_FIRST_UNIVERSAL'), 'CH2_NATIONAL_CONGRESS');
   assert.equal(getPreviousChapter('CH1_RADA_CREATION'), null);
 });
+
+// ---------------------------------------------------------------------------
+// Акти 1919–1921
+// ---------------------------------------------------------------------------
+import { DIALOGUE_STEPS } from './historicalData';
+import { migrateGameState as migrate } from './rules';
+
+function playthrough(pick: (choices: DialogueChoice[]) => DialogueChoice) {
+  let state = createInitialGameState();
+  let id = 'step_ch1_1';
+  while (id !== 'step_epilogue') {
+    const choice = pick(DIALOGUE_STEPS[id].choices);
+    state = applyChoiceToState(state, choice, 't', 'y');
+    id = choice.nextStepId!;
+  }
+  return state;
+}
+
+test('following history leads to the historical ending', () => {
+  const state = playthrough((cs) => cs.find((c) => c.historicalCanon)!);
+  assert.equal(determineGameEnding(state).type, 'HISTORICAL_TRAGIC');
+});
+
+test('a bold alternative path can still change history', () => {
+  const score = (c: DialogueChoice) =>
+    (c.metricEffects.nationalUnity ?? 0) + (c.metricEffects.armyReadiness ?? 0) + (c.metricEffects.popularTrust ?? 0);
+  const state = playthrough((cs) => [...cs].filter((c) => !c.historicalCanon).sort((a, b) => score(b) - score(a))[0] ?? cs[0]);
+  assert.notEqual(determineGameEnding(state).type, 'HISTORICAL_TRAGIC');
+});
+
+test('a finished v3 save continues with the First Winter Campaign', () => {
+  const old = {
+    version: 3,
+    chapter: 'EPILOGUE',
+    currentStepId: 'step_epilogue',
+    unlockedChapters: ['CH1_RADA_CREATION', 'CH8_DIRECTORY_AND_ZLUKA', 'CH9_TRIANGLE_OF_DEATH', 'EPILOGUE'],
+    completedChapters: ['CH9_TRIANGLE_OF_DEATH'],
+    stars: 40,
+  };
+  const s = migrate(old);
+  assert.equal(s.chapter, 'ACT_FIRST_WINTER_CAMPAIGN');
+  assert.equal(s.currentStepId, 'step_winter_1');
+  for (const c of ['ACT_RED_MASKS', 'ACT_OTAMANSHCHYNA', 'ACT_AUGUST_1919', 'ACT_FIRST_WINTER_CAMPAIGN', 'EPILOGUE']) {
+    assert.ok(s.unlockedChapters.includes(c as never), c);
+  }
+  assert.ok(!s.unlockedChapters.includes('ACT_1920_WARSAW'));
+  assert.equal(s.stars, 40);
+});
+
+test('a v3 save in the middle of the story keeps its place', () => {
+  const s = migrate({ version: 3, chapter: 'CH5_THIRD_UNIVERSAL', currentStepId: 'step_ch5_1', unlockedChapters: ['CH1_RADA_CREATION', 'CH5_THIRD_UNIVERSAL'] });
+  assert.equal(s.chapter, 'CH5_THIRD_UNIVERSAL');
+  assert.ok(!s.unlockedChapters.includes('ACT_RED_MASKS'));
+});

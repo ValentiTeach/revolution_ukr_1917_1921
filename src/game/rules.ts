@@ -16,6 +16,9 @@ import {
   HeroSprite,
   ChoiceRequirement,
 } from './types';
+import { CHAPTER_ORDER } from './chapters';
+
+export { CHAPTER_ORDER };
 
 export interface GameState {
   version: number;
@@ -41,22 +44,10 @@ export interface GameState {
   proclaimedUniversals: number;   // скільки Універсалів проголошено
   missionsDone: string[];         // виконані доручення
   questionsAsked: string[];       // питання, які джура поставив персонажам
+  arcadeWins: string[];           // види міні-ігор, виграні в Ігротеці
 }
 
-export const STATE_VERSION = 3;
-
-const CHAPTER_ORDER: ChapterId[] = [
-  'CH1_RADA_CREATION',
-  'CH2_NATIONAL_CONGRESS',
-  'CH3_FIRST_UNIVERSAL',
-  'CH4_SECOND_UNIVERSAL',
-  'CH5_THIRD_UNIVERSAL',
-  'CH6_FOURTH_UNIVERSAL_KRUTY',
-  'CH7_HETMANATE_ORDER',
-  'CH8_DIRECTORY_AND_ZLUKA',
-  'CH9_TRIANGLE_OF_DEATH',
-  'EPILOGUE',
-];
+export const STATE_VERSION = 4;
 
 /**
  * Акт відкритий, лише якщо гравець дійшов до нього, пройшовши попередній.
@@ -89,6 +80,8 @@ export const HERO_RANKS: HeroRank[] = [
   { id: 'sotnyk', title: 'Сотник', minStars: 24, description: 'Ти вмієш домовлятися з делегатами та солдатами.' },
   { id: 'polkovnyk', title: 'Полковник', minStars: 36, description: 'Твоє слово важить на засіданнях уряду.' },
   { id: 'otaman', title: 'Отаман Долі', minStars: 50, description: 'Легенда революції. Про тебе складатимуть пісні!' },
+  { id: 'lytsar', title: 'Лицар Залізного хреста', minStars: 75, description: 'Ти пройшов(-ла) Зимовий похід і не залишив(-ла) нікого позаду.' },
+  { id: 'legend', title: 'Легенда Соборності', minStars: 100, description: 'Твоє імʼя записане поруч із героями Крут, Замостя й Базару.' },
 ];
 
 export function getRank(stars: number): HeroRank {
@@ -148,6 +141,7 @@ export function createInitialGameState(): GameState {
     proclaimedUniversals: 0,
     missionsDone: [],
     questionsAsked: [],
+    arcadeWins: [],
   };
 }
 
@@ -174,9 +168,34 @@ export function migrateGameState(raw: unknown): GameState {
     usedOperations: Array.isArray(saved.usedOperations) ? saved.usedOperations : [],
     missionsDone: Array.isArray(saved.missionsDone) ? saved.missionsDone : [],
     questionsAsked: Array.isArray(saved.questionsAsked) ? saved.questionsAsked : [],
+    arcadeWins: Array.isArray(saved.arcadeWins) ? saved.arcadeWins : [],
   };
   if (!merged.currentStepId || merged.currentStepId === 'rada_birth_1') {
     merged.currentStepId = 'step_ch1_1';
+  }
+  if (!CHAPTER_ORDER.includes(merged.chapter)) merged.chapter = 'CH1_RADA_CREATION';
+  merged.unlockedChapters = Array.isArray(saved.unlockedChapters)
+    ? saved.unlockedChapters.filter((c) => CHAPTER_ORDER.includes(c))
+    : fresh.unlockedChapters;
+
+  // Версія 4 додала акти 1919–1921 років. Хто вже пройшов далі, не мусить
+  // починати спочатку: нові акти «між» пройденими відкриваються одразу,
+  // а той, хто дійшов до епілогу, продовжує з Першого Зимового походу.
+  const savedVersion = typeof saved.version === 'number' ? saved.version : 1;
+  if (savedVersion < 4) {
+    const unlocked = new Set(merged.unlockedChapters);
+    if (unlocked.has('CH9_TRIANGLE_OF_DEATH') || unlocked.has('EPILOGUE')) {
+      (['ACT_RED_MASKS', 'ACT_OTAMANSHCHYNA', 'ACT_AUGUST_1919', 'CH9_TRIANGLE_OF_DEATH'] as ChapterId[]).forEach((c) => unlocked.add(c));
+    }
+    const finishedOld = unlocked.has('EPILOGUE') || merged.completedChapters.includes('CH9_TRIANGLE_OF_DEATH');
+    if (finishedOld) {
+      unlocked.add('ACT_FIRST_WINTER_CAMPAIGN');
+      if (merged.chapter === 'EPILOGUE') {
+        merged.chapter = 'ACT_FIRST_WINTER_CAMPAIGN';
+        merged.currentStepId = 'step_winter_1';
+      }
+    }
+    merged.unlockedChapters = CHAPTER_ORDER.filter((c) => unlocked.has(c));
   }
   return merged;
 }
@@ -194,7 +213,7 @@ export function unlockAchievement(state: GameState, id: string): [GameState, boo
 }
 
 /** Перевіряє умови досягнень, які залежать від загального стану. */
-export function evaluateAchievements(state: GameState, totalArtifacts: number, totalMissions = 9): { state: GameState; newlyUnlocked: string[] } {
+export function evaluateAchievements(state: GameState, totalArtifacts: number, totalMissions = 16): { state: GameState; newlyUnlocked: string[] } {
   let next = state;
   const unlocked: string[] = [];
   const tryUnlock = (id: string, condition: boolean) => {
@@ -218,6 +237,15 @@ export function evaluateAchievements(state: GameState, totalArtifacts: number, t
   tryUnlock('mission_first', state.missionsDone.length >= 1);
   tryUnlock('mission_all', totalMissions > 0 && state.missionsDone.length >= totalMissions);
   tryUnlock('curious', state.questionsAsked.length >= 10);
+  tryUnlock('unmasked', state.missionsDone.includes('m_masks'));
+  tryUnlock('kholodnyi_yar', state.missionsDone.includes('m_otamans'));
+  tryUnlock('tachanka_raid', state.missionsDone.includes('m_august'));
+  tryUnlock('iron_cross', state.missionsDone.includes('m_winter'));
+  tryUnlock('zamosc', state.missionsDone.includes('m_1920'));
+  tryUnlock('syvash', state.missionsDone.includes('m_crimea'));
+  tryUnlock('memory_keeper', state.completedChapters.includes('ACT_1921_FALL'));
+  tryUnlock('legend', state.stars >= 100);
+  tryUnlock('arcade_master', state.arcadeWins.length >= 10);
 
   return { state: next, newlyUnlocked: unlocked };
 }
@@ -353,8 +381,12 @@ export function resolveStaffBattle(
 
 export function determineGameEnding(state: GameState): EndingResult {
   const { nationalUnity, armyReadiness, diplomacy, popularTrust, treasury } = state.metrics;
-  const avgFactions =
-    Object.values(state.reputation).reduce((a, b) => a + b, 0) / Object.keys(state.reputation).length;
+  // Хто повторює історію, той отримує історичний фінал: альтернативні
+  // кінцівки відкриваються лише тоді, коли гравець справді змінював хід подій.
+  const total = state.decisionHistory.length;
+  const canonCount = state.decisionHistory.filter((d) => d.wasCanon).length;
+  const followedHistory = total >= 5 && canonCount / total >= 0.7;
+  if (followedHistory) return historicalEnding();
 
   // 1. Great Soborna Victory (Requires high unity and high army, united fronts)
   if (nationalUnity >= 65 && armyReadiness >= 65 && popularTrust >= 55) {
@@ -430,20 +462,24 @@ export function determineGameEnding(state: GameState): EndingResult {
     };
   }
 
-  // 5. Historical Canon Ending (Tragic heroism, unquenched torch of liberty)
+  return historicalEnding();
+}
+
+function historicalEnding(): EndingResult {
   return {
     type: 'HISTORICAL_TRAGIC',
-    title: 'Незламні в Трикутнику Смерті',
+    title: 'Незламні: від Крут до Базару',
     subtitle: 'Історичний канон: Насіння майбутньої перемоги',
     description:
-      'Опинившись між більшовицькою навалою, білогвардійцями Денікіна, тифом та байдужістю Антанти, Українська Народна Республіка боролася до останнього патрона. Армія пішла у Зимові походи, зберігши честь прапора. Землі були тимчасово розділені між сусідами, але вогонь 1917–1921 років, IV Універсал та Акт Злуки назавжди закарбували ідею незалежності, яка відродилася у 1991 році.',
+      'Опинившись між більшовицькою навалою, білогвардійцями Денікіна й Врангеля, тифом і байдужістю Антанти, Українська Народна Республіка боролася до останнього патрона. Армія пройшла два Зимові походи, стояла в Замості, а 359 героїв Базару обрали честь замість зради. Ризький мир 1921 року поділив українські землі між сусідами, і держава впала. Але уряд УНР не склав повноважень на чужині, а ідея незалежності, IV Універсалу та Акту Злуки відродилася 1991 року.',
     achievements: [
       'Ухвалено фундаментальні I, II, III та IV Універсали',
       'Проголошено історичний Акт Злуки УНР і ЗУНР (1919)',
-      'Героїчний спротив під Крутами та в Першому Зимовому поході',
-      'Сформовано правову основу української модерної державності',
+      'Зірвано маски «радянських республік» Москви',
+      'Пройдено Перший і Другий Зимові походи',
+      'Збережено памʼять героїв Крут, Замостя й Базару',
     ],
     historicalComparison:
-      'Це шлях реальної історії. Навіть зазнавши військової поразки через нерівні сили та розʼєднаність, покоління революції створило фундамент, без якого сучасна Україна була б неможливою.',
+      'Це шлях реальної історії. Навіть зазнавши поразки через нерівні сили, отаманщину та розʼєднаність, покоління революції створило фундамент, без якого сучасна Україна була б неможливою. Клейноди УНР 1992 року передали незалежній Україні.',
   };
 }

@@ -22,12 +22,13 @@ import { Toast, Toasts } from './components/Toasts';
 import { Modal } from './components/Modal';
 import { MissionRunner } from './components/MissionRunner';
 import { MissionsBoard } from './components/MissionsBoard';
+import { ArcadeView } from './components/ArcadeView';
 import { PixelAvatar } from './components/PixelAvatar';
 import { PixelEmoji } from './components/PixelEmoji';
 import { PixelWipe } from './components/PixelWipe';
 import { PX_TRANSITION } from './game/motion';
 import { readHeroName } from './game/heroCookie';
-import { Artifact, ChapterId, DialogueChoice, GameMetrics, HeroSprite, Mission } from './game/types';
+import { Artifact, ChapterId, DialogueChoice, GameMetrics, HeroSprite, Mission, StationKind } from './game/types';
 import {
   createInitialGameState,
   applyChoiceToState,
@@ -43,7 +44,8 @@ import {
   clamp,
 } from './game/rules';
 import { CHAPTER_CONFIG, DIALOGUE_STEPS } from './game/historicalData';
-import { ACHIEVEMENTS, ARTIFACTS, COMPANION, getAchievement } from './game/lore';
+import { ACHIEVEMENTS, ARTIFACTS, COMPANION, MINIGAMES, QUIZ_QUESTIONS, getAchievement } from './game/lore';
+import { STORY_ACT_COUNT } from './game/chapters';
 import { BG_IMAGES } from './game/assets';
 import { MISSIONS, getMission, getMissionForChapter } from './game/missions';
 import { sound } from './game/sound';
@@ -507,6 +509,15 @@ function AppInner() {
           <MissionsBoard missionsDone={gameState.missionsDone} availableChapters={availableChapters} onOpen={setActiveMission} />
         )}
 
+        {activeTab === 'arcade' && (
+          <ArcadeView
+            wins={gameState.arcadeWins}
+            onWin={(kind: StationKind) =>
+              setGameState((s) => (s.arcadeWins.includes(kind) ? s : { ...s, arcadeWins: [...s.arcadeWins, kind] }))
+            }
+          />
+        )}
+
         {activeTab === 'satchel' && (
           <SatchelView
             heroName={heroName}
@@ -640,7 +651,7 @@ interface TitleScreenProps {
 const FEATURES = [
   { icon: MessageSquare, title: 'Розмовляй з героями', text: 'Грушевський, Петлюра, Скоропадський чекають на твою пораду.' },
   { icon: Search, title: 'Шукай знахідки', text: `${ARTIFACTS.length} таємниць сховано на картинах доби.` },
-  { icon: Gamepad2, title: 'Відчиняй двері', text: `${MISSIONS.length} доручень-коридорів із десятьма видами міні-ігор.` },
+  { icon: Gamepad2, title: 'Відчиняй двері', text: `${MISSIONS.length} доручень-коридорів і 16 видів міні-ігор: тачанка, брід, шифр, прокрадання…` },
 ];
 
 const TitleScreen: React.FC<TitleScreenProps> = ({
@@ -698,7 +709,7 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
               ))}
             </h1>
             <p className="mt-3 max-w-2xl text-base sm:text-lg leading-snug text-stone-100 [text-shadow:2px_2px_0_#0c0a09]">
-              Стань юним джурою Центральної Ради! Разом із поштовим голубом Сизокрилом пройди шлях від перших зборів у Києві до Акту Злуки та Зимового походу. Твої поради змінюватимуть історію.
+              Стань юним джурою Центральної Ради! Разом із поштовим голубом Сизокрилом пройди шлях від перших зборів у Києві через Акт Злуки, Холодний Яр, два Зимові походи й Сиваш — до Базару 1921 року. Твої поради змінюватимуть історію.
             </p>
           </div>
         </div>
@@ -794,7 +805,7 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
               })}
             </div>
             <p className="mt-3 text-xs text-stone-500">
-              У грі {ACHIEVEMENTS.length} медалей, {ARTIFACTS.length} знахідок, {MISSIONS.length} доручень, 9 вікторин і 9 міні-ігор між актами. Акти відкриваються по черзі: наступний стане доступним, коли пройдеш попередній. Позначка «📜 Як було» показує справжній історичний вибір.
+              У грі {STORY_ACT_COUNT} актів, {ACHIEVEMENTS.length} медалей, {ARTIFACTS.length} знахідок, {MISSIONS.length} доручень, {QUIZ_QUESTIONS.length} вікторин і {MINIGAMES.length} міні-ігор між актами. Акти відкриваються по черзі: наступний стане доступним, коли пройдеш попередній. Позначка «📜 Як було» показує справжній історичний вибір.
             </p>
           </details>
 

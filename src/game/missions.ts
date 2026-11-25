@@ -12,13 +12,16 @@
  * У джури три серця. Помилка коштує серце, і двері можна спробувати знову.
  * Якщо серця скінчились — Сизокрил допомагає почати доручення спочатку.
  * Виконане доручення відкриває таємний варіант відповіді в діалогах акту.
+ * Доручення актів 1919–1921 років лежать у missions1919_1921.ts.
  */
 
 import { ChapterId, Mission } from './types';
+import { NEW_MISSIONS } from './missions1919_1921';
+import { CHAPTER_ORDER } from './chapters';
 
 export const MISSION_HEARTS = 3;
 
-export const MISSIONS: Mission[] = [
+const ALL_MISSIONS: Mission[] = [
   // ------------------------------------------------------------------ АКТ I
   {
     id: 'm_ch1_letter',
@@ -376,7 +379,7 @@ export const MISSIONS: Mission[] = [
         emoji: '🚂',
         kind: 'rail',
         intro: 'Ворожий потяг близько! Розбирай шпали, щоб виграти час.',
-        params: { railTarget: 14, railSeconds: 16 },
+        params: { railTarget: 10, railSeconds: 20 },
       },
     ],
   },
@@ -564,7 +567,11 @@ export const MISSIONS: Mission[] = [
       },
     ],
   },
+  ...NEW_MISSIONS,
 ];
+
+/** Усі доручення в хронологічному порядку актів. */
+export const MISSIONS: Mission[] = [...ALL_MISSIONS].sort((a, b) => CHAPTER_ORDER.indexOf(a.chapterId) - CHAPTER_ORDER.indexOf(b.chapterId));
 
 export function getMissionForChapter(chapterId: ChapterId): Mission | undefined {
   return MISSIONS.find((m) => m.chapterId === chapterId);
