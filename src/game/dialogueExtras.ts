@@ -316,13 +316,13 @@ export const EXTRA_CHOICES: Record<string, DialogueChoice[]> = {
       ideologicalHint: 'Допомога від людей, а не з казни.',
       factionEffects: { galicians: 15, peasantry: 5, socialists: 5 },
       metricEffects: { nationalUnity: 15, popularTrust: 10 },
-      nextStepId: 'step_ch9_1',
+      nextStepId: 'step_masks_1',
       historicalCanon: false,
       reflection: 'Люди несли хліб, теплі речі й навіть обручки. Галицькі стрільці писали, що ці посилки зігрівали серце.',
     },
   ],
 
-  // --- АКТ IX ---
+  // --- АКТ XII (Трикутник смерті) ---
   step_ch9_1: [
     {
       id: 'c_x_ch9_1_hospitals',
@@ -356,7 +356,7 @@ export const EXTRA_CHOICES: Record<string, DialogueChoice[]> = {
       ideologicalHint: 'Коли ресурсів мало, допомагає кмітливість.',
       factionEffects: { socialists: 5, conservatives: 5, galicians: 5 },
       metricEffects: { popularTrust: 10, diplomacy: 10 },
-      nextStepId: 'step_epilogue',
+      nextStepId: 'step_winter_1',
       historicalCanon: false,
       reflection: 'Студенти переписували буквари ночами. Книжок вийшло менше, зате кожну берегли як скарб.',
     },
@@ -368,7 +368,7 @@ export const EXTRA_CHOICES: Record<string, DialogueChoice[]> = {
       ideologicalHint: 'Памʼять — теж сила.',
       factionEffects: { independentists: 10, military: 10, socialists: 10 },
       metricEffects: { nationalUnity: 15, popularTrust: 15 },
-      nextStepId: 'step_epilogue',
+      nextStepId: 'step_winter_1',
       historicalCanon: false,
       reflection: 'Студенти заснували товариство памʼяті Крут. Через багато років їхні онуки відкриють там меморіал.',
     },

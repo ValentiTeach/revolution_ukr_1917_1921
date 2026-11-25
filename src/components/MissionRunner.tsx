@@ -8,16 +8,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { ArrowRight, DoorOpen, RotateCcw } from './icons';
 import { Modal } from './Modal';
 import { PixelAvatar } from './PixelAvatar';
-import { TelegramPuzzle } from './minigames/TelegramPuzzle';
-import { MemoryGame } from './minigames/MemoryGame';
-import { RailSabotage } from './minigames/RailSabotage';
-import { WiresGame } from './minigames/WiresGame';
-import { SkillCheckGame } from './minigames/SkillCheckGame';
-import { HideGame } from './minigames/HideGame';
-import { DrawersGame } from './minigames/DrawersGame';
-import { CodeLockGame } from './minigames/CodeLockGame';
-import { MorseGame } from './minigames/MorseGame';
-import { SortingGame } from './minigames/SortingGame';
+import { KIND_LABEL, StationGame as KindGame } from './minigames/StationGame';
 import { Mission, MissionStation } from '../game/types';
 import { MISSION_HEARTS } from '../game/missions';
 import { COMPANION } from '../game/lore';
@@ -26,47 +17,10 @@ import { PixelEmoji } from './PixelEmoji';
 
 type Station = Omit<MissionStation, 'fork'>;
 
-const KIND_LABEL: Record<Station['kind'], string> = {
-  telegram: 'Склади речення',
-  memory: 'Знайди пари',
-  rail: 'На швидкість',
-  wires: 'Полагодь дроти',
-  skillcheck: 'Влуч у зону',
-  hide: 'Сховайся!',
-  drawers: 'Знайди річ',
-  codelock: 'Кодовий замок',
-  morse: 'Азбука Морзе',
-  sorting: 'Розклади по місцях',
-};
-
 /** Вмикає потрібну міні-гру для «дверей». */
-export const StationGame: React.FC<{ station: Station; onFinish: (won: boolean) => void }> = ({ station, onFinish }) => {
-  const p = station.params;
-  switch (station.kind) {
-    case 'telegram':
-      return <TelegramPuzzle sentence={p.sentence ?? 'Слава Україні'} onFinish={onFinish} allowSkip={false} />;
-    case 'memory':
-      return <MemoryGame pairs={p.pairs ?? []} onFinish={onFinish} allowSkip={false} />;
-    case 'rail':
-      return <RailSabotage target={p.railTarget ?? 12} seconds={p.railSeconds ?? 15} onFinish={onFinish} allowSkip={false} />;
-    case 'wires':
-      return <WiresGame wires={p.wires ?? 4} onFinish={onFinish} />;
-    case 'skillcheck':
-      return <SkillCheckGame hits={p.hits ?? 3} speed={p.speed ?? 1} onFinish={onFinish} />;
-    case 'hide':
-      return <HideGame work={p.work ?? 8} patrols={p.patrols ?? 2} place={station.place} onFinish={onFinish} />;
-    case 'drawers':
-      return <DrawersGame drawers={p.drawers ?? 9} item={p.item ?? '🗝️ Ключ'} onFinish={onFinish} />;
-    case 'codelock':
-      return <CodeLockGame code={p.code ?? '0000'} clues={p.clues ?? []} onFinish={onFinish} />;
-    case 'morse':
-      return <MorseGame word={p.word ?? 'УНР'} onFinish={onFinish} />;
-    case 'sorting':
-      return <SortingGame items={p.sortItems ?? []} targets={p.sortTargets ?? []} onFinish={onFinish} />;
-    default:
-      return null;
-  }
-};
+export const StationGame: React.FC<{ station: Station; onFinish: (won: boolean) => void }> = ({ station, onFinish }) => (
+  <KindGame kind={station.kind} params={station.params} place={station.place} onFinish={onFinish} />
+);
 
 type Stage = 'brief' | 'fork' | 'play' | 'won' | 'lost' | 'gameover' | 'complete';
 

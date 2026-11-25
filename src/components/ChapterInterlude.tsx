@@ -8,9 +8,7 @@ import { motion } from 'motion/react';
 import { ArrowRight, BookOpen, Gamepad2, HelpCircle, Star } from './icons';
 import { Modal } from './Modal';
 import { PixelAvatar } from './PixelAvatar';
-import { TelegramPuzzle } from './minigames/TelegramPuzzle';
-import { MemoryGame } from './minigames/MemoryGame';
-import { RailSabotage } from './minigames/RailSabotage';
+import { KIND_LABEL, StationGame } from './minigames/StationGame';
 import { ChapterId, HeroSprite } from '../game/types';
 import { CHAPTER_CONFIG } from '../game/historicalData';
 import { getDiaryEntry, getMinigameForChapter, getQuizForChapter, COMPANION } from '../game/lore';
@@ -51,6 +49,8 @@ const InterludeBody: React.FC<ChapterInterludeProps & { chapterId: ChapterId }> 
   const [stage, setStage] = useState<Stage>('diary');
   const [answer, setAnswer] = useState<number | null>(null);
   const [gameResult, setGameResult] = useState<boolean | null>(null);
+  const [gameAttempt, setGameAttempt] = useState(0);
+  const [gameLost, setGameLost] = useState(false);
   const [earned, setEarned] = useState(0);
 
   const goNext = () => {
@@ -77,6 +77,12 @@ const InterludeBody: React.FC<ChapterInterludeProps & { chapterId: ChapterId }> 
       sound.playWrong();
     }
     onQuizAnswered(quiz.id, correct);
+  };
+
+  /** Програш на привалі не завершує гру: можна спробувати ще раз або пропустити. */
+  const onGameEnd = (won: boolean) => {
+    if (won) finishGame(true);
+    else setGameLost(true);
   };
 
   const finishGame = (won: boolean) => {
@@ -209,14 +215,49 @@ const InterludeBody: React.FC<ChapterInterludeProps & { chapterId: ChapterId }> 
       {stage === 'game' && game && (
         <div className="space-y-3">
           <div>
+            <div className="font-pixel text-[9px] text-violet-300">МІНІ-ГРА · {KIND_LABEL[game.kind].toUpperCase()}</div>
             <h3 className="font-serif text-xl font-bold text-amber-300">🎮 {game.title}</h3>
             <p className="text-sm text-stone-300">{game.intro}</p>
             <p className="text-xs text-amber-300 mt-1">Нагорода: +{game.rewardStars} ⭐</p>
           </div>
-          {game.kind === 'telegram' && game.sentence && <TelegramPuzzle sentence={game.sentence} onFinish={finishGame} />}
-          {game.kind === 'memory' && game.pairs && <MemoryGame pairs={game.pairs} onFinish={finishGame} />}
-          {game.kind === 'rail' && (
-            <RailSabotage target={game.railTarget ?? 12} seconds={game.railSeconds ?? 15} onFinish={finishGame} />
+          {gameLost ? (
+            <div className="space-y-3 border-2 border-rose-800 bg-rose-950/30 p-4 text-center">
+              <PixelEmoji emoji="💔" size={56} className="mx-auto" />
+              <p className="font-bold text-rose-200">Цього разу не вийшло.</p>
+              <p className="text-sm text-stone-300">🕊️ {COMPANION.name}: «Курли! Спробуй ще раз — тепер ти знаєш, як воно влаштовано».</p>
+              <div className="flex justify-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    sound.playSelect();
+                    setGameLost(false);
+                    setGameAttempt((a) => a + 1);
+                  }}
+                  autoFocus
+                  className="pixel-btn border-2 border-amber-400 bg-amber-500 px-5 py-2.5 font-bold text-stone-950 hover:bg-amber-400"
+                >
+                  Ще раз
+                </button>
+                <button type="button" onClick={() => finishGame(false)} className="pixel-btn border-2 border-stone-600 bg-stone-800 px-5 py-2.5 text-stone-200">
+                  Пропустити
+                </button>
+              </div>
+            </div>
+          ) : (
+            <StationGame key={gameAttempt} kind={game.kind} params={game.params} place={game.place} onFinish={onGameEnd} />
+          )}
+          {gameResult === null && !gameLost && (
+            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-stone-800 pt-2 text-xs text-stone-400">
+              <span>Не виходить? Почни знову або пропусти — зірки можна здобути іншим разом.</span>
+              <span className="flex gap-3">
+                <button type="button" onClick={() => setGameAttempt((a) => a + 1)} className="underline hover:text-amber-300">
+                  Почати знову
+                </button>
+                <button type="button" onClick={() => finishGame(false)} className="underline hover:text-stone-200">
+                  Пропустити
+                </button>
+              </span>
+            </div>
           )}
         </div>
       )}
@@ -260,7 +301,7 @@ export const ChapterInterlude: React.FC<ChapterInterludeProps> = (props) => {
     <Modal
       open={chapterId !== null}
       dismissible={false}
-      maxWidth="max-w-2xl"
+      maxWidth="max-w-3xl"
       title={chapterId ? `Привал після акту: ${CHAPTER_CONFIG[chapterId].title.split(':')[0]}` : ''}
     >
       {chapterId && <InterludeBody key={chapterId} {...props} chapterId={chapterId} />}

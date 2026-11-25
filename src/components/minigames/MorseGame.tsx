@@ -6,11 +6,18 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { MORSE_UA } from '../../game/missions';
 import { sound } from '../../game/sound';
-import { MistakeMeter, StationGameProps } from './shared';
+import { MistakeMeter, StationGameProps, useGameKeys, useTimers } from './shared';
 
 const MAX_MISTAKES = 3;
+/** Довше за це — тире, коротше — крапка (як на справжньому ключі). */
+const DASH_MS = 230;
 
-/** «Азбука Морзе»: подивись і послухай сигнал, потім повтори його. */
+/**
+ * «Азбука Морзе»: подивись і послухай сигнал, а потім відстукай його
+ * на телеграфному ключі. Коротке натискання — крапка, довге — тире.
+ * Можна тримати мишку, палець або пробіл. Для тих, кому важко тримати,
+ * є запасні кнопки «●» і «▬».
+ */
 export const MorseGame: React.FC<StationGameProps & { word: string }> = ({ word, onFinish }) => {
   const letters = word.toUpperCase().split('');
   const [index, setIndex] = useState(0);
@@ -18,76 +25,129 @@ export const MorseGame: React.FC<StationGameProps & { word: string }> = ({ word,
   const [input, setInput] = useState('');
   const [mistakes, setMistakes] = useState(0);
   const [lit, setLit] = useState<number | null>(null);
-  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const [pressed, setPressed] = useState(false);
+  const [holdMs, setHoldMs] = useState(0);
+  const [tape, setTape] = useState<string>('');
+  const pressStart = useRef<number | null>(null);
+  const holdTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const watchTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const later = useTimers();
 
   const letter = letters[index];
   const code = MORSE_UA[letter] ?? '';
 
-  useEffect(() => () => timers.current.forEach(clearTimeout), []);
+  useEffect(
+    () => () => {
+      watchTimers.current.forEach(clearTimeout);
+      if (holdTimer.current) clearInterval(holdTimer.current);
+      sound.stopTone();
+    },
+    [],
+  );
 
   // Відтворити сигнал поточної літери
   useEffect(() => {
     if (phase !== 'watch') return;
-    timers.current.forEach(clearTimeout);
-    timers.current = [];
-    let t = 400;
+    watchTimers.current.forEach(clearTimeout);
+    watchTimers.current = [];
+    let t = 500;
     code.split('').forEach((sym, i) => {
-      const dur = sym === '.' ? 180 : 480;
-      timers.current.push(
+      const dur = sym === '.' ? 160 : 460;
+      watchTimers.current.push(
         setTimeout(() => {
           setLit(i);
           sound.playBeep(720, dur / 1000);
         }, t),
       );
-      timers.current.push(setTimeout(() => setLit(null), t + dur));
+      watchTimers.current.push(setTimeout(() => setLit(null), t + dur));
       t += dur + 220;
     });
-    timers.current.push(setTimeout(() => setPhase('input'), t + 600));
+    watchTimers.current.push(setTimeout(() => setPhase('input'), t + 450));
   }, [phase, code]);
 
-  const tap = (sym: '.' | '-') => {
+  const addSymbol = (sym: '.' | '-') => {
     if (phase !== 'input') return;
-    sound.playBeep(720, sym === '.' ? 0.08 : 0.25);
+    setTape((tp) => (tp + sym).slice(-40));
     const next = input + sym;
     if (!code.startsWith(next)) {
       sound.playWrong();
       const m = mistakes + 1;
       setMistakes(m);
       setInput('');
+      setTape((tp) => tp + ' ✗ ');
       if (m >= MAX_MISTAKES) {
         setPhase('done');
-        setTimeout(() => onFinish(false), 900);
+        later(() => onFinish(false), 1200);
       } else {
-        setPhase('watch');
+        later(() => setPhase('watch'), 500);
       }
       return;
     }
     setInput(next);
     if (next === code) {
       sound.playStar();
+      setTape((tp) => tp + '  ');
       if (index + 1 >= letters.length) {
         setPhase('done');
         sound.playFanfare();
-        setTimeout(() => onFinish(true), 1000);
+        later(() => onFinish(true), 1200);
       } else {
-        setTimeout(() => {
-          setIndex(index + 1);
+        later(() => {
+          setIndex((i) => i + 1);
           setInput('');
           setPhase('watch');
-        }, 500);
+        }, 600);
       }
     }
   };
+
+  // Телеграфний ключ: тримай довше — тире
+  const keyDown = () => {
+    if (phase !== 'input' || pressStart.current !== null) return;
+    pressStart.current = performance.now();
+    setPressed(true);
+    setHoldMs(0);
+    sound.startTone(720);
+    holdTimer.current = setInterval(() => {
+      if (pressStart.current !== null) setHoldMs(performance.now() - pressStart.current);
+    }, 30);
+  };
+  const keyUp = () => {
+    if (pressStart.current === null) return;
+    const ms = performance.now() - pressStart.current;
+    pressStart.current = null;
+    setPressed(false);
+    if (holdTimer.current) clearInterval(holdTimer.current);
+    sound.stopTone();
+    addSymbol(ms >= DASH_MS ? '-' : '.');
+  };
+
+  useGameKeys((e) => {
+    if (e.key === ' ' && !e.repeat) {
+      e.preventDefault();
+      keyDown();
+    } else if (e.key === '.') addSymbol('.');
+    else if (e.key === '-') addSymbol('-');
+  });
+  useEffect(() => {
+    const up = (e: KeyboardEvent) => {
+      if (e.key === ' ') keyUp();
+    };
+    window.addEventListener('keyup', up);
+    return () => window.removeEventListener('keyup', up);
+  });
 
   const renderSymbols = (str: string, highlight?: number | null) =>
     str.split('').map((s, i) => (
       <span
         key={i}
-        className={`inline-block ${s === '.' ? 'h-4 w-4 rounded-full' : 'h-4 w-10'} ${
+        className={`inline-block ${s === '.' ? 'h-4 w-4' : 'h-4 w-10'} ${
           highlight === undefined || highlight === i ? 'bg-amber-300 shadow-[0_0_10px_#fcd34d]' : 'bg-stone-600'
         }`}
       />
     ));
+
+  const holdPct = Math.min(100, (holdMs / (DASH_MS * 1.6)) * 100);
 
   return (
     <div className="space-y-4">
@@ -103,7 +163,10 @@ export const MorseGame: React.FC<StationGameProps & { word: string }> = ({ word,
       </div>
 
       <div className="flex min-h-[120px] flex-col items-center justify-center gap-3 border-2 border-stone-700 bg-stone-950 p-4">
-        <div className="font-pixel text-3xl text-amber-200">{letter}</div>
+        <div className="flex items-center gap-3">
+          <span className={`h-5 w-5 border-2 border-stone-950 ${lit !== null || pressed ? 'bg-amber-300 shadow-[0_0_14px_#fcd34d]' : 'bg-stone-700'}`} aria-hidden />
+          <span className="font-pixel text-3xl text-amber-200">{letter}</span>
+        </div>
         {phase === 'watch' && (
           <>
             <div className="flex items-center gap-2">{renderSymbols(code, lit)}</div>
@@ -111,33 +174,61 @@ export const MorseGame: React.FC<StationGameProps & { word: string }> = ({ word,
           </>
         )}
         {phase === 'input' && (
-          <>
-            <div className="flex min-h-4 items-center gap-2">{input ? renderSymbols(input) : <span className="text-xs text-stone-500">Повтори сигнал!</span>}</div>
-          </>
+          <div className="flex min-h-4 items-center gap-2">{input ? renderSymbols(input) : <span className="text-xs text-stone-500">Відстукай сигнал ключем!</span>}</div>
         )}
         {phase === 'done' && <div className="text-sm font-bold text-emerald-300">{mistakes >= MAX_MISTAKES ? 'Сигнал загубився…' : 'Сигнал прийнято! 📡'}</div>}
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
-        <button type="button" onClick={() => tap('.')} disabled={phase !== 'input'} className="pixel-btn border-2 border-amber-400 bg-amber-500 py-4 text-2xl font-bold text-stone-950 disabled:opacity-40">
-          ●
-        </button>
-        <button type="button" onClick={() => tap('-')} disabled={phase !== 'input'} className="pixel-btn border-2 border-amber-400 bg-amber-500 py-4 text-2xl font-bold text-stone-950 disabled:opacity-40">
-          ▬
-        </button>
+      {/* Паперова стрічка телеграфного апарата */}
+      <div className="parchment overflow-hidden border-2 border-amber-900/60 px-3 py-1">
+        <div className="whitespace-nowrap text-right font-mono text-lg font-bold tracking-[0.3em] text-amber-950" aria-label="Стрічка">
+          {tape.replace(/\./g, '•').replace(/-/g, '—') || '…'}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-[1fr_auto] items-stretch gap-3">
         <button
           type="button"
-          onClick={() => {
-            setInput('');
-            setPhase('watch');
+          onPointerDown={(e) => {
+            e.preventDefault();
+            keyDown();
           }}
+          onPointerUp={keyUp}
+          onPointerLeave={keyUp}
+          onPointerCancel={keyUp}
           disabled={phase !== 'input'}
-          className="pixel-btn border-2 border-stone-600 bg-stone-800 text-sm text-stone-200 disabled:opacity-40"
+          className={`relative flex touch-none select-none flex-col items-center justify-end gap-1 overflow-hidden border-2 border-stone-950 bg-gradient-to-b from-stone-700 to-stone-900 py-3 disabled:opacity-50 ${
+            pressed ? 'translate-y-1' : ''
+          }`}
+          aria-label="Телеграфний ключ: коротко — крапка, довго — тире"
         >
-          🔁 Ще раз
+          {/* Важіль ключа */}
+          <span className={`block h-3 w-40 max-w-[80%] border-2 border-stone-950 bg-amber-600 ${pressed ? 'translate-y-1' : ''}`} />
+          <span className="block h-5 w-8 border-2 border-stone-950 bg-stone-950" />
+          <span className="text-xs text-stone-300">Тримай ключ (або пробіл): коротко ●, довго ▬</span>
+          <span className="absolute bottom-0 left-0 h-1 bg-amber-400" style={{ width: `${pressed ? holdPct : 0}%` }} />
+          {pressed && <span className="absolute right-2 top-1 font-pixel text-[9px] text-amber-200">{holdMs >= DASH_MS ? '▬' : '●'}</span>}
         </button>
+        <div className="flex flex-col gap-2">
+          <button type="button" onClick={() => addSymbol('.')} disabled={phase !== 'input'} className="pixel-btn border-2 border-stone-600 bg-stone-800 px-3 py-1.5 text-lg disabled:opacity-40" aria-label="Крапка">
+            ●
+          </button>
+          <button type="button" onClick={() => addSymbol('-')} disabled={phase !== 'input'} className="pixel-btn border-2 border-stone-600 bg-stone-800 px-3 py-1.5 text-lg disabled:opacity-40" aria-label="Тире">
+            ▬
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setInput('');
+              setPhase('watch');
+            }}
+            disabled={phase !== 'input'}
+            className="pixel-btn border-2 border-stone-600 bg-stone-900 px-2 py-1 text-[11px] text-stone-300 disabled:opacity-40"
+          >
+            🔁 Ще раз
+          </button>
+        </div>
       </div>
-      <p className="text-xs text-stone-500">● — коротко (крапка), ▬ — довго (тире).</p>
     </div>
   );
 };

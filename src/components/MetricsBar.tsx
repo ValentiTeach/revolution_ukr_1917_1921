@@ -9,6 +9,7 @@ import {
   Backpack,
   BookOpen,
   DoorOpen,
+  Gamepad2,
   GitBranch,
   Lightbulb,
   LightbulbOff,
@@ -28,7 +29,7 @@ import { PixelAvatar } from './PixelAvatar';
 import { PixelEmoji } from './PixelEmoji';
 import { pxEase } from '../game/motion';
 
-export type GameTab = 'rpg' | 'missions' | 'satchel' | 'tree' | 'map' | 'universals' | 'archive';
+export type GameTab = 'rpg' | 'missions' | 'arcade' | 'satchel' | 'tree' | 'map' | 'universals' | 'archive';
 
 interface MetricsBarProps {
   metrics: GameMetrics;
@@ -48,6 +49,7 @@ interface MetricsBarProps {
 const TABS: { id: GameTab; label: string; icon: React.ElementType }[] = [
   { id: 'rpg', label: 'Пригода', icon: MessageSquare },
   { id: 'missions', label: 'Доручення', icon: DoorOpen },
+  { id: 'arcade', label: 'Ігротека', icon: Gamepad2 },
   { id: 'satchel', label: 'Торба', icon: Backpack },
   { id: 'map', label: 'Штаб', icon: MapIcon },
   { id: 'universals', label: 'Універсали', icon: Scroll },

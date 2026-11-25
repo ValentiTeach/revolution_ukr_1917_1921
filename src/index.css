@@ -414,6 +414,66 @@
   .pixel-btn { transition: none; }
 }
 
+
+/* ==========================================================================
+   Атмосфера сцен 1919–1921: туман, вогонь, листя, іскри
+   ========================================================================== */
+@keyframes px-fog-move {
+  from { transform: translateX(-8%); }
+  to { transform: translateX(8%); }
+}
+.px-fog {
+  position: absolute;
+  inset: 40% -10% 20% -10%;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(0deg, transparent 0 10px, rgba(168, 184, 214, 0.16) 10px 18px, transparent 18px 34px),
+    linear-gradient(to bottom, transparent, rgba(168, 184, 214, 0.18), transparent);
+  animation: px-fog-move 18s steps(36) infinite alternate;
+}
+@keyframes px-fire-flicker {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  25% { opacity: 0.8; transform: scale(1.06); }
+  50% { opacity: 0.45; transform: scale(0.96); }
+  75% { opacity: 0.7; transform: scale(1.03); }
+}
+.px-fire {
+  position: absolute;
+  width: 34%;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(255, 170, 70, 0.45) 0 18%, rgba(255, 120, 40, 0.18) 18% 42%, transparent 62%);
+  mix-blend-mode: screen;
+  animation: px-fire-flicker 0.9s steps(4) infinite;
+}
+.px-leaves, .px-embers {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.px-leaves::before, .px-leaves::after, .px-embers::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 3px;
+  background: transparent;
+}
+.px-leaves::before { box-shadow: 483px 155px 0 #e08a1e, 811px 245px 0 #c2571a, 184px 34px 0 #e08a1e, 822px 281px 0 #f2b632, 120px 113px 0 #f2b632, 566px 399px 0 #c2571a, 217px 134px 0 #c2571a, 52px 424px 0 #f2b632, 556px 99px 0 #c2571a, 634px 148px 0 #f2b632, 177px 432px 0 #f2b632, 1375px 198px 0 #c2571a, 364px 126px 0 #9a3a12, 573px 45px 0 #f2b632, 14px 465px 0 #f2b632, 1172px 360px 0 #f2b632, 1041px 99px 0 #9a3a12, 867px 306px 0 #f2b632, 882px 231px 0 #c2571a, 477px 156px 0 #f2b632, 88px 41px 0 #e08a1e, 947px 320px 0 #f2b632, 1062px 273px 0 #9a3a12, 702px 74px 0 #c2571a, 136px 211px 0 #c2571a, 1300px 323px 0 #9a3a12, 565px 94px 0 #f2b632, 892px 382px 0 #f2b632, 1299px 285px 0 #c2571a, 662px 51px 0 #e08a1e, 468px 142px 0 #c2571a, 250px 169px 0 #c2571a, 595px 235px 0 #e08a1e, 87px 182px 0 #e08a1e, 585px 376px 0 #f2b632, 37px 165px 0 #f2b632, 658px 494px 0 #c2571a, 1335px 210px 0 #e08a1e, 600px 316px 0 #c2571a, 909px 149px 0 #c2571a, 512px 195px 0 #c2571a, 678px 293px 0 #e08a1e, 744px 22px 0 #9a3a12, 347px 186px 0 #f2b632, 594px 292px 0 #e08a1e, 899px 106px 0 #9a3a12; animation: px-fall 16s steps(80) infinite; }
+.px-leaves::after { box-shadow: 425px 558px 0 #e08a1e, 127px 528px 0 #f2b632, 345px 804px 0 #f2b632, 306px 810px 0 #e08a1e, 1118px 751px 0 #f2b632, 510px 664px 0 #e08a1e, 250px 927px 0 #f2b632, 599px 896px 0 #c2571a, 1334px 602px 0 #c2571a, 413px 623px 0 #c2571a, 840px 751px 0 #e08a1e, 448px 715px 0 #c2571a, 509px 831px 0 #c2571a, 441px 755px 0 #e08a1e, 64px 518px 0 #c2571a, 518px 624px 0 #f2b632, 426px 895px 0 #e08a1e, 854px 945px 0 #c2571a, 290px 666px 0 #e08a1e, 644px 789px 0 #e08a1e, 1166px 706px 0 #f2b632, 1339px 945px 0 #f2b632, 82px 753px 0 #c2571a, 190px 720px 0 #e08a1e, 1172px 960px 0 #e08a1e, 689px 651px 0 #f2b632, 965px 909px 0 #f2b632, 645px 917px 0 #c2571a, 1081px 610px 0 #f2b632, 549px 673px 0 #c2571a, 1016px 538px 0 #c2571a, 1285px 842px 0 #e08a1e, 91px 702px 0 #f2b632, 261px 892px 0 #c2571a, 1366px 938px 0 #e08a1e, 342px 852px 0 #f2b632, 951px 791px 0 #c2571a, 826px 974px 0 #c2571a, 447px 908px 0 #e08a1e, 432px 972px 0 #e08a1e, 26px 812px 0 #c2571a, 237px 702px 0 #c2571a, 455px 781px 0 #e08a1e, 413px 582px 0 #f2b632, 1245px 669px 0 #f2b632, 965px 968px 0 #f2b632; animation: px-fall 22s steps(110) infinite; }
+@keyframes px-rise-up {
+  from { transform: translateY(500px); }
+  to { transform: translateY(-40px); }
+}
+.px-embers::before { width: 2px; height: 2px; box-shadow: 900px 13px 0 #ffb84a, 70px 356px 0 #ffe08a, 231px 250px 0 #ffe08a, 526px 311px 0 #ffb84a, 84px 185px 0 #ffb84a, 1071px 463px 0 #ffb84a, 608px 428px 0 #ff7a2a, 153px 43px 0 #ffe08a, 929px 195px 0 #ffb84a, 637px 198px 0 #ffb84a, 996px 438px 0 #ff7a2a, 194px 39px 0 #ffb84a, 1271px 408px 0 #ff7a2a, 1049px 222px 0 #ff7a2a, 909px 34px 0 #ffe08a, 401px 326px 0 #ff7a2a, 980px 216px 0 #ffb84a, 1143px 85px 0 #ff7a2a, 333px 90px 0 #ffe08a, 305px 167px 0 #ff7a2a, 693px 132px 0 #ffe08a, 9px 363px 0 #ffb84a, 11px 331px 0 #ff7a2a, 247px 279px 0 #ffb84a, 996px 402px 0 #ffe08a, 1230px 247px 0 #ffe08a, 155px 266px 0 #ffb84a, 842px 433px 0 #ff7a2a, 730px 117px 0 #ffb84a, 1283px 0px 0 #ffe08a, 108px 312px 0 #ff7a2a, 1114px 467px 0 #ff7a2a, 1163px 156px 0 #ffe08a, 902px 313px 0 #ffe08a, 905px 200px 0 #ffb84a, 515px 394px 0 #ffe08a, 741px 338px 0 #ff7a2a, 272px 221px 0 #ffb84a, 1240px 73px 0 #ffe08a, 1274px 90px 0 #ff7a2a; animation: px-rise-up 12s steps(60) infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .px-fog, .px-fire, .px-leaves::before, .px-leaves::after, .px-embers::before { animation: none !important; }
+}
+
 .scrollbar-none::-webkit-scrollbar { display: none; }
 .scrollbar-none { scrollbar-width: none; }
 

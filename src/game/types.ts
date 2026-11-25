@@ -40,7 +40,14 @@ export type ChapterId =
   | 'CH6_FOURTH_UNIVERSAL_KRUTY'
   | 'CH7_HETMANATE_ORDER'
   | 'CH8_DIRECTORY_AND_ZLUKA'
-  | 'CH9_TRIANGLE_OF_DEATH'
+  | 'ACT_RED_MASKS'              // Республіки-маски: другий наступ червоних (зима 1919)
+  | 'ACT_OTAMANSHCHYNA'          // Отаманщина й повстанські республіки (весна–літо 1919)
+  | 'ACT_AUGUST_1919'            // Київ, Денікін і рейд Махна (серпень–жовтень 1919)
+  | 'CH9_TRIANGLE_OF_DEATH'      // Трикутник смерті (листопад 1919)
+  | 'ACT_FIRST_WINTER_CAMPAIGN'  // Перший Зимовий похід (грудень 1919 – травень 1920)
+  | 'ACT_1920_WARSAW'            // Варшавський союз і Замостя (1920)
+  | 'ACT_CRIMEA_1920'            // Старобільськ, Сиваш, евакуація білих (жовтень–листопад 1920)
+  | 'ACT_1921_FALL'              // Рига, Другий Зимовий похід, Базар (1921)
   | 'EPILOGUE';
 
 export interface ChoiceRequirement {
@@ -76,7 +83,7 @@ export interface DialogueStep {
   speaker: string;
   role: string;
   avatar: string; // pixel sprite identifier
-  bgImageKey: 'hero' | 'rada' | 'map' | 'kruty';
+  bgImageKey: BgKey;
   speech: string;
   contextNote?: string;
   choices: DialogueChoice[];
@@ -104,6 +111,14 @@ export interface CityNode {
   historicalNote: string;
 }
 
+export interface ChapterConfig {
+  title: string;
+  period: string;
+  summary: string;
+  bgKey: BgKey;
+  startStepId: string;
+}
+
 export interface DecisionTreeNode {
   id: string;
   chapterId: ChapterId;
@@ -121,7 +136,12 @@ export interface HistoricalFigure {
   years: string;
   role: string;
   bio: string;
+  /** Справжня цитата або гасло. Порожній рядок — цитати немає, показуємо факт. */
   quote: string;
+  /** Звідки цитата (наприклад, «напис на прапорі»). */
+  quoteNote?: string;
+  /** Памʼятний факт замість вигаданої цитати. */
+  fact?: string;
   sprite: string;
   factionId: FactionId;
 }
@@ -148,7 +168,20 @@ export interface EndingResult {
 
 export type HeroSprite = 'hero_boy' | 'hero_girl';
 
-export type BgKey = 'hero' | 'rada' | 'map' | 'kruty';
+export type BgKey =
+  | 'hero'
+  | 'rada'
+  | 'map'
+  | 'kruty'
+  | 'winter'     // засніжений шлях Зимового походу
+  | 'steppe'     // степ на заході сонця, тачанки
+  | 'forest'     // нічний ліс Холодного Яру
+  | 'harbor'     // Севастопольська бухта, евакуація
+  | 'syvash'     // нічний брід через Сиваш
+  | 'armored'    // бронепотяг на донецькій станції
+  | 'kamianets'  // фортеця Камʼянця-Подільського
+  | 'fortress'   // мури Замостя, 1920
+  | 'memorial';  // поле памʼяті під Базаром
 
 export interface HeroRank {
   id: string;
@@ -184,20 +217,15 @@ export interface DiaryEntry {
   text: string;       // запис від першої особи героя
 }
 
-export type MinigameKind = 'telegram' | 'rail' | 'memory';
-
+/** Міні-гра на привалі після акту: будь-який вид «дверей» зі своїми параметрами. */
 export interface MinigameConfig {
   chapterId: ChapterId;
-  kind: MinigameKind;
+  kind: StationKind;
   title: string;
   intro: string;
-  // telegram: слова, які треба скласти у правильному порядку
-  sentence?: string;
-  // memory: пари символів
-  pairs?: { emoji: string; label: string }[];
-  // rail: скільки шпал треба розібрати та за скільки секунд
-  railTarget?: number;
-  railSeconds?: number;
+  /** Місце дії (для ігор, яким воно потрібне). */
+  place?: string;
+  params: StationParams;
   rewardStars: number;
 }
 
@@ -227,7 +255,20 @@ export type StationKind =
   | 'drawers'
   | 'codelock'
   | 'morse'
-  | 'sorting';
+  | 'sorting'
+  | 'tachanka'   // мчи тачанкою степом, оминай перешкоди
+  | 'ford'       // промацуй брід жердиною (Сиваш, лід)
+  | 'ships'      // розподіли людей по пароплавах
+  | 'route'      // проклади маршрут походу картою з туманом
+  | 'cipher'     // розшифруй телеграму шифрувальним колом
+  | 'stealth';   // прокрадися повз вартових покроково
+
+/** Вартовий у грі «Прокрадися»: стартова клітинка та маршрут (U/D/L/R, W — чекати). */
+export interface StealthGuard {
+  x: number;
+  y: number;
+  path: string;
+}
 
 export interface StationParams {
   sentence?: string;
@@ -244,8 +285,25 @@ export interface StationParams {
   code?: string;                                   // codelock: правильний код
   clues?: string[];                                // codelock: підказки
   word?: string;                                   // morse: слово
-  sortItems?: { item: string; target: string }[];  // sorting
+  sortItems?: { item: string; target: string; why?: string }[];  // sorting
   sortTargets?: string[];
+  decoys?: string[];                               // telegram: зайві слова-пастки
+  distance?: number;                               // tachanka: скільки метрів проїхати
+  night?: boolean;                                 // tachanka: нічний рейд
+  fordTheme?: 'sea' | 'ice';                       // ford: солона вода чи лід
+  fordCols?: number;
+  fordRows?: number;
+  ships?: { name: string; capacity: number }[];    // ships: пароплави
+  groups?: { label: string; emoji: string; size: number }[]; // ships: групи людей
+  shipSeconds?: number;
+  routeMap?: string[];                             // route: мапа (див. RouteGame)
+  routeFood?: number;
+  routeWarmth?: number;
+  cipherText?: string;                             // cipher: відкритий текст
+  cipherShift?: number;                            // cipher: зсув шифру
+  stealthMap?: string[];                           // stealth: рівень (див. StealthGame)
+  guards?: StealthGuard[];
+  stealthTheme?: 'forest' | 'station' | 'snow';    // stealth: як виглядає рівень
 }
 
 export interface MissionStation {

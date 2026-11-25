@@ -4,6 +4,7 @@
  */
 
 import {
+  ChapterConfig,
   ChapterId,
   CityNode,
   DialogueStep,
@@ -13,6 +14,8 @@ import {
   UniversalClause,
 } from './types';
 import { EXTRA_CHOICES, STEP_QUESTIONS } from './dialogueExtras';
+import { NEW_CHAPTERS, NEW_CHRONOLOGY, NEW_DIALOGUE_STEPS, NEW_FIGURES } from './story1919_1921';
+import { CHAPTER_ORDER } from './chapters';
 
 export const FACTIONS: Record<FactionId, FactionInfo> = {
   socialists: {
@@ -182,6 +185,7 @@ export const HISTORICAL_FIGURES: HistoricalFigure[] = [
     sprite: 'ohienko',
     factionId: 'socialists',
   },
+  ...NEW_FIGURES,
 ];
 
 export const HISTORICAL_CHRONOLOGY = [
@@ -233,24 +237,23 @@ export const HISTORICAL_CHRONOLOGY = [
     desc: 'Урочисте обʼєднання Західноукраїнської та Наддніпрянської республік на Софійській площі в Києві.',
     canon: true,
   },
+  ...NEW_CHRONOLOGY.slice(0, 4),
   {
-    date: '1919–1921',
-    event: 'Трикутник Смерті та Визвольні Змагання',
-    desc: 'Нерівна боротьба проти червоної навали та білогвардійців, дипломатичні випробування та вічна памʼять героям.',
+    date: 'Листопад 1919',
+    event: 'Трикутник смерті',
+    desc: 'Армія УНР затиснута між червоними, білими й польськими військами, лютує тиф. Камʼянець-Подільський — тимчасова столиця.',
+    canon: true,
+  },
+  ...NEW_CHRONOLOGY.slice(4),
+  {
+    date: '22 серпня 1992',
+    event: 'Клейноди УНР передано незалежній Україні',
+    desc: 'Останній президент УНР в екзилі Микола Плавʼюк передав повноваження державного центру УНР Президентові незалежної України.',
     canon: true,
   },
 ];
 
-export const CHAPTER_CONFIG: Record<
-  ChapterId,
-  {
-    title: string;
-    period: string;
-    summary: string;
-    bgKey: 'hero' | 'rada' | 'map' | 'kruty';
-    startStepId: string;
-  }
-> = {
+const BASE_CHAPTERS: Partial<Record<ChapterId, ChapterConfig>> = {
   CH1_RADA_CREATION: {
     title: 'Акт I: Весна Надій — Створення УЦР',
     period: 'Березень 1917 року',
@@ -308,9 +311,9 @@ export const CHAPTER_CONFIG: Record<
     startStepId: 'step_ch8_1',
   },
   CH9_TRIANGLE_OF_DEATH: {
-    title: 'Акт IX: Трикутник Смерті — Випробування Долі',
-    period: '1919–1921 роки',
-    summary: 'Фронти стискаються. Дипломатія у Версалі, Зимові походи та доленосний вибір фіналу.',
+    title: 'Акт XII: Трикутник смерті — Остання столиця',
+    period: 'Листопад 1919 року',
+    summary: 'Фронти стискаються з трьох боків, лютує тиф, Галицька армія уклала перемирʼя з білими. Камʼянець-Подільський стає останньою столицею УНР.',
     bgKey: 'map',
     startStepId: 'step_ch9_1',
   },
@@ -322,6 +325,11 @@ export const CHAPTER_CONFIG: Record<
     startStepId: 'step_epilogue',
   },
 };
+
+/** Конфігурація актів у хронологічному порядку (порядок ключів = порядок актів). */
+export const CHAPTER_CONFIG = Object.fromEntries(
+  CHAPTER_ORDER.map((id) => [id, (BASE_CHAPTERS[id] ?? NEW_CHAPTERS[id])!]),
+) as Record<ChapterId, ChapterConfig>;
 
 export const DIALOGUE_STEPS: Record<string, DialogueStep> = {
   // --- CHAPTER 1 ---
@@ -724,7 +732,7 @@ export const DIALOGUE_STEPS: Record<string, DialogueStep> = {
         ideologicalHint: 'Директорія справді надсилала допомогу Галичині, хоча й сама потребувала всього.',
         factionEffects: { galicians: 25, military: 10, peasantry: -5 },
         metricEffects: { nationalUnity: 15, treasury: -15, armyReadiness: -5 },
-        nextStepId: 'step_ch9_1',
+        nextStepId: 'step_masks_1',
         historicalCanon: true,
         reflection: 'Галицькі стрільці отримали допомогу і відчули, що Злука — не лише слова. Влітку 1919 р. УГА перейде Збруч і разом з Армією УНР піде на Київ.',
       },
@@ -734,7 +742,7 @@ export const DIALOGUE_STEPS: Record<string, DialogueStep> = {
         ideologicalHint: 'Раціонально, але Галичина почуватиметься покинутою.',
         factionEffects: { galicians: -20, military: 10 },
         metricEffects: { armyReadiness: 10, nationalUnity: -15 },
-        nextStepId: 'step_ch9_1',
+        nextStepId: 'step_masks_1',
         historicalCanon: false,
         reflection: 'Київ зміцнив оборону, але між Сходом і Заходом пролягла тріщина недовіри.',
       },
@@ -748,8 +756,8 @@ export const DIALOGUE_STEPS: Record<string, DialogueStep> = {
     role: 'Головний Отаман Військ УНР',
     avatar: 'petliura',
     bgImageKey: 'map',
-    contextNote: '1919–1920 рр. "Трикутник смерті" (Любар–Шепетівка–Миропіль). Війська УНР затиснуті між Червоною армією, білогвардійцями Денікіна та польським кордоном. Лютує епідемія тифу.',
-    speech: 'Ми стоїмо в "Трикутнику смерті". Ліків немає, набоїв по 10 штук на гвинтівку, білогвардійці відмовляються визнавати Україну, а більшовики кидають нові дивізії. Наші генерали (Василь Тютюнник, Михайло Омелянович-Павленко) пропонують піти у Перший Зимовий похід по тилах ворога. Водночас у Варшаві можна укласти союз із Пілсудським. Який ваш вирішальний наказ для фіналу визвольних змагань?',
+    contextNote: 'Листопад 1919 р. «Трикутник смерті» (Любар — Чортория — Миропіль). Війська УНР затиснуті між Червоною армією, білогвардійцями Денікіна та польським фронтом. Лютує епідемія тифу, а Галицька армія уклала перемирʼя з білими.',
+    speech: 'Ми стоїмо в «трикутнику смерті». Ліків немає, набоїв по десять штук на гвинтівку, білогвардійці відмовляються визнавати Україну, а більшовики кидають нові дивізії. Генерали Михайло Омелянович-Павленко та Юрко Тютюнник пропонують піти в похід тилами ворога. Водночас у Варшаві можна шукати союзу з Пілсудським. Який твій вирішальний наказ?',
     choices: [
       {
         id: 'c_ch9_soborna_mobilization_allies',
@@ -759,17 +767,17 @@ export const DIALOGUE_STEPS: Record<string, DialogueStep> = {
         metricEffects: { armyReadiness: 25, nationalUnity: 25, popularTrust: 20 },
         nextStepId: 'step_ch9_2',
         historicalCanon: false,
-        reflection: 'Удар обʼєднаних сил зламав хребет інтервентам! Відбувся тріумфальний вступ до столиці.',
+        reflection: 'Удар обʼєднаних сил прорвав кільце, і армія на кілька тижнів повернулася до Києва. Та тиф і нові дивізії червоних знову змусили її відступити.',
       },
       {
         id: 'c_ch9_winter_campaign_and_warsaw',
         text: 'Вирушити в рейд Першого Зимового походу по ворожих тилах та укласти Варшавський договір заради спільного наступу (Історичний вибір).',
-        ideologicalHint: 'Варшавський договір квітня 1920 р. та безсмертний Перший Зимовий похід.',
+        ideologicalHint: '6 грудня 1919 року армія вирушила в Перший Зимовий похід, а Петлюра — до Варшави.',
         factionEffects: { military: 15, galicians: -15 },
         metricEffects: { armyReadiness: 15, diplomacy: 15, nationalUnity: -5 },
         nextStepId: 'step_ch9_2',
         historicalCanon: true,
-        reflection: 'Армія УНР здійснила легендарний рейд тилами білих і червоних, зберігши ядро державності. Травневий парад на Хрещатику 1920 року звільнив Київ.',
+        reflection: 'Армія УНР вирушила в Перший Зимовий похід тилами білих і червоних, а Петлюра поїхав до Варшави шукати союзника. Державність не загинула — вона пішла в похід.',
       },
     ],
   },
@@ -778,7 +786,7 @@ export const DIALOGUE_STEPS: Record<string, DialogueStep> = {
     speaker: 'Іван Огієнко',
     role: 'Ректор Камʼянець-Подільського університету, міністр освіти',
     avatar: 'ohienko',
-    bgImageKey: 'hero',
+    bgImageKey: 'kamianets',
     contextNote: 'Камʼянець-Подільський, 1919–1920 рр. Тимчасова столиця УНР: тут працює уряд, друкуються гривні, діє університет і приймають іноземних дипломатів.',
     speech: 'Джуро, глянь на цих студентів — вони вчаться між повітряними тривогами! Наш університет відкрито рік тому, і це диво посеред війни. Уряд має останні запаси паперу: надрукувати на ньому підручники для шкіл чи листівки й відозви до Європи, щоб світ нарешті нас почув?',
     choices: [
@@ -788,7 +796,7 @@ export const DIALOGUE_STEPS: Record<string, DialogueStep> = {
         ideologicalHint: 'Огієнко уклав перший офіційний український правопис 1919 року і видав десятки підручників.',
         factionEffects: { socialists: 10, peasantry: 10, galicians: 10 },
         metricEffects: { popularTrust: 15, nationalUnity: 10, diplomacy: -5 },
-        nextStepId: 'step_epilogue',
+        nextStepId: 'step_winter_1',
         historicalCanon: true,
         reflection: 'Правопис, підручники та словники поїхали у села й містечка. Школа пережила державу й зберегла мову для майбутнього.',
       },
@@ -798,7 +806,7 @@ export const DIALOGUE_STEPS: Record<string, DialogueStep> = {
         ideologicalHint: 'Дипломатичний удар: шанс отримати допомогу, але школи лишаться без книжок.',
         factionEffects: { conservatives: 10, independentists: 5, peasantry: -5 },
         metricEffects: { diplomacy: 20, popularTrust: -5 },
-        nextStepId: 'step_epilogue',
+        nextStepId: 'step_winter_1',
         historicalCanon: false,
         reflection: 'Європейські газети вперше написали про Україну великими літерами, але сільські школи того року лишилися без букварів.',
       },
@@ -813,7 +821,7 @@ export const DIALOGUE_STEPS: Record<string, DialogueStep> = {
     avatar: 'hrushevsky',
     bgImageKey: 'hero',
     contextNote: 'Підсумки Української національно-демократичної революції 1917–1921 рр.',
-    speech: 'Братове й посестри! Шлях 1917–1921 років був сповнений самопожертви, великих злетів і трагічних уроків. Ми пройшли від перших зборів у Педагогічному музеї через вогонь чотирьох Універсалів, Крути, Гетьманат, Акт Злуки до запеклих боїв за кожен клапоть рідної землі. Погляньмо на результати ваших рішень у Дереві Долі нашої нації!',
+    speech: 'Братове й посестри! Шлях 1917–1921 років був сповнений самопожертви, великих злетів і трагічних уроків. Ми пройшли від перших зборів у Педагогічному музеї через вогонь чотирьох Універсалів, Крути, Гетьманат і Акт Злуки, крізь маски Москви, отаманщину, два Зимові походи, Замостя й Сиваш — аж до Базару. Держава впала, але ідея вистояла й повернулася 1991 року. Погляньмо на результати твоїх рішень у Дереві Долі!',
     choices: [
       {
         id: 'c_epilogue_inspect',
@@ -827,6 +835,9 @@ export const DIALOGUE_STEPS: Record<string, DialogueStep> = {
     ],
   },
 };
+
+// Нові акти 1919–1921 мають усі варіанти й питання одразу.
+Object.assign(DIALOGUE_STEPS, NEW_DIALOGUE_STEPS);
 
 // Додаємо компромісні й таємні варіанти та питання до персонажів.
 for (const [stepId, extra] of Object.entries(EXTRA_CHOICES)) {

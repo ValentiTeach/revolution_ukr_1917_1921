@@ -43,7 +43,7 @@ export const SatchelView: React.FC<SatchelViewProps> = ({
   const next = getNextRank(stars);
   const progressToNext = next ? Math.round(((stars - rank.minStars) / (next.minStars - rank.minStars)) * 100) : 100;
   const unlockedDiary = DIARY_ENTRIES.filter(
-    (d) => completedChapters.includes(d.chapterId) || (d.chapterId === 'EPILOGUE' && completedChapters.includes('CH9_TRIANGLE_OF_DEATH')),
+    (d) => completedChapters.includes(d.chapterId) || (d.chapterId === 'EPILOGUE' && completedChapters.includes('ACT_1921_FALL')),
   );
 
   const tabs: { id: Tab; label: string; icon: React.ElementType; count: string }[] = [
