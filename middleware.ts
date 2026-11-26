@@ -14,7 +14,8 @@
  * на Vercel.
  */
 
-import { handleGate, GateEnv } from './server/gate';
+import { handleGate } from './server/gate.js';
+import type { GateEnv } from './server/gate.js';
 
 export const config = {
   // Усі шляхи: HTML, скрипти, стилі, картинки
