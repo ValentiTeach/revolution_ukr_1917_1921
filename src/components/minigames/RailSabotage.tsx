@@ -133,7 +133,7 @@ export const RailSabotage: React.FC<RailSabotageProps> = ({ target, seconds, onF
           <span className="h-3 w-[calc(100%+12px)] -translate-y-3 bg-stone-950" />
           <span className="mt-1 h-4 w-4 bg-amber-300" />
         </div>
-        <div className="absolute bottom-[7.5rem] right-0 bg-stone-950/90 px-1 font-pixel text-[7px] text-amber-200">СТАНЦІЯ</div>
+        <div className="absolute bottom-[7.5rem] right-0 bg-stone-950/90 px-1 font-pixel text-[8px] text-amber-200">СТАНЦІЯ</div>
         {/* Потяг з димом */}
         <div className="absolute bottom-10" style={{ left: `calc(${trainLeft}% - 20px)` }} aria-hidden>
           {phase === 'play' && (
@@ -144,7 +144,7 @@ export const RailSabotage: React.FC<RailSabotageProps> = ({ target, seconds, onF
           )}
           <PixelSprite id="loco" size={84} className={phase === 'play' ? 'px-bob' : ''} />
         </div>
-        <div className="absolute left-2 right-2 top-2 flex justify-between font-pixel text-[9px] text-amber-200 sm:text-[10px]">
+        <div className="absolute left-2 right-2 top-2 flex justify-between font-pixel text-[8px] text-amber-200">
           <span>🔩 {bolts}/{target}</span>
           {combo >= 2 && phase === 'play' && <span className="px-pop text-yellow-300">СЕРІЯ ×{combo}</span>}
           <span>{Math.max(0, Math.round(100 - trainPos))}% до станції</span>
@@ -181,8 +181,8 @@ export const RailSabotage: React.FC<RailSabotageProps> = ({ target, seconds, onF
                   <PixelSprite id="wrench" size={28} />
                 </span>
               )}
-              {pop === i && <span className="px-rise absolute -top-2 font-pixel text-[9px] text-yellow-200">+1</span>}
-              <span className="absolute bottom-0.5 font-pixel text-[7px] text-stone-400">{i + 1}</span>
+              {pop === i && <span className="px-rise absolute -top-2 font-pixel text-[8px] text-yellow-200">+1</span>}
+              <span className="absolute bottom-0.5 font-pixel text-[8px] text-stone-400">{i + 1}</span>
               {isActive && (
                 <span className="absolute bottom-0.5 right-1 flex gap-0.5">
                   {Array.from({ length: TURNS }).map((__, k) => (

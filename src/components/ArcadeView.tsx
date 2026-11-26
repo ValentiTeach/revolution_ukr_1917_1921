@@ -112,7 +112,7 @@ export const ArcadeView: React.FC<ArcadeViewProps> = ({ wins, onWin }) => {
           <button type="button" onClick={() => setKind(null)} className="pixel-btn border-2 border-stone-600 bg-stone-800 px-3 py-1.5 text-sm">
             ◀ До Ігротеки
           </button>
-          <span className="font-pixel text-[9px] text-violet-300">
+          <span className="font-pixel text-[8px] text-violet-300">
             {KIND_LABEL[kind].toUpperCase()} · РІВЕНЬ {(vi % list.length) + 1}/{list.length}
           </span>
         </div>
@@ -167,17 +167,17 @@ export const ArcadeView: React.FC<ArcadeViewProps> = ({ wins, onWin }) => {
       <div className="pixel-frame bg-stone-950 p-4 sm:p-6">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <div className="font-pixel text-[9px] text-violet-300">ІГРОТЕКА</div>
+            <div className="font-pixel text-[8px] text-violet-300">ІГРОТЕКА</div>
             <h2 className="font-serif text-2xl font-bold text-amber-300">Тренуйся в усіх міні-іграх</h2>
             <p className="max-w-2xl text-sm text-stone-300">
               Тут немає сердець і нічого не можна втратити. Обирай гру, перемикай рівні з різних актів і вигравай. Перемоги в десяти різних іграх дають медаль «Майстер ігор».
             </p>
           </div>
           <div className="border-2 border-violet-700 bg-violet-950/40 px-3 py-2 text-center">
-            <div className="font-pixel text-lg text-violet-200">
+            <div className="font-pixel text-[16px] text-violet-200">
               {wins.length}/{ORDER.length}
             </div>
-            <div className="text-[11px] text-violet-300">ігор пройдено</div>
+            <div className="text-xs text-violet-300">ігор пройдено</div>
           </div>
         </div>
       </div>
@@ -198,7 +198,7 @@ export const ArcadeView: React.FC<ArcadeViewProps> = ({ wins, onWin }) => {
               </span>
               <span className="font-bold text-stone-100">{KIND_LABEL[k]}</span>
               <span className="text-xs leading-snug text-stone-400">{KIND_HINT[k]}</span>
-              <span className="text-[10px] text-violet-300">Рівнів: {variants[k].length}</span>
+              <span className="text-xs text-violet-300">Рівнів: {variants[k].length}</span>
             </button>
           );
         })}

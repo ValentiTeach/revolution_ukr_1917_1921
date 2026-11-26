@@ -101,7 +101,7 @@ export const DPad: React.FC<{ onMove: (dx: number, dy: number) => void; onWait?:
   waitLabel = 'Чекати',
 }) => {
   const btn =
-    'pixel-btn flex h-12 w-12 items-center justify-center border-2 border-stone-500 bg-stone-800 font-pixel text-xs text-amber-200 hover:border-amber-400 disabled:opacity-40';
+    'pixel-btn flex h-12 w-12 items-center justify-center border-2 border-stone-500 bg-stone-800 font-pixel text-[16px] text-amber-200 hover:border-amber-400 disabled:opacity-40';
   return (
     <div className="grid w-max grid-cols-3 gap-1" aria-label="Керування">
       <span />
@@ -115,7 +115,7 @@ export const DPad: React.FC<{ onMove: (dx: number, dy: number) => void; onWait?:
       {onWait ? (
         <button
           type="button"
-          className={`${btn} text-[8px] leading-tight`}
+          className={`${btn} text-xs leading-tight`}
           disabled={disabled}
           onClick={onWait}
           aria-label={waitLabel}
@@ -163,7 +163,7 @@ export const TimeBar: React.FC<{ left: number; total: number; label?: string }> 
     <div>
       <div className="mb-1 flex justify-between text-xs text-stone-400">
         <span>{label}</span>
-        <span className={`font-pixel text-[9px] ${pct < 25 ? 'text-rose-300 px-blink' : 'text-amber-200'}`}>{Math.ceil(left)}с</span>
+        <span className={`font-pixel text-[8px] ${pct < 25 ? 'text-rose-300 px-blink' : 'text-amber-200'}`}>{Math.ceil(left)}с</span>
       </div>
       <div className="px-bar h-3 overflow-hidden">
         <div className={`h-full ${pct < 25 ? 'bg-rose-500' : 'bg-amber-500'}`} style={{ width: `${pct}%` }} />

@@ -87,7 +87,7 @@ export const MetricsBar: React.FC<MetricsBarProps> = ({
   }, [stars]);
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b-2 border-amber-900/80 bg-stone-950/95 text-stone-200 backdrop-blur-md">
+    <header className="sticky top-0 z-40 w-full border-b-2 border-amber-900/80 bg-stone-950/95 text-stone-200">
       <div className="flag-strip" />
       <div className="mx-auto max-w-7xl flex flex-col lg:flex-row lg:items-center justify-between gap-2 px-3 sm:px-4 py-2">
         {/* Герой */}
@@ -104,7 +104,7 @@ export const MetricsBar: React.FC<MetricsBarProps> = ({
             <PixelAvatar id={heroSprite} size="sm" />
             <div>
               <div className="font-serif text-sm sm:text-base font-bold text-amber-200 leading-tight">{heroName}</div>
-              <div className="flex items-center gap-2 text-[11px] text-stone-400">
+              <div className="flex items-center gap-2 text-xs text-stone-400">
                 <span>{rank.title}</span>
                 <span className="relative flex items-center gap-0.5 font-bold text-amber-300">
                   <Star className="h-3.5 w-3.5 text-amber-400" />
@@ -112,7 +112,7 @@ export const MetricsBar: React.FC<MetricsBarProps> = ({
                     {stars}
                   </span>
                   {gain && (
-                    <span key={gain.key} className="px-rise absolute -top-1 left-full ml-1 whitespace-nowrap font-pixel text-[9px] text-yellow-300">
+                    <span key={gain.key} className="px-rise absolute -top-1 left-full ml-1 whitespace-nowrap font-pixel text-[8px] text-yellow-300">
                       +{gain.n}
                     </span>
                   )}
@@ -124,7 +124,7 @@ export const MetricsBar: React.FC<MetricsBarProps> = ({
 
           <div className="flex items-center gap-1.5 lg:hidden">
             {isAlternateHistory && (
-              <span title="Ти змінив(-ла) хід історії" className="border border-amber-600/60 bg-amber-950/50 px-1.5 py-1 text-[10px] text-amber-200">
+              <span title="Ти змінив(-ла) хід історії" className="border border-amber-600/60 bg-amber-950/50 px-1.5 py-1 text-xs text-amber-200">
                 ⚡
               </span>
             )}
@@ -169,7 +169,7 @@ export const MetricsBar: React.FC<MetricsBarProps> = ({
           {isAlternateHistory && (
             <span
               title="Твої рішення відхилилися від того, як було насправді"
-              className="inline-flex items-center gap-1 border border-amber-600/60 bg-amber-950/50 px-2 py-1 text-[11px] text-amber-200"
+              className="inline-flex items-center gap-1 border border-amber-600/60 bg-amber-950/50 px-2 py-1 text-xs text-amber-200"
             >
               ⚡ Альтернатива
             </span>
@@ -196,7 +196,7 @@ export const MetricsBar: React.FC<MetricsBarProps> = ({
               <div key={m.key} title={`${m.fullName}: ${m.kidHint}`} className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-2 min-w-0">
                 <span className="flex shrink-0 items-center gap-1 whitespace-nowrap">
                   <PixelEmoji emoji={m.emoji} size={18} res={12} />
-                  <span className="hidden md:inline text-stone-400 text-[11px]">{m.label}</span>
+                  <span className="hidden md:inline text-stone-400 text-xs">{m.label}</span>
                   <motion.span
                     key={value}
                     initial={{ scale: 1.4 }}

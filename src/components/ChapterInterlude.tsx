@@ -181,7 +181,7 @@ const InterludeBody: React.FC<ChapterInterludeProps & { chapterId: ChapterId }> 
                   disabled={answer !== null}
                   className={`pixel-btn flex items-center gap-3 border-2 px-4 py-3 text-left text-base ${cls}`}
                 >
-                  <span className="font-pixel text-[10px] text-amber-300">{String.fromCharCode(1040 + idx)}</span>
+                  <span className="font-pixel text-[8px] text-amber-300">{String.fromCharCode(1040 + idx)}</span>
                   <span>{opt}</span>
                   {answer !== null && isCorrect && <span className="ml-auto">✅</span>}
                 </button>
@@ -215,7 +215,7 @@ const InterludeBody: React.FC<ChapterInterludeProps & { chapterId: ChapterId }> 
       {stage === 'game' && game && (
         <div className="space-y-3">
           <div>
-            <div className="font-pixel text-[9px] text-violet-300">МІНІ-ГРА · {KIND_LABEL[game.kind].toUpperCase()}</div>
+            <div className="font-pixel text-[8px] text-violet-300">МІНІ-ГРА · {KIND_LABEL[game.kind].toUpperCase()}</div>
             <h3 className="font-serif text-xl font-bold text-amber-300">🎮 {game.title}</h3>
             <p className="text-sm text-stone-300">{game.intro}</p>
             <p className="text-xs text-amber-300 mt-1">Нагорода: +{game.rewardStars} ⭐</p>

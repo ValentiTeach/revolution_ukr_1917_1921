@@ -89,7 +89,7 @@ export const CipherGame: React.FC<StationGameProps & { text: string; shift: numb
     <div className="space-y-4">
       <div className="flex items-center justify-between text-sm text-stone-300">
         <span>
-          Поворот кола: <strong className="font-pixel text-xs text-amber-300">{offset}</strong>
+          Поворот кола: <strong className="font-pixel text-[16px] text-amber-300">{offset}</strong>
         </span>
         <MistakeMeter mistakes={mistakes} max={MAX_MISTAKES} />
       </div>
@@ -138,7 +138,7 @@ export const CipherGame: React.FC<StationGameProps & { text: string; shift: numb
             {UA_ALPHABET.split('').map((ch, i) => {
               const p = letterAt(i, c - 24, 0);
               return (
-                <text key={`o${ch}`} x={p.x} y={p.y} textAnchor="middle" dominantBaseline="central" fontSize="13" fontWeight="700" fill="#fde68a" fontFamily="Pixelify Sans, monospace">
+                <text key={`o${ch}`} x={p.x} y={p.y} textAnchor="middle" dominantBaseline="central" fontSize="12" fontWeight="700" fill="#fde68a" fontFamily="Dolia Pixel, monospace">
                   {ch}
                 </text>
               );
@@ -147,37 +147,37 @@ export const CipherGame: React.FC<StationGameProps & { text: string; shift: numb
             {UA_ALPHABET.split('').map((ch, i) => {
               const p = letterAt(i + offset, c - 56, 0);
               return (
-                <text key={`i${ch}`} x={p.x} y={p.y} textAnchor="middle" dominantBaseline="central" fontSize="12" fill="#bae6fd" fontFamily="Pixelify Sans, monospace">
+                <text key={`i${ch}`} x={p.x} y={p.y} textAnchor="middle" dominantBaseline="central" fontSize="12" fill="#bae6fd" fontFamily="Dolia Pixel, monospace">
                   {ch}
                 </text>
               );
             })}
             {/* Стрілка на «А» */}
             <rect x={c - 3} y={2} width={6} height={10} fill="#ef4444" stroke="#0c0a09" strokeWidth="1" />
-            <text x={c} y={c} textAnchor="middle" dominantBaseline="central" fontSize="22" fill="#f59e0b" fontFamily="Press Start 2P, monospace">
+            <text x={c} y={c} textAnchor="middle" dominantBaseline="central" fontSize="24" fill="#f59e0b" fontFamily="Press Start 2P, monospace">
               ✦
             </text>
           </svg>
-          <p className="mt-1 text-center text-[11px] text-stone-500">Крути колесом, пальцем або стрілками ← →</p>
+          <p className="mt-1 text-center text-xs text-stone-500">Крути колесом, пальцем або стрілками ← →</p>
         </div>
 
         <div className="space-y-3">
           <div className="parchment border-2 border-amber-900/60 p-3">
-            <div className="mb-1 flex justify-between text-[11px] uppercase tracking-widest text-amber-900/80">
+            <div className="mb-1 flex justify-between text-xs uppercase tracking-widest text-amber-900/80">
               <span>☎ Перехоплено</span>
               <span>ЦІЛКОМ ТАЄМНО</span>
             </div>
             <p className="font-mono text-base font-bold tracking-[0.18em] text-amber-950 break-words">{encrypted}</p>
           </div>
           <div className={`border-2 bg-stone-950 p-3 ${shake ? 'animate-shake border-rose-500' : done === 'won' ? 'border-emerald-400' : 'border-sky-800'}`}>
-            <div className="mb-1 text-[11px] uppercase tracking-widest text-sky-400">Розшифровка</div>
+            <div className="mb-1 text-xs uppercase tracking-widest text-sky-400">Розшифровка</div>
             <p className={`font-mono text-base font-bold tracking-[0.18em] break-words ${done === 'won' ? 'text-emerald-300' : 'text-sky-100'}`}>{decoded}</p>
           </div>
           <div className="flex gap-2">
-            <button type="button" onClick={() => rotate(-1)} disabled={!!done} className="pixel-btn border-2 border-stone-600 bg-stone-800 px-4 py-2 font-pixel text-xs" aria-label="Повернути назад">
+            <button type="button" onClick={() => rotate(-1)} disabled={!!done} className="pixel-btn border-2 border-stone-600 bg-stone-800 px-4 py-2 font-pixel text-[16px]" aria-label="Повернути назад">
               ◀
             </button>
-            <button type="button" onClick={() => rotate(1)} disabled={!!done} className="pixel-btn border-2 border-stone-600 bg-stone-800 px-4 py-2 font-pixel text-xs" aria-label="Повернути вперед">
+            <button type="button" onClick={() => rotate(1)} disabled={!!done} className="pixel-btn border-2 border-stone-600 bg-stone-800 px-4 py-2 font-pixel text-[16px]" aria-label="Повернути вперед">
               ▶
             </button>
             <button

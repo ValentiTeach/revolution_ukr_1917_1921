@@ -110,7 +110,7 @@ export const EndingView: React.FC<EndingViewProps> = ({
       <div className="flex flex-col sm:flex-row items-center gap-4 bg-stone-900 pixel-frame p-5">
         <PixelAvatar id={heroSprite} size="lg" className="animate-float" />
         <div className="flex-1 text-center sm:text-left">
-          <div className="font-pixel text-[10px] text-amber-400">ДЖУРА РЕВОЛЮЦІЇ</div>
+          <div className="font-pixel text-[8px] text-amber-400">ДЖУРА РЕВОЛЮЦІЇ</div>
           <div className="font-serif text-2xl font-bold text-amber-200">{heroName}</div>
           <div className="text-sm text-stone-300">
             Звання: <strong className="text-amber-300">{rank.title}</strong> · {stars} ⭐ · знахідок {artifactsCount}/{ARTIFACTS.length} · медалей{' '}
@@ -132,23 +132,23 @@ export const EndingView: React.FC<EndingViewProps> = ({
       {/* Final Metrics overview */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         <div className="border border-stone-800 bg-stone-900/90 p-3 text-center">
-          <div className="text-[11px] text-stone-400">Єдність:</div>
+          <div className="text-xs text-stone-400">Єдність:</div>
           <div className="font-mono text-lg font-bold text-sky-400">{metrics.nationalUnity}%</div>
         </div>
         <div className="border border-stone-800 bg-stone-900/90 p-3 text-center">
-          <div className="text-[11px] text-stone-400">Армія:</div>
+          <div className="text-xs text-stone-400">Армія:</div>
           <div className="font-mono text-lg font-bold text-amber-400">{metrics.armyReadiness}%</div>
         </div>
         <div className="border border-stone-800 bg-stone-900/90 p-3 text-center">
-          <div className="text-[11px] text-stone-400">Дипломатія:</div>
+          <div className="text-xs text-stone-400">Дипломатія:</div>
           <div className="font-mono text-lg font-bold text-emerald-400">{metrics.diplomacy}%</div>
         </div>
         <div className="border border-stone-800 bg-stone-900/90 p-3 text-center">
-          <div className="text-[11px] text-stone-400">Довіра:</div>
+          <div className="text-xs text-stone-400">Довіра:</div>
           <div className="font-mono text-lg font-bold text-rose-400">{metrics.popularTrust}%</div>
         </div>
         <div className="border border-stone-800 bg-stone-900/90 p-3 text-center col-span-2 sm:col-span-1">
-          <div className="text-[11px] text-stone-400">Скарбниця:</div>
+          <div className="text-xs text-stone-400">Скарбниця:</div>
           <div className="font-mono text-lg font-bold text-yellow-400">{metrics.treasury}%</div>
         </div>
       </div>

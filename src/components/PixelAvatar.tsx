@@ -12,10 +12,12 @@ interface PixelAvatarProps {
 }
 
 export const PixelAvatar: React.FC<PixelAvatarProps> = ({ id, size = 'md', className = '' }) => {
+  // Портрет 32×32 у рамці 2 px: усередині рівно 32, 64 або 96 px,
+  // щоб кожен піксель портрета займав 1, 2 або 3 екранні пікселі (без «рябих» стовпчиків)
   const sizeClasses = {
-    sm: 'w-10 h-10',
-    md: 'w-16 h-16',
-    lg: 'w-24 h-24',
+    sm: 'w-[36px] h-[36px]',
+    md: 'w-[68px] h-[68px]',
+    lg: 'w-[100px] h-[100px]',
   }[size];
 
   // Pixel-art portraits rendered as crisp SVG vectors with retro palettes
@@ -641,7 +643,9 @@ export const PixelAvatar: React.FC<PixelAvatarProps> = ({ id, size = 'md', class
       style={{ imageRendering: 'pixelated' }}
     >
       {renderSvgPortrait()}
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+      {/* Ступінчаста тінь знизу: дві смуги з різкою межею, без плавного градієнта */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/4 bg-black/15" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/8 bg-black/15" />
     </div>
   );
 };

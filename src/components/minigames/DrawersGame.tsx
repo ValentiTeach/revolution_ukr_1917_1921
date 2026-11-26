@@ -132,7 +132,7 @@ export const DrawersGame: React.FC<StationGameProps & { drawers: number; item: s
                   ) : (
                     <>
                       <PixelEmoji emoji={JUNK[i % JUNK.length]} size={24} res={12} />
-                      <span className={`text-[11px] font-bold ${h.cls}`}>
+                      <span className={`text-xs font-bold ${h.cls}`}>
                         {h.emoji} {h.text}
                       </span>
                     </>
@@ -140,7 +140,7 @@ export const DrawersGame: React.FC<StationGameProps & { drawers: number; item: s
                 ) : (
                   <>
                     <span className="h-2 w-8 bg-amber-300 shadow-[0_2px_0_#78350f]" aria-hidden />
-                    {tugged.has(i) && <span className="mt-1 text-[10px] text-amber-200">ще раз!</span>}
+                    {tugged.has(i) && <span className="mt-1 text-xs text-amber-200">ще раз!</span>}
                     {lit && <span className={`mt-1 text-xs font-bold ${h.cls}`}>{h.emoji}</span>}
                   </>
                 )}

@@ -69,10 +69,10 @@ export const FactionsPanel: React.FC<FactionsPanelProps> = ({ reputation }) => {
               }`}
             >
               <div className="flex items-center justify-between gap-1 mb-1">
-                <span className="font-semibold text-stone-200 truncate text-[11px]">
+                <span className="font-semibold text-stone-200 truncate text-xs">
                   {info.name.split(' ')[0]}
                 </span>
-                <span className="font-mono text-stone-300 font-bold tabular-nums text-[11px]">
+                <span className="font-mono text-stone-300 font-bold tabular-nums text-xs">
                   {val}%
                 </span>
               </div>
@@ -85,7 +85,7 @@ export const FactionsPanel: React.FC<FactionsPanelProps> = ({ reputation }) => {
                   }}
                 />
               </div>
-              <div className="flex items-center justify-between text-[10px]">
+              <div className="flex items-center justify-between text-xs">
                 <span className={status.color}>{status.text}</span>
                 <Info className="h-3 w-3 text-stone-500" />
               </div>

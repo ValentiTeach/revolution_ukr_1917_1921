@@ -211,12 +211,12 @@ export const HideGame: React.FC<StationGameProps & { work: number; patrols: numb
 
         <AnimatePresence>
           {phase === 'warning' && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="px-blink absolute inset-x-0 top-9 text-center font-pixel text-[11px] text-amber-300 sm:text-xs">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="px-blink absolute inset-x-0 top-9 text-center font-pixel text-[8px] text-amber-300 sm:text-[16px]">
               👣 Чути кроки… ХОВАЙСЯ!
             </motion.div>
           )}
           {phase === 'fakeout' && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-x-0 top-9 text-center font-pixel text-[10px] text-sky-300">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-x-0 top-9 text-center font-pixel text-[8px] text-sky-300">
               …тиша. Пішов? Не поспішай!
             </motion.div>
           )}
@@ -253,7 +253,7 @@ export const HideGame: React.FC<StationGameProps & { work: number; patrols: numb
           disabled={hidden || cooling || !!result || phase === 'passing'}
           className="pixel-btn border-2 border-amber-400 bg-amber-500 py-3 font-bold text-stone-950 hover:bg-amber-400 disabled:opacity-40"
         >
-          ✋ Працювати <span className="text-[10px] font-normal">(пробіл)</span>
+          ✋ Працювати <span className="text-xs font-normal">(пробіл)</span>
         </button>
         <button
           type="button"
@@ -261,7 +261,7 @@ export const HideGame: React.FC<StationGameProps & { work: number; patrols: numb
           disabled={!!result}
           className={`pixel-btn border-2 py-3 font-bold ${hidden ? 'border-sky-300 bg-sky-600 text-white' : 'border-stone-500 bg-stone-800 text-stone-100 hover:border-sky-400'}`}
         >
-          {hidden ? '🙈 Вийти' : '🛢️ Сховатися'} <span className="text-[10px] font-normal">(H)</span>
+          {hidden ? '🙈 Вийти' : '🛢️ Сховатися'} <span className="text-xs font-normal">(H)</span>
         </button>
       </div>
       <p className="text-center text-xs text-stone-500">Ховайся, коли чуєш кроки, і виходь, щойно патруль мине: у бочці не вистачить подиху надовго. Не поспішай працювати — шум кличе патруль.</p>

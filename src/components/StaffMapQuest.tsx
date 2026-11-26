@@ -160,9 +160,8 @@ export const StaffMapQuest: React.FC<StaffMapQuestProps> = ({
               src={BG_IMAGES.map}
               alt="Воєнна карта України 1917-1921"
               referrerPolicy="no-referrer"
-              className="h-full w-full object-cover filter contrast-105"
+              className="pixelated h-full w-full object-cover"
             />
-            <div className="pointer-events-none absolute inset-0 bg-stone-950/15" />
 
             {/* City interactive markers */}
             {cities.map((city) => {
@@ -177,26 +176,27 @@ export const StaffMapQuest: React.FC<StaffMapQuestProps> = ({
                     sound.playSelect();
                     setSelectedCity(city);
                   }}
+                  aria-label={city.nameUk}
+                  title={city.nameUk}
                   style={{
                     left: `${city.x}%`,
                     top: `${city.y}%`,
                   }}
-                  className={`absolute -translate-x-1/2 -translate-y-1/2 flex items-center gap-1.5 p-1 border transition-all ${
+                  className={`absolute -translate-x-1/2 -translate-y-1/2 flex items-center justify-center border-2 p-[2px] ${
                     isSelected
-                      ? 'scale-110 z-20 border-amber-300 bg-amber-950/90 text-amber-200 shadow-lg'
+                      ? 'z-20 border-amber-300 bg-amber-950/90 text-amber-200 shadow-md'
                       : isUNR
-                      ? 'border-sky-500/80 bg-stone-950/80 text-sky-200 hover:scale-105'
-                      : 'border-rose-600/80 bg-stone-950/80 text-rose-300 hover:scale-105'
+                      ? 'border-sky-500 bg-stone-950/85 text-sky-200 hover:border-sky-300'
+                      : 'border-rose-600 bg-stone-950/85 text-rose-300 hover:border-rose-400'
                   }`}
                 >
-                  <MapPin
-                    className={`h-3.5 w-3.5 ${
-                      isSelected ? 'text-amber-300' : isUNR ? 'text-sky-400' : 'text-rose-400'
-                    }`}
-                  />
-                  <span className="font-serif text-[11px] font-bold whitespace-nowrap px-1">
-                    {city.nameUk}
-                  </span>
+                  <MapPin className={`h-3 w-3 ${isSelected ? 'text-amber-300' : isUNR ? 'text-sky-400' : 'text-rose-400'}`} />
+                  {/* Назви міст уже є на карті; табличка з'являється лише в обраного міста */}
+                  {isSelected && (
+                    <span className="px-pop absolute left-full top-1/2 ml-1 -translate-y-1/2 whitespace-nowrap border-2 border-amber-300 bg-stone-950 px-1.5 text-xs font-bold text-amber-200">
+                      {city.nameUk}
+                    </span>
+                  )}
                 </button>
               );
             })}
@@ -212,7 +212,7 @@ export const StaffMapQuest: React.FC<StaffMapQuestProps> = ({
                 <span className="h-2 w-2 rounded-full bg-rose-500" /> Лінія боїв / Оспорюється
               </span>
             </div>
-            <span className="text-[11px] text-stone-500 font-mono">
+            <span className="text-xs text-stone-500 font-mono">
               Масштаб: 1 верста = 1.06 км · Залізнична сітка
             </span>
           </div>
@@ -228,14 +228,14 @@ export const StaffMapQuest: React.FC<StaffMapQuestProps> = ({
                   <h3 className="font-serif text-base font-bold text-amber-300">
                     {selectedCity.nameUk}
                   </h3>
-                  <span className="text-[11px] text-stone-400">
+                  <span className="text-xs text-stone-400">
                     {selectedCity.importance === 'capital' && 'Столиця та центр уряду'}
                     {selectedCity.importance === 'major' && 'Стратегічний промисловий центр'}
                     {selectedCity.importance === 'fortress' && 'Залізничний оборонний вузол'}
                   </span>
                 </div>
                 <span
-                  className={`border px-2 py-0.5 text-[10px] font-mono uppercase ${
+                  className={`border px-2 py-0.5 text-xs font-mono uppercase ${
                     selectedCity.controlledBy === 'UNR'
                       ? 'border-sky-500 bg-sky-950/80 text-sky-300'
                       : selectedCity.controlledBy === 'ZUNR'
@@ -249,7 +249,7 @@ export const StaffMapQuest: React.FC<StaffMapQuestProps> = ({
                 </span>
               </div>
 
-              <p className="text-stone-300 leading-relaxed text-[11px]">
+              <p className="text-stone-300 leading-relaxed text-xs">
                 {selectedCity.historicalNote}
               </p>
 
@@ -293,7 +293,7 @@ export const StaffMapQuest: React.FC<StaffMapQuestProps> = ({
                               setTactics((prev) => ({ ...prev, [op.id]: t.id }));
                             }}
                             aria-pressed={chosen === t.id}
-                            className={`border px-1 py-1.5 text-[11px] leading-tight ${
+                            className={`border px-1 py-1.5 text-xs leading-tight ${
                               chosen === t.id ? 'border-amber-400 bg-amber-950 text-amber-100' : 'border-stone-700 text-stone-400 hover:border-stone-500'
                             }`}
                           >
@@ -304,7 +304,7 @@ export const StaffMapQuest: React.FC<StaffMapQuestProps> = ({
                       </div>
                     )}
                     <div className="mt-2 flex items-center justify-between pt-2 border-t border-stone-800/60">
-                      <span className="text-[11px] text-stone-500">
+                      <span className="text-xs text-stone-500">
                         Ворог: ~{op.enemyPower} · Наші: ~{op.friendlyTroops}
                       </span>
                       {done ? (
@@ -351,7 +351,7 @@ export const StaffMapQuest: React.FC<StaffMapQuestProps> = ({
                 )}
               </div>
               <p className="leading-relaxed">{lastBattleResult.report}</p>
-              <div className="flex items-center justify-between font-mono text-[11px] pt-2 border-t border-stone-800">
+              <div className="flex items-center justify-between font-mono text-xs pt-2 border-t border-stone-800">
                 <span>Втрати захисників: ~{lastBattleResult.friendlyLosses}</span>
                 <span>Втрати ворога: ~{lastBattleResult.enemyLosses}</span>
               </div>

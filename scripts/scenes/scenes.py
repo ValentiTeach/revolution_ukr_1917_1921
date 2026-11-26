@@ -236,8 +236,22 @@ def scene_forest() -> Canvas:
     hill = ridge(13, W, 96, [(18, 140), (4, 26)])
     for x in range(W):
         hill[x] = min(hill[x], 96 - round(26 * math.exp(-((x - 192) / 70) ** 2)))
-    cv.fill_below(hill, H, lambda x, y, top: hexc('#1d3346') if y - top < 2 else hexc('#14263a'))
+    # Пласка вершина під монастирем, щоб мури стояли на землі, а не «висіли»
     mx, mb = 192, hill[192] + 2
+    for x in range(mx - 40, mx + 41):
+        hill[x] = min(hill[x], mb - 1 + round(abs(x - mx) / 40 * 2))
+    # Пагорб: місячне світло на правому схилі, темний лівий
+    def hill_shade(x, y, top):
+        if y - top < 1:
+            return hexc('#3a5878') if x > mx else hexc('#24405a')
+        if y - top < 3 and x > mx and dith(x, y, 0.5):
+            return hexc('#24405a')
+        return hexc('#14263a') if not (x > mx and dith(x, y, 0.15)) else hexc('#1a3048')
+    cv.fill_below(hill, H, hill_shade)
+    # Стежка серпантином до брами
+    for k in range(40):
+        px = mx + 30 + round(10 * math.sin(k / 6))
+        cv.set(px, mb + 2 + k // 2, hexc('#2a405a'))
     wall = hexc('#a9b6d2')
     wall_d = hexc('#66739a')
     cv.rect(mx - 34, mb - 10, 68, 10, wall)  # мури
@@ -298,16 +312,34 @@ def scene_forest() -> Canvas:
     horse(cv, 316, 180, 16, hexc('#3a281c'), hexc('#24180f'), hexc('#120c08'), facing=-1)
     horse(cv, 340, 186, 16, hexc('#4a3424'), hexc('#2c1e14'), hexc('#120c08'), step=1, facing=-1)
 
-    # Старий дуб на передньому плані (знахідка: x≈10%, y≈52%)
-    for y in range(40, H):
-        w = 18 + (y - 40) // 9
-        for x in range(0, w):
-            c = hexc('#2a1d14') if x < w - 5 else hexc('#3f2c1e')
-            if (x * 7 + y * 3) % 11 == 0:
-                c = hexc('#1a120c')
-            if x > w - 3:
-                c = hexc('#5c4a3a') if dith(x, y, 0.5) else hexc('#3f2c1e')
+    # Старий дуб на передньому плані (знахідка: x≈10%, y≈52%): кривий стовбур,
+    # що розширюється до коренів, глибока кора, місячне світло на правому боці, дупло
+    def trunk_cx(y: int) -> float:
+        return 12 + 4 * math.sin(y / 23) - (y - 40) * 0.02
+
+    for y in range(30, H):
+        w = 16 + (y - 30) * 0.1 + max(0, y - (H - 22)) * 1.4
+        left, right = trunk_cx(y) - w / 2, trunk_cx(y) + w / 2
+        for x in range(max(0, int(left)), int(right) + 1):
+            u = (x - left) / w
+            c = hexc('#24180f')
+            if (x + round(2.5 * math.sin(y / 6 + x * 0.7))) % 4 == 0:
+                c = hexc('#140d08')  # борозни кори
+            elif u > 0.55:
+                c = hexc('#33241a')
+            if u > 0.82:
+                c = hexc('#4e5a6a') if dith(x, y, 0.55) else hexc('#3a3a40')  # місяць
+                if (x + round(2.5 * math.sin(y / 6 + x * 0.7))) % 4 == 0:
+                    c = hexc('#22202a')
             cv.set(x, y, c)
+    # Дупло
+    cv.ellipse(trunk_cx(118) + 1, 118, 3, 6, hexc('#07060a'))
+    for k in range(-6, 7):
+        cv.set(round(trunk_cx(118) + 4), 118 + k, hexc('#4e5a6a') if abs(k) < 5 else hexc('#33241a'))
+    # Великі гілки, що йдуть у крону
+    for (sx, sy, ex, ey, wd) in ((18, 60, 52, 22, 4), (10, 52, 2, 18, 3), (20, 78, 44, 60, 2)):
+        for k in range(wd):
+            cv.line(sx + k, sy, ex + k, ey, hexc('#24180f') if k < wd - 1 else hexc('#3a3a40'))
     oak_crown(cv, 18, 20, 30, hexc('#0a1822'), hexc('#12293a'), hexc('#2b4a64'), 5)
     oak_crown(cv, 60, 6, 22, hexc('#0a1822'), hexc('#12293a'), hexc('#2b4a64'), 6)
     oak_crown(cv, 380, 18, 26, hexc('#0a1822'), hexc('#12293a'), hexc('#2b4a64'), 7)
@@ -433,8 +465,17 @@ def scene_syvash() -> Canvas:
     cv.vgrad(0, 98, [hexc(c) for c in ('#03050d', '#0a1024', '#141c3a', '#202a4c')])
     cv.stars(71, 160, 80, [hexc('#e2e8f0'), hexc('#a5b4fc'), hexc('#fef9c3')])
     cv.glow(70, 34, 48, hexc('#7d93c8'), 0.4)
-    cv.ellipse(70, 34, 10, 10, hexc('#f3f0dc'))
-    cv.ellipse(73, 31, 9, 9, hexc('#0a1024'))  # серп місяця
+    # Серп місяця: освітлена частина диска поза «тіньовим» колом. Тінь не малюємо
+    # чорною плямою — там лишається небо з ледь помітним попелястим світлом.
+    for y in range(22, 47):
+        for x in range(58, 83):
+            inside = (x + 0.5 - 70) ** 2 + (y + 0.5 - 34) ** 2 <= 100
+            shadow = (x + 0.5 - 74) ** 2 + (y + 0.5 - 31) ** 2 <= 84
+            if inside and not shadow:
+                edge = (x + 0.5 - 74) ** 2 + (y + 0.5 - 31) ** 2 <= 110
+                cv.set(x, y, hexc('#d9d2b4') if edge else hexc('#f6f2de'))
+            elif inside and shadow:
+                cv.blend(x, y, hexc('#3a4a78'), 0.35)
 
     # Протилежний берег: Литовський півострів і Перекопський вал
     shore = ridge(81, W, 96, [(4, 60), (2, 10)])
@@ -605,21 +646,45 @@ def scene_armored() -> Canvas:
         for k in range(3):
             wheel(cv, wx + 10 + k * (ww - 20) // 2, 143, 4, hexc('#1a1a1a'), hexc('#3a3a3a'))
         cv.rect(wx + ww, top + 22, 4, 3, hexc('#1a1a1a'))  # зчіпка
-    # Паровоз броньований
-    cv.rect(238, 108, 30, 34, plate)
-    cv.rect(238, 108, 30, 3, plate_l)
-    cv.rect(260, 96, 8, 12, plate_d)  # будка
-    cv.rect(242, 98, 6, 10, plate_d)  # труба
-    smoke(cv, 245, 96, 50, hexc('#e4e2ea'), 4, drift=-1.1)
-    for k in range(3):
-        wheel(cv, 244 + k * 9, 142, 5, hexc('#1a1a1a'), hexc('#c0262d'))
+    # Броньований паровоз: будка машиніста ззаду, кутастий бронекожух котла,
+    # труба й сухопарник, броньований фартух над колесами, прожектор спереду
+    rivet = hexc('#7a8a72')
+    wheel_y = 143
+    for k, wx in enumerate((246, 258, 270)):
+        wheel(cv, wx, wheel_y, 5, hexc('#151515'), hexc('#8a1c1e'), k * 0.5)
+    wheel(cv, 283, wheel_y + 2, 3, hexc('#151515'), hexc('#3a3a3a'))
+    cv.line(246, wheel_y, 270, wheel_y, hexc('#9a9aa6'))  # дишло
+    cv.poly([(250, 112), (279, 112), (289, 121), (289, 131), (250, 131)], shader=lambda x, y: plate_l if y < 114 else (plate_d if x > 284 or y > 128 else plate))
+    cv.rect(263, 108, 6, 4, plate)  # сухопарник
+    cv.rect(263, 108, 6, 1, plate_l)
+    cv.rect(276, 101, 5, 11, hexc('#23281f'))  # труба
+    cv.rect(275, 100, 7, 2, hexc('#171a14'))
+    cv.rect(235, 98, 19, 2, plate_d)  # дах будки
+    cv.rect(236, 100, 16, 31, plate)
+    cv.rect(236, 100, 16, 2, plate_l)
+    cv.rect(249, 100, 3, 31, plate_d)
+    cv.rect(239, 105, 7, 3, hexc('#121410'))  # оглядова щілина
+    cv.rect(234, 131, 56, 9, plate_d)  # фартух
+    cv.rect(234, 131, 56, 1, plate_l)
+    for rx in range(236, 289, 4):
+        cv.set(rx, 133, rivet)
+        cv.set(rx, 138, rivet)
+    for rx in range(252, 286, 5):
+        cv.set(rx, 116, rivet)
+    cv.rect(289, 117, 2, 3, hexc('#ffe9a8'))  # прожектор
+    cv.glow(291, 118, 8, hexc('#ffd27a'), 0.5)
+    cv.rect(289, 136, 3, 2, hexc('#1a1a1a'))  # буфер
+    smoke(cv, 278, 99, 50, hexc('#e4e2ea'), 4, drift=-1.1)
     # Червоний прапор і зірка на вагоні
     cv.vline(60, 80, 100, hexc('#2a1e1a'))
     for yy in range(9):
         for xx in range(16):
             cv.set(61 + xx, 80 + yy + (1 if (xx // 4) % 2 else 0), hexc('#c0262d'))
-    for dx, dy in ((0, -3), (-1, -1), (1, -1), (-3, -1), (3, -1), (-2, 1), (2, 1), (-3, 3), (3, 3), (0, 0), (-1, 0), (1, 0)):
-        cv.set(198 + dx, 126 + dy, hexc('#c0262d'))
+    star = ['...#...', '..###..', '#######', '.#####.', '..###..', '.##.##.', '##...##']
+    for yy, row in enumerate(star):
+        for xx, ch in enumerate(row):
+            if ch == '#':
+                cv.set(195 + xx, 122 + yy, hexc('#c0262d'))
     # Вартові в будьонівках
     for gx, gy in ((120, 168), (300, 172), (330, 178)):
         soldier(cv, gx, gy, 18, hexc('#5a5e48'), hexc('#3a3d2e'), hexc('#4a4e3a'), hexc('#d9a37f'), hexc('#4a3424'), budenovka=True, facing=-1 if gx > 200 else 1)
@@ -634,9 +699,15 @@ def round_tower(cv: Canvas, x: int, base: int, w: int, h: int, stone, stone_d, r
     for yy in range(base - h, base):
         for xx in range(x - w // 2, x + w // 2 + 1):
             rel = (xx - (x - w // 2)) / w
-            c = stone if rel < 0.55 else stone_d
-            if (yy // 4 + (xx // 3)) % 7 == 0:
-                c = mix(c, (0, 0, 0), 0.15)
+            # Циліндр: світла смуга ліворуч від центру, темніші краї, тінь праворуч
+            c = stone if 0.12 < rel < 0.55 else stone_d
+            if rel <= 0.12:
+                c = mix(stone, stone_d, 0.5)
+            if rel > 0.85:
+                c = mix(stone_d, (0, 0, 0), 0.15)
+            # Кладка: шви через ряд зі зсувом
+            if yy % 4 == 0 or (xx + (yy // 4) * 3) % 6 == 0:
+                c = mix(c, (60, 50, 40), 0.18)
             cv.set(xx, yy, c)
     cv.poly([(x - w / 2 - 2, base - h), (x + w / 2 + 2, base - h), (x, base - h - w * 1.1)], shader=lambda xx, yy: roof if xx < x else roof_d)
     for k in range(2):
@@ -664,9 +735,8 @@ def scene_kamianets() -> Canvas:
     cv.fill_below(far, H, lambda x, y, top: hexc('#8a9a6a') if dith(x, y, 0.4) else hexc('#7a8a5c'))
     cv.haze(80, 110, hexc('#c7def2'), 0.5, 0.0)
 
-    # Каньйон: дві скелі й річка між ними
-    left_cliff = [round(110 + 14 * math.sin(x / 17)) for x in range(W)]
-    for y in range(104, H):
+    # Трава на плато з осінніми вкрапленнями
+    for y in range(100, H):
         for x in range(W):
             c = hexc('#7d8a5a')
             if ((x * 7 + y * 11) % 13) == 0 or dith(x, y, 0.2 + 0.15 * math.sin(x / 9 + y / 4)):
@@ -674,31 +744,67 @@ def scene_kamianets() -> Canvas:
             if ((x * 5 + y * 3) % 31) == 0:
                 c = hexc('#c9a040')
             cv.set(x, y, c)
-    river_x = lambda y: 70 + round(18 * math.sin(y / 23)) + round((y - 120) * 0.25)
-    for y in range(120, H):
+
+    # Каньйон Смотрича: тягнеться з-під Турецького мосту вниз ліворуч, ширшає ближче до нас.
+    # Лівий схил у тіні, правий освітлений; скелі з вертикальними тріщинами й уступами.
+    def river_x(y: float) -> float:
+        return 120 - (y - 108) * 0.55 + 7 * math.sin(y / 19)
+
+    rock_l = [hexc('#8a7a5e'), hexc('#74664e'), hexc('#5e523e')]  # тіньовий схил
+    rock_r = [hexc('#d2c29c'), hexc('#bcaa84'), hexc('#a4926c')]  # освітлений схил
+    noise = random.Random(73)
+    crack = {x: noise.random() for x in range(-40, W + 40)}
+    for y in range(106, H):
         rx = river_x(y)
-        for x in range(0, W):
-            dx = x - rx
-            if abs(dx) < 10 + (y - 120) // 6:
-                c = hexc('#3a7a8a') if (x + y // 2) % 9 else hexc('#7ab8c4')
+        river_hw = 3 + (y - 106) / 16
+        wall_hw = 12 + (y - 106) * 0.42
+        lip_l = rx - wall_hw + 3 * math.sin(y / 7)
+        lip_r = rx + wall_hw + 3 * math.sin(y / 9 + 1)
+        for x in range(max(0, int(lip_l) - 1), min(W, int(lip_r) + 2)):
+            if abs(x - rx) < river_hw:
+                c = hexc('#2f6c7c') if (x + y // 2) % 9 else hexc('#7ab8c4')
+                if abs(x - rx) > river_hw - 1:
+                    c = hexc('#21505c')  # темна смуга біля берега
                 cv.set(x, y, c)
-            elif -60 < dx < 0 or 0 < dx < 70:
-                # стіни каньйону: шари вапняку
-                layer = (y // 5) % 3
-                c = [hexc('#b8a582'), hexc('#a08c6a'), hexc('#c9b894')][layer]
-                if dx > 0 and dx < 14:
-                    c = mix(c, hexc('#5a4a3a'), 0.4)
-                cv.set(x, y, c)
-    # Скельне плато з фортецею й прямовисна скеля під нею
-    plateau = 120
-    for x in range(120, 384):
-        cliff_bottom = plateau + 14 + round(6 * math.sin(x / 11))
-        for y in range(plateau - round(4 * math.sin(x / 13)), cliff_bottom):
-            layer = (y // 4) % 3
-            c = [hexc('#b8a582'), hexc('#a08c6a'), hexc('#c9b894')][layer]
-            if (x // 7 + y // 4) % 5 == 0:
-                c = mix(c, hexc('#4a3a2a'), 0.35)
+                continue
+            if x < rx:
+                depth = (x - lip_l) / max(1, (rx - river_hw) - lip_l)  # 0 біля краю, 1 біля води
+                ramp = rock_l
+            else:
+                depth = ((rx + river_hw) - x) / max(1, (rx + river_hw) - lip_r) if lip_r != rx + river_hw else 0
+                depth = 1 - (x - (rx + river_hw)) / max(1, lip_r - (rx + river_hw))
+                ramp = rock_r
+            if x < lip_l or x > lip_r:
+                continue
+            i = 0 if depth < 0.4 else (1 if depth < 0.75 else 2)
+            c = ramp[i]
+            if dith(x, y, (depth * 3) % 1) and i < 2:
+                c = ramp[i + 1]
+            if crack[x] < 0.18 and (y + x) % 5:
+                c = mix(c, hexc('#3a3028'), 0.45)  # вертикальні тріщини
+            if (y + round(crack[x] * 9)) % 11 == 0:
+                c = mix(c, hexc('#f0e6c8'), 0.35)  # уступи
             cv.set(x, y, c)
+        # Трав'яний край урвища
+        for lx in (round(lip_l) - 1, round(lip_r) + 1):
+            cv.set(lx, y, hexc('#4f5e36'))
+
+    # Скельне плато з фортецею: прямовисна скеля під мурами, освітлена зліва
+    plateau = 118
+    for x in range(132, W):
+        cliff_bottom = plateau + 16 + round(5 * math.sin(x / 11)) + round(3 * math.sin(x / 4.3))
+        top = plateau - round(3 * math.sin(x / 13))
+        for y in range(top, cliff_bottom):
+            t = (y - top) / max(1, cliff_bottom - top)
+            c = rock_r[0] if t < 0.3 else (rock_r[1] if t < 0.7 else rock_r[2])
+            if dith(x, y, (t * 3) % 1) and t < 0.7:
+                c = rock_r[1] if t < 0.3 else rock_r[2]
+            if crack[x % W] < 0.2:
+                c = mix(c, hexc('#3a3028'), 0.4)
+            if x > 300:
+                c = mix(c, hexc('#5e523e'), 0.25)
+            cv.set(x, y, c)
+        cv.set(x, cliff_bottom, hexc('#4f5e36'))
     stone, stone_d = hexc('#d9cdb2'), hexc('#a89a80')
     roof, roof_d = hexc('#9a3a22'), hexc('#6a2416')
     cv.rect(140, 96, 190, 22, stone)
@@ -712,20 +818,33 @@ def scene_kamianets() -> Canvas:
     for yy in range(8):
         for xx in range(14):
             cv.set(216 + xx, 26 + yy + (1 if (xx // 3) % 2 else 0), UA_BLUE if yy < 4 else UA_YELLOW)
-    # Турецький міст
-    for x in range(96, 142):
-        cv.rect(x, 112, 1, 6, stone_d)
+    # Турецький міст через каньйон: проїзд угорі, арки з глибокою тінню під ними
+    for x in range(98, 142):
+        cv.rect(x, 112, 1, 7, stone_d if x > 128 else stone)
         cv.set(x, 111, stone)
-    for ax in (104, 120, 134):
-        cv.ellipse(ax, 122, 5, 6, hexc('#7d8a5a'))
+        cv.set(x, 110, stone_d if x % 3 == 0 else stone)  # парапет
+    for ax in (106, 120, 134):
+        for yy in range(114, 119):
+            for xx in range(ax - 4, ax + 5):
+                if (xx - ax) ** 2 / 16 + (yy - 119) ** 2 / 25 <= 1:
+                    cv.set(xx, yy, hexc('#2a241c') if yy > 115 else hexc('#3e3428'))
     # Осінні дерева на схилах
     for i, (ax, ab, ar) in enumerate(((20, 128, 10), (40, 140, 12), (112, 150, 9), (150, 138, 8), (350, 150, 12), (372, 138, 10), (330, 160, 14), (10, 170, 16))):
         autumn_tree(cv, ax, ab, ar, i)
-    # Передній план: стежка й скриня з гривнями (знахідка: x≈82%, y≈74%)
-    for y in range(168, H):
-        for x in range(170, W):
-            if y > 168 + (x - 170) * 0.1:
-                cv.set(x, y, hexc('#8a7650') if dith(x, y, 0.4) else hexc('#7a6644'))
+    # Передній план: стежка до брами й скриня з гривнями (знахідка: x≈82%, y≈74%)
+    path = [(334, 216), (318, 196), (292, 176), (252, 156), (206, 142), (168, 134)]
+    for (ax, ay), (bx, by) in zip(path, path[1:]):
+        steps = max(abs(bx - ax), abs(by - ay))
+        for k in range(steps):
+            t = k / steps
+            px, py = ax + (bx - ax) * t, ay + (by - ay) * t
+            half = 2 + (py - 130) / 9
+            for xx in range(round(px - half), round(px + half) + 1):
+                edge = abs(xx - px) > half - 1.2
+                c = hexc('#9a8458') if dith(xx, round(py), 0.45) else hexc('#86714a')
+                if edge:
+                    c = hexc('#6a5a3a')
+                cv.set(xx, round(py), c)
     cv.rect(304, 156, 24, 14, hexc('#7a4e2a'))
     cv.rect(304, 156, 24, 2, hexc('#a06a3a'))
     for k in range(3):
@@ -768,12 +887,23 @@ def scene_fortress() -> Canvas:
         cv.rect(k, 80, 3, 6, hexc('#3a2a30'))
     cv.haze(60, 100, hexc('#f2e6c4'), 0.35, 0.0)
 
-    # Поля пшениці праворуч і курява кінноти на обрії (x≈85%, y≈40%)
+    # Поля пшениці праворуч і курява кінноти на обрії (x≈85%, y≈40%):
+    # борозни в перспективі (далі густіші), світліше вдалині, колоски-зернятка ближче
+    grain = random.Random(44)
     for y in range(92, H):
-        for xx in range(220, W):
-            c = hexc('#d8b24c') if (xx + y * 2) % 7 else hexc('#c09a3a')
-            if y < 100:
-                c = mix(c, hexc('#e8dcb0'), 0.5)
+        t = (y - 92) / (H - 92)
+        far_c = mix(hexc('#e6d6a0'), hexc('#d8b24c'), min(1, t * 2.2))
+        furrow = mix(far_c, hexc('#a8822e'), 0.45)
+        row = int((t ** 0.6) * 26)
+        prev_row = int((max(0, (y - 1 - 92)) / (H - 92)) ** 0.6 * 26)
+        for xx in range(200, W):
+            c = far_c
+            if row != prev_row:
+                c = furrow
+            elif dith(xx, y, 0.15 + 0.25 * t):
+                c = mix(far_c, hexc('#c09a3a'), 0.5)
+            if t > 0.2 and grain.random() < 0.05 * t:
+                c = hexc('#f4e2a0')
             cv.set(xx, y, c)
     for (dx, dy, dl) in ((326, 88, 70), (300, 92, 40), (360, 90, 40)):
         for k in range(dl):
@@ -797,19 +927,30 @@ def scene_fortress() -> Canvas:
         return mix(c, (20, 8, 6), shade)
 
     wall_top = 104
-    cv.poly([(0, wall_top), (230, wall_top), (250, 150), (0, 150)], shader=lambda x, y: bricks(x, y, 0.05))
-    # Бастіон, що виступає вперед: лівий бік на сонці, правий у тіні
-    cv.poly([(70, 112), (160, 112), (170, 160), (115, 182), (60, 160)], shader=lambda x, y: bricks(x, y) if x < 115 else bricks(x, y, 0.35))
-    # Рів із водою під мурами
-    for y in range(150, 162):
+    # Рів із водою під мурами (спершу вода, потім бастіон, що стоїть у ній)
+    for y in range(146, 186):
         for x in range(0, 250):
-            if cv.get(x, y) == (0, 0, 0) or y >= 158:
-                cv.set(x, y, hexc('#4a6a6a') if (x // 5 + y) % 4 else hexc('#7a9a92'))
+            if y >= 168 and abs(x - 115) / 72 + (y - 168) / 18 > 1:
+                continue  # рів огинає наконечник бастіону
+            cv.set(x, y, hexc('#4a6a6a') if (x // 5 + y) % 4 else hexc('#7a9a92'))
+    cv.poly([(0, wall_top), (232, wall_top), (242, 150), (0, 150)], shader=lambda x, y: bricks(x, y, 0.05 if x < 226 else 0.3))
+    # Бастіон-«наконечник», що виступає вперед: ліва грань на сонці, права в тіні,
+    # зверху земляний вал із парапетом
+    cv.poly([(62, 116), (115, 126), (115, 180), (56, 162)], shader=lambda x, y: bricks(x, y))
+    cv.poly([(115, 126), (168, 116), (174, 162), (115, 180)], shader=lambda x, y: bricks(x, y, 0.38))
+    cv.poly([(66, 104), (162, 104), (168, 116), (115, 126), (62, 116)], hexc('#7d7a4e'))
+    for k in range(66, 162, 3):
+        cv.set(k, 104 + (k % 2), hexc('#6a683e'))
+    cv.line(62, 116, 115, 126, brick_l)
+    cv.line(115, 126, 168, 116, hexc('#8a3a24'))
+    cv.line(62, 115, 115, 125, brick_l)
+    cv.line(115, 125, 168, 115, hexc('#8a3a24'))
+    cv.vline(115, 126, 180, hexc('#5a2418'))  # ребро бастіону
     for k in range(0, 230, 12):
         cv.rect(k, wall_top - 6, 8, 6, brick)
         cv.rect(k, wall_top - 6, 8, 1, brick_l)
-    for ex in (84, 104, 126, 146):
-        cv.rect(ex, 128, 6, 4, hexc('#1a0e0a'))  # амбразури
+    for ex, ey in ((80, 136), (100, 140), (128, 140), (150, 136)):
+        cv.rect(ex, ey, 5, 3, hexc('#1a0e0a'))  # амбразури
     # Прапори УНР і Польщі
     for fx, c1, c2 in ((96, UA_BLUE, UA_YELLOW), (140, hexc('#f4f4f4'), hexc('#d01c2a'))):
         cv.vline(fx, 70, 112, hexc('#3a2a22'))
@@ -824,8 +965,10 @@ def scene_fortress() -> Canvas:
     # Окоп із мішками й польовий телефон (x≈62%, y≈76%)
     for y in range(150, H):
         for x in range(W):
-            if x < 250 and y < 162:
+            if x < 250 and y < 168:
                 continue
+            if 40 <= x <= 190 and y < 186 and cv.get(x, y) != (0, 0, 0):
+                continue  # бастіон і вода рову навколо нього
             c = hexc('#8a7a4a') if dith(x, y, 0.4 + 0.2 * math.sin(x / 7)) else hexc('#7a6a3e')
             if ((x * 7 + y * 13) % 29) == 0:
                 c = hexc('#a8984e')
@@ -893,7 +1036,24 @@ def scene_memorial() -> Canvas:
                 cv.set(bx + k, y, c)
         bare_tree(cv, bx + 1, H - bh + 20, bh * 0.9, hexc('#3a2a2e'), bx, 0.5)
     # Памʼятний хрест на кургані
-    cv.ellipse(192, 176, 70, 14, shader=lambda x, y: hexc('#6a5a4a') if y < 172 else hexc('#5a4a3e'))
+    # Курган: опуклий горбок, освітлений заходом ліворуч, з сухою травою й латками снігу
+    def mound(x, y):
+        nx, ny = (x - 192) / 70, (y - 176) / 14
+        lit = -nx * 0.7 - ny * 0.9
+        c = hexc('#7a6a52') if lit > 0.35 else (hexc('#6a5a4a') if lit > -0.1 else hexc('#55473a'))
+        if 0.2 < lit < 0.5 and dith(x, y, 0.5):
+            c = hexc('#6a5a4a')
+        if ny < -0.75:
+            c = hexc('#8a7a5c')  # гребінь
+        if ((x * 7 + y * 13) % 17) == 0:
+            c = hexc('#a08e62')  # сухі стеблини
+        if ny < -0.3 and -0.6 < nx < -0.2 and dith(x, y, 0.6):
+            c = hexc('#e6e4ee')  # латка снігу
+        return c
+    cv.ellipse(192, 176, 70, 14, shader=mound)
+    for x in range(124, 261):
+        yb = round(176 + 14 * math.sqrt(max(0, 1 - ((x - 192) / 70) ** 2)))
+        cv.set(x, yb, hexc('#3e3328'))  # тінь біля підніжжя
     stone, stone_d, stone_l = hexc('#8a8478'), hexc('#5e5a52'), hexc('#b8b0a0')
     cv.rect(178, 150, 28, 18, stone)  # постамент
     cv.rect(178, 150, 28, 2, stone_l)

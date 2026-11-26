@@ -86,7 +86,7 @@ export const TelegramPuzzle: React.FC<TelegramPuzzleProps> = ({ sentence, decoys
   return (
     <div className="space-y-4">
       <div className={`parchment min-h-[96px] border-2 border-amber-800 p-4 font-mono text-base sm:text-lg ${shake !== null ? 'animate-shake' : ''}`}>
-        <div className="mb-2 flex items-center justify-between text-[11px] uppercase tracking-widest text-amber-900/80">
+        <div className="mb-2 flex items-center justify-between text-xs uppercase tracking-widest text-amber-900/80">
           <span>☎ Телеграма · Київ</span>
           <span>
             {placed.length}/{words.length}

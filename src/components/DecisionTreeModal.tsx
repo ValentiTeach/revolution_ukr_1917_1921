@@ -54,17 +54,17 @@ export const DecisionTreeModal: React.FC<DecisionTreeModalProps> = ({
 
           <div className="flex items-center gap-4 bg-stone-950/80 border border-stone-800 px-4 py-2.5 text-xs">
             <div>
-              <span className="text-stone-400 text-[11px] block">Канонічність лінії:</span>
+              <span className="text-stone-400 text-xs block">Канонічність лінії:</span>
               <span className="font-mono font-bold text-amber-300 text-sm">{canonPercent}%</span>
             </div>
             <div className="h-8 w-px bg-stone-800" />
             <div>
-              <span className="text-stone-400 text-[11px] block">Історичні вибори:</span>
+              <span className="text-stone-400 text-xs block">Історичні вибори:</span>
               <span className="font-mono font-bold text-stone-200 text-sm">{canonChoicesCount}</span>
             </div>
             <div className="h-8 w-px bg-stone-800" />
             <div>
-              <span className="text-stone-400 text-[11px] block">Альтернативні:</span>
+              <span className="text-stone-400 text-xs block">Альтернативні:</span>
               <span className="font-mono font-bold text-emerald-400 text-sm">{altChoicesCount}</span>
             </div>
           </div>
@@ -138,20 +138,20 @@ export const DecisionTreeModal: React.FC<DecisionTreeModalProps> = ({
 
                       {historyNode ? (
                         historyNode.wasCanon ? (
-                          <span className="text-[10px] font-mono uppercase border border-stone-700 bg-stone-800 px-2 py-0.5 text-stone-300">
+                          <span className="text-xs font-mono uppercase border border-stone-700 bg-stone-800 px-2 py-0.5 text-stone-300">
                             Історичний канон
                           </span>
                         ) : (
-                          <span className="text-[10px] font-mono uppercase border border-emerald-800 bg-emerald-950 px-2 py-0.5 text-emerald-300">
+                          <span className="text-xs font-mono uppercase border border-emerald-800 bg-emerald-950 px-2 py-0.5 text-emerald-300">
                             Альтернативна гілка
                           </span>
                         )
                       ) : isCurrent ? (
-                        <span className="text-[10px] font-mono uppercase border border-amber-600 bg-amber-900/60 px-2 py-0.5 text-amber-300">
+                        <span className="text-xs font-mono uppercase border border-amber-600 bg-amber-900/60 px-2 py-0.5 text-amber-300">
                           Поточна подія
                         </span>
                       ) : (
-                        <span className="text-[10px] font-mono text-stone-600">Очікується</span>
+                        <span className="text-xs font-mono text-stone-600">Очікується</span>
                       )}
                     </div>
 
@@ -163,7 +163,7 @@ export const DecisionTreeModal: React.FC<DecisionTreeModalProps> = ({
                     )}
 
                     <div className="mt-2 flex items-center justify-between text-xs pt-2 border-t border-stone-800/60">
-                      <p className="text-stone-400 text-[11px] truncate max-w-sm">
+                      <p className="text-stone-400 text-xs truncate max-w-sm">
                         {cfg.summary}
                       </p>
                       {isChapterOpen(cid) ? (
@@ -174,13 +174,13 @@ export const DecisionTreeModal: React.FC<DecisionTreeModalProps> = ({
                             sound.playSelect();
                             onJumpToChapter(cid);
                           }}
-                          className="flex items-center gap-1 text-[11px] text-amber-400 hover:text-amber-300 hover:underline shrink-0"
+                          className="flex items-center gap-1 text-xs text-amber-400 hover:text-amber-300 hover:underline shrink-0"
                         >
                           <span>Перейти</span>
                           <ArrowRight className="h-3 w-3" />
                         </button>
                       ) : (
-                        <span className="flex items-center gap-1 text-[11px] text-stone-600 shrink-0">
+                        <span className="flex items-center gap-1 text-xs text-stone-600 shrink-0">
                           <Lock className="h-3 w-3" /> Закрито
                         </span>
                       )}
@@ -202,7 +202,7 @@ export const DecisionTreeModal: React.FC<DecisionTreeModalProps> = ({
           {selectedNode ? (
             <div className="border border-stone-800 bg-stone-900/90 p-5 space-y-4 text-xs text-stone-300 shadow-md">
               <div className="border-b border-stone-800 pb-3">
-                <span className="text-[11px] text-stone-400">{selectedNode.year}</span>
+                <span className="text-xs text-stone-400">{selectedNode.year}</span>
                 <h4 className="font-serif text-base font-bold text-amber-300 mt-0.5">
                   {selectedNode.title}
                 </h4>

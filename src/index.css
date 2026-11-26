@@ -6,10 +6,29 @@
    Повний опис: docs/VISUAL_STYLE.md
    ========================================================================== */
 
+/* Власний піксельний шрифт «Доля»: правильні українські д, ґ, ь, ї, є.
+   Сітка 12 пікселів на кегль, тож найчіткіший він у 12, 24 і 36 px
+   (а на екранах із подвійною щільністю ще й у 18 px). Збирається скриптом
+   scripts/fonts/build_font.py із бітових гліфів scripts/fonts/glyphs.py. */
+@font-face {
+  font-family: 'Dolia Pixel';
+  src: url('./assets/fonts/DoliaPixel-Regular.woff2') format('woff2');
+  font-weight: 100 549;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Dolia Pixel';
+  src: url('./assets/fonts/DoliaPixel-Bold.woff2') format('woff2');
+  font-weight: 550 1000;
+  font-style: normal;
+  font-display: swap;
+}
+
 @theme {
-  --font-sans: 'Pixelify Sans', ui-monospace, system-ui, sans-serif;
-  --font-serif: 'Pixelify Sans', ui-monospace, serif;
-  --font-mono: 'Pixelify Sans', ui-monospace, monospace;
+  --font-sans: 'Dolia Pixel', ui-monospace, system-ui, sans-serif;
+  --font-serif: 'Dolia Pixel', ui-monospace, serif;
+  --font-mono: 'Dolia Pixel', ui-monospace, monospace;
   --font-pixel: 'Press Start 2P', ui-monospace, monospace;
   --font-display: 'Press Start 2P', ui-monospace, monospace;
 
@@ -29,6 +48,25 @@
   --color-px-green: #22c55e;
   --color-px-violet: #8b5cf6;
 
+  /* Тіні тільки жорсткі, зі зсувом на цілі пікселі — жодного розмиття */
+  --shadow-2xs: 0 1px 0 rgba(0, 0, 0, 0.45);
+  --shadow-xs: 0 2px 0 rgba(0, 0, 0, 0.45);
+  --shadow-sm: 2px 2px 0 rgba(0, 0, 0, 0.45);
+  --shadow-md: 3px 3px 0 rgba(0, 0, 0, 0.5);
+  --shadow-lg: 4px 4px 0 rgba(0, 0, 0, 0.55);
+  --shadow-xl: 6px 6px 0 rgba(0, 0, 0, 0.55);
+  --shadow-2xl: 8px 8px 0 rgba(0, 0, 0, 0.6);
+  --drop-shadow-sm: 1px 1px 0 rgba(0, 0, 0, 0.6);
+  --drop-shadow-md: 2px 2px 0 rgba(0, 0, 0, 0.6);
+  --drop-shadow-lg: 3px 3px 0 rgba(0, 0, 0, 0.6);
+
+  /* Будь-який перехід — кадрами, а не плавно */
+  --default-transition-duration: 120ms;
+  --default-transition-timing-function: steps(3, end);
+  --ease-in: steps(3, end);
+  --ease-out: steps(3, end);
+  --ease-in-out: steps(4, end);
+
   --color-ukr-blue: #1d6fd1;
   --color-ukr-yellow: #f7c948;
   --color-parchment: #f3e4c1;
@@ -40,12 +78,15 @@
     -webkit-font-smoothing: none;
     -moz-osx-font-smoothing: grayscale;
     font-smooth: never;
+    /* Піксельний шрифт не можна нахиляти чи «потовщувати» програмно: це розмиває пікселі */
+    font-synthesis: none;
+    text-rendering: optimizeSpeed;
   }
 
   body {
-    font-family: 'Pixelify Sans', ui-monospace, system-ui, sans-serif;
-    font-size: 17px;
-    letter-spacing: 0.01em;
+    font-family: 'Dolia Pixel', ui-monospace, system-ui, sans-serif;
+    font-size: 18px;
+    letter-spacing: 0;
     background-color: #0c0a09;
     /* Піксельна «підлога»: шахова сітка 4×4 з легким градієнтом неба */
     background-image:
@@ -56,8 +97,14 @@
   }
 
   h1, h2, h3, h4, .font-serif {
-    font-family: 'Pixelify Sans', ui-monospace, serif;
-    letter-spacing: 0.02em;
+    font-family: 'Dolia Pixel', ui-monospace, serif;
+    letter-spacing: 0;
+  }
+
+  /* Press Start 2P має сітку 8 пікселів на кегль: показуємо лише в 8, 16, 24, 32… px */
+  .font-pixel, .font-display {
+    letter-spacing: 0;
+    line-height: 1.5;
   }
 
   /* Жодних заокруглень: у піксельному світі все квадратне */
@@ -95,7 +142,7 @@
 }
 
 .handwriting {
-  font-family: 'Caveat', 'Pixelify Sans', cursive;
+  font-family: 'Caveat', 'Dolia Pixel', cursive;
 }
 
 /* --------------------------------------------------------------------------
@@ -200,7 +247,8 @@
   box-shadow: inset 0 0 0 3px rgba(120, 80, 30, 0.35), inset 6px 6px 0 rgba(255, 255, 255, 0.3), inset -6px -6px 0 rgba(120, 80, 30, 0.2);
 }
 
-/* ЕПТ-ефект старого монітора: рядки розгортки та віньєтка */
+/* ЕПТ-ефект старого монітора: ступінчаста віньєтка (кільця з різкими межами).
+   Рядки розгортки малює сам PixelScene — точно по рядках художніх пікселів. */
 .px-crt {
   position: relative;
 }
@@ -209,10 +257,43 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background:
-    repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.18) 0 2px, transparent 2px 4px),
-    radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, 0.55) 100%);
-  mix-blend-mode: multiply;
+  background: radial-gradient(ellipse closest-side at center, transparent 0 78%, rgba(0, 0, 0, 0.16) 78% 88%, rgba(0, 0, 0, 0.3) 88% 97%, rgba(0, 0, 0, 0.45) 97%);
+  background-size: 100% 100%;
+}
+/* Рядки розгортки: тонка темна лінія внизу кожного художнього пікселя (--apx задає PixelScene) */
+.px-scanlines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0 calc(var(--apx, 3px) - 1px),
+    rgba(0, 0, 0, 0.2) calc(var(--apx, 3px) - 1px) var(--apx, 3px)
+  );
+}
+/* Ступінчаста тінь знизу сцени (замість плавного градієнта): смуги з різкими межами */
+.px-shade-up {
+  pointer-events: none;
+  background: linear-gradient(
+    to top,
+    rgba(12, 10, 9, 0.96) 0 10%,
+    rgba(12, 10, 9, 0.78) 10% 20%,
+    rgba(12, 10, 9, 0.56) 20% 30%,
+    rgba(12, 10, 9, 0.36) 30% 42%,
+    rgba(12, 10, 9, 0.18) 42% 56%,
+    transparent 56%
+  );
+}
+.px-shade-up-soft {
+  pointer-events: none;
+  background: linear-gradient(
+    to top,
+    rgba(12, 10, 9, 0.9) 0 7%,
+    rgba(12, 10, 9, 0.6) 7% 14%,
+    rgba(12, 10, 9, 0.32) 14% 22%,
+    rgba(12, 10, 9, 0.12) 22% 32%,
+    transparent 32%
+  );
 }
 
 /* --------------------------------------------------------------------------
@@ -225,12 +306,14 @@
 }
 .animate-float, .px-bob { animation: px-bob 1.4s steps(2, jump-none) infinite; }
 
+/* Помах крил: лише вертикальні кроки на цілі пікселі. Обертання розмивало б спрайт. */
 @keyframes px-flap {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  25% { transform: translateY(-4px) rotate(-6deg); }
-  75% { transform: translateY(-2px) rotate(6deg); }
+  0%, 100% { transform: translateY(0); }
+  25% { transform: translateY(-4px); }
+  50% { transform: translateY(-2px); }
+  75% { transform: translateY(-6px); }
 }
-.animate-flap { animation: px-flap 0.9s steps(4) infinite; }
+.animate-flap { animation: px-flap 0.9s steps(1) infinite; }
 
 @keyframes px-blink {
   0%, 49% { opacity: 1; }
@@ -244,11 +327,14 @@
 }
 .px-cursor { animation: px-cursor 0.6s steps(2, jump-none) infinite; }
 
+/* Сяйво знахідки: кільця-пікселі розходяться кадрами, а сама іконка лише підскакує
+   на 2 px (масштабування розмивало б піксельний спрайт). */
 @keyframes sparkle {
-  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(247, 201, 72, 0.9); }
-  50% { transform: scale(1.15); box-shadow: 0 0 0 4px rgba(247, 201, 72, 0.5), 0 0 0 8px rgba(247, 201, 72, 0.2); }
+  0%, 100% { translate: 0 0; box-shadow: 0 0 0 0 rgba(247, 201, 72, 0.9); }
+  33% { translate: 0 -2px; box-shadow: 0 0 0 3px rgba(247, 201, 72, 0.7); }
+  66% { translate: 0 -2px; box-shadow: 0 0 0 3px rgba(247, 201, 72, 0.35), 0 0 0 6px rgba(247, 201, 72, 0.25); }
 }
-.animate-sparkle { animation: sparkle 1.2s steps(3) infinite; }
+.animate-sparkle { animation: sparkle 1.2s steps(1) infinite; }
 
 @keyframes shake-x {
   0%, 100% { transform: translateX(0); }
@@ -283,23 +369,13 @@
 }
 .px-reveal { animation: px-reveal 0.5s steps(8) both; }
 
-@keyframes px-pan {
-  0% { transform: scale(1.08) translateX(-1.5%); }
-  100% { transform: scale(1.08) translateX(1.5%); }
+/* Панорама: кадр зсувається рівно на один художній піксель за крок (--apx — розмір
+   художнього пікселя, його задає PixelScene). Без масштабування, тож пікселі не «пливуть». */
+@keyframes px-pan-art {
+  from { transform: translateX(calc(var(--apx, 3px) * -6)); }
+  to { transform: translateX(calc(var(--apx, 3px) * 6)); }
 }
-.px-pan { animation: px-pan 24s steps(48) infinite alternate; }
-
-@keyframes px-flicker {
-  0%, 100% { opacity: 0.12; }
-  20% { opacity: 0.22; }
-  40% { opacity: 0.1; }
-  60% { opacity: 0.2; }
-  80% { opacity: 0.14; }
-}
-.px-flicker {
-  background: radial-gradient(ellipse at 50% 15%, rgba(253, 224, 71, 0.9), transparent 55%);
-  animation: px-flicker 2.4s steps(5) infinite;
-}
+.px-pan-art { animation: px-pan-art 30s steps(12, jump-none) infinite alternate; }
 
 /* Квадратний сніг і пил: сотні пікселів із box-shadow */
 @keyframes px-fall {
@@ -329,13 +405,18 @@
 }
 .snow-layer::before, .px-snow::before {
   box-shadow: 663px 485px 0 #f8fafc, 308px 202px 0 #f8fafc, 1333px 24px 0 #f8fafc, 148px 420px 0 #f8fafc, 1097px 48px 0 #f8fafc, 748px 298px 0 #f8fafc, 118px 465px 0 #f8fafc, 1039px 109px 0 #f8fafc, 76px 44px 0 #f8fafc, 888px 214px 0 #f8fafc, 143px 123px 0 #f8fafc, 185px 282px 0 #f8fafc, 869px 30px 0 #f8fafc, 1158px 63px 0 #f8fafc, 457px 322px 0 #f8fafc, 1284px 298px 0 #f8fafc, 126px 295px 0 #f8fafc, 1199px 203px 0 #f8fafc, 101px 499px 0 #f8fafc, 452px 23px 0 #f8fafc, 1140px 439px 0 #f8fafc, 272px 148px 0 #f8fafc, 858px 73px 0 #f8fafc, 1107px 60px 0 #f8fafc, 1169px 157px 0 #f8fafc, 1147px 417px 0 #f8fafc, 1396px 92px 0 #f8fafc, 211px 297px 0 #f8fafc, 1169px 327px 0 #f8fafc, 384px 190px 0 #f8fafc, 199px 280px 0 #f8fafc, 128px 288px 0 #f8fafc, 122px 316px 0 #f8fafc, 421px 254px 0 #f8fafc, 1393px 272px 0 #f8fafc, 875px 397px 0 #f8fafc, 643px 238px 0 #f8fafc, 1199px 472px 0 #f8fafc, 928px 185px 0 #f8fafc, 613px 127px 0 #f8fafc, 368px 357px 0 #f8fafc, 499px 41px 0 #f8fafc, 1176px 153px 0 #f8fafc, 1075px 253px 0 #f8fafc, 703px 373px 0 #f8fafc, 919px 147px 0 #f8fafc, 1247px 37px 0 #f8fafc, 241px 262px 0 #f8fafc, 856px 84px 0 #f8fafc, 700px 77px 0 #f8fafc, 1001px 215px 0 #f8fafc, 80px 492px 0 #f8fafc, 1368px 39px 0 #f8fafc, 1142px 293px 0 #f8fafc, 642px 174px 0 #f8fafc, 717px 304px 0 #f8fafc, 1017px 296px 0 #f8fafc, 934px 35px 0 #f8fafc, 191px 483px 0 #f8fafc, 552px 242px 0 #f8fafc, 663px 985px 0 #f8fafc, 308px 702px 0 #f8fafc, 1333px 524px 0 #f8fafc, 148px 920px 0 #f8fafc, 1097px 548px 0 #f8fafc, 748px 798px 0 #f8fafc, 118px 965px 0 #f8fafc, 1039px 609px 0 #f8fafc, 76px 544px 0 #f8fafc, 888px 714px 0 #f8fafc, 143px 623px 0 #f8fafc, 185px 782px 0 #f8fafc, 869px 530px 0 #f8fafc, 1158px 563px 0 #f8fafc, 457px 822px 0 #f8fafc, 1284px 798px 0 #f8fafc, 126px 795px 0 #f8fafc, 1199px 703px 0 #f8fafc, 101px 999px 0 #f8fafc, 452px 523px 0 #f8fafc, 1140px 939px 0 #f8fafc, 272px 648px 0 #f8fafc, 858px 573px 0 #f8fafc, 1107px 560px 0 #f8fafc, 1169px 657px 0 #f8fafc, 1147px 917px 0 #f8fafc, 1396px 592px 0 #f8fafc, 211px 797px 0 #f8fafc, 1169px 827px 0 #f8fafc, 384px 690px 0 #f8fafc, 199px 780px 0 #f8fafc, 128px 788px 0 #f8fafc, 122px 816px 0 #f8fafc, 421px 754px 0 #f8fafc, 1393px 772px 0 #f8fafc, 875px 897px 0 #f8fafc, 643px 738px 0 #f8fafc, 1199px 972px 0 #f8fafc, 928px 685px 0 #f8fafc, 613px 627px 0 #f8fafc, 368px 857px 0 #f8fafc, 499px 541px 0 #f8fafc, 1176px 653px 0 #f8fafc, 1075px 753px 0 #f8fafc, 703px 873px 0 #f8fafc, 919px 647px 0 #f8fafc, 1247px 537px 0 #f8fafc, 241px 762px 0 #f8fafc, 856px 584px 0 #f8fafc, 700px 577px 0 #f8fafc, 1001px 715px 0 #f8fafc, 80px 992px 0 #f8fafc, 1368px 539px 0 #f8fafc, 1142px 793px 0 #f8fafc, 642px 674px 0 #f8fafc, 717px 804px 0 #f8fafc, 1017px 796px 0 #f8fafc, 934px 535px 0 #f8fafc, 191px 983px 0 #f8fafc, 552px 742px 0 #f8fafc;
-  animation: px-fall 9s steps(90) infinite;
+  animation: px-fall 9s steps(90) infinite, px-sway 2.4s steps(4, jump-none) infinite alternate;
 }
 .snow-layer::after, .px-snow::after {
   width: 2px;
   height: 2px;
   box-shadow: 1360px 33px 0 rgba(248,250,252,0.6), 124px 374px 0 rgba(248,250,252,0.6), 634px 331px 0 rgba(248,250,252,0.6), 1183px 348px 0 rgba(248,250,252,0.6), 912px 145px 0 rgba(248,250,252,0.6), 790px 454px 0 rgba(248,250,252,0.6), 1369px 177px 0 rgba(248,250,252,0.6), 46px 481px 0 rgba(248,250,252,0.6), 945px 181px 0 rgba(248,250,252,0.6), 344px 312px 0 rgba(248,250,252,0.6), 239px 252px 0 rgba(248,250,252,0.6), 120px 111px 0 rgba(248,250,252,0.6), 588px 66px 0 rgba(248,250,252,0.6), 507px 203px 0 rgba(248,250,252,0.6), 800px 469px 0 rgba(248,250,252,0.6), 1016px 41px 0 rgba(248,250,252,0.6), 340px 229px 0 rgba(248,250,252,0.6), 822px 281px 0 rgba(248,250,252,0.6), 569px 452px 0 rgba(248,250,252,0.6), 280px 419px 0 rgba(248,250,252,0.6), 881px 442px 0 rgba(248,250,252,0.6), 1126px 142px 0 rgba(248,250,252,0.6), 850px 183px 0 rgba(248,250,252,0.6), 1398px 452px 0 rgba(248,250,252,0.6), 779px 490px 0 rgba(248,250,252,0.6), 472px 77px 0 rgba(248,250,252,0.6), 169px 90px 0 rgba(248,250,252,0.6), 309px 118px 0 rgba(248,250,252,0.6), 1348px 119px 0 rgba(248,250,252,0.6), 24px 248px 0 rgba(248,250,252,0.6), 1206px 93px 0 rgba(248,250,252,0.6), 538px 144px 0 rgba(248,250,252,0.6), 8px 74px 0 rgba(248,250,252,0.6), 858px 273px 0 rgba(248,250,252,0.6), 756px 312px 0 rgba(248,250,252,0.6), 1159px 163px 0 rgba(248,250,252,0.6), 257px 353px 0 rgba(248,250,252,0.6), 1055px 486px 0 rgba(248,250,252,0.6), 1264px 335px 0 rgba(248,250,252,0.6), 1384px 378px 0 rgba(248,250,252,0.6), 1360px 533px 0 rgba(248,250,252,0.6), 124px 874px 0 rgba(248,250,252,0.6), 634px 831px 0 rgba(248,250,252,0.6), 1183px 848px 0 rgba(248,250,252,0.6), 912px 645px 0 rgba(248,250,252,0.6), 790px 954px 0 rgba(248,250,252,0.6), 1369px 677px 0 rgba(248,250,252,0.6), 46px 981px 0 rgba(248,250,252,0.6), 945px 681px 0 rgba(248,250,252,0.6), 344px 812px 0 rgba(248,250,252,0.6), 239px 752px 0 rgba(248,250,252,0.6), 120px 611px 0 rgba(248,250,252,0.6), 588px 566px 0 rgba(248,250,252,0.6), 507px 703px 0 rgba(248,250,252,0.6), 800px 969px 0 rgba(248,250,252,0.6), 1016px 541px 0 rgba(248,250,252,0.6), 340px 729px 0 rgba(248,250,252,0.6), 822px 781px 0 rgba(248,250,252,0.6), 569px 952px 0 rgba(248,250,252,0.6), 280px 919px 0 rgba(248,250,252,0.6), 881px 942px 0 rgba(248,250,252,0.6), 1126px 642px 0 rgba(248,250,252,0.6), 850px 683px 0 rgba(248,250,252,0.6), 1398px 952px 0 rgba(248,250,252,0.6), 779px 990px 0 rgba(248,250,252,0.6), 472px 577px 0 rgba(248,250,252,0.6), 169px 590px 0 rgba(248,250,252,0.6), 309px 618px 0 rgba(248,250,252,0.6), 1348px 619px 0 rgba(248,250,252,0.6), 24px 748px 0 rgba(248,250,252,0.6), 1206px 593px 0 rgba(248,250,252,0.6), 538px 644px 0 rgba(248,250,252,0.6), 8px 574px 0 rgba(248,250,252,0.6), 858px 773px 0 rgba(248,250,252,0.6), 756px 812px 0 rgba(248,250,252,0.6), 1159px 663px 0 rgba(248,250,252,0.6), 257px 853px 0 rgba(248,250,252,0.6), 1055px 986px 0 rgba(248,250,252,0.6), 1264px 835px 0 rgba(248,250,252,0.6), 1384px 878px 0 rgba(248,250,252,0.6);
-  animation: px-fall 14s steps(140) infinite;
+  animation: px-fall 14s steps(140) infinite, px-sway 3.2s steps(4, jump-none) -1.6s infinite alternate;
+}
+/* Сніжинки погойдуються вбік окремою властивістю translate, не збиваючи падіння */
+@keyframes px-sway {
+  from { translate: -3px 0; }
+  to { translate: 3px 0; }
 }
 .px-dust {
   position: absolute;
@@ -364,9 +445,11 @@
 }
 .px-fly { animation: px-fly 16s steps(160) infinite; }
 
+/* Хмара пливе через увесь контейнер (раніше відсотки бралися від її 8-піксельної ширини,
+   і хмари майже стояли на місці) */
 @keyframes px-cloud {
-  from { transform: translateX(-30%); }
-  to { transform: translateX(130%); }
+  from { left: -64px; }
+  to { left: calc(100% + 8px); }
 }
 .px-cloud {
   position: absolute;
@@ -397,15 +480,17 @@
 .px-wipe-cell { animation: px-wipe 0.01s steps(1) forwards; }
 
 /* Двері відчиняються */
+/* Двері відчиняються трьома кадрами: стулка вужчає й темнішає (без 3D-перспективи,
+   яка розмивала піксельний спрайт) */
 @keyframes px-door {
-  0% { transform: perspective(60px) rotateY(0deg); }
-  100% { transform: perspective(60px) rotateY(-55deg); }
+  0% { transform: scaleX(1); filter: brightness(1); }
+  100% { transform: scaleX(0.34); filter: brightness(0.6); }
 }
-.px-door-open { transform-origin: left center; animation: px-door 0.4s steps(3) forwards; }
+.px-door-open { transform-origin: left center; animation: px-door 0.36s steps(3, jump-none) forwards; }
 
 @media (prefers-reduced-motion: reduce) {
   .animate-float, .px-bob, .animate-flap, .animate-sparkle, .animate-shake,
-  .px-cursor, .px-pan, .px-flicker, .px-fly, .px-cloud, .px-drop, .px-pop, .px-rise,
+  .px-cursor, .px-pan-art, .px-lamp, .px-fly, .px-cloud, .px-drop, .px-pop, .px-rise,
   .px-open, .px-reveal, .px-door-open,
   .snow-layer::before, .snow-layer::after, .px-snow::before, .px-snow::after, .px-dust::before {
     animation: none !important;
@@ -431,11 +516,18 @@
     linear-gradient(to bottom, transparent, rgba(168, 184, 214, 0.18), transparent);
   animation: px-fog-move 18s steps(36) infinite alternate;
 }
+/* Світло вогню: три кільця з різкими межами (як у сцені), що мерехтять кадрами.
+   Кільця «дихають» через зміну прозорості й розміру внутрішнього кола, без scale. */
 @keyframes px-fire-flicker {
-  0%, 100% { opacity: 0.55; transform: scale(1); }
-  25% { opacity: 0.8; transform: scale(1.06); }
-  50% { opacity: 0.45; transform: scale(0.96); }
-  75% { opacity: 0.7; transform: scale(1.03); }
+  0%, 100% { opacity: 0.85; --fire-core: 26%; }
+  25% { opacity: 1; --fire-core: 30%; }
+  50% { opacity: 0.7; --fire-core: 24%; }
+  75% { opacity: 0.95; --fire-core: 28%; }
+}
+@property --fire-core {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 26%;
 }
 .px-fire {
   position: absolute;
@@ -443,9 +535,34 @@
   aspect-ratio: 1;
   translate: -50% -50%;
   pointer-events: none;
-  background: radial-gradient(circle, rgba(255, 170, 70, 0.45) 0 18%, rgba(255, 120, 40, 0.18) 18% 42%, transparent 62%);
+  background: radial-gradient(
+    circle closest-side,
+    rgba(255, 190, 90, 0.34) 0 var(--fire-core),
+    rgba(255, 140, 50, 0.2) var(--fire-core) 56%,
+    rgba(255, 110, 40, 0.09) 56% 82%,
+    transparent 82%
+  );
   mix-blend-mode: screen;
-  animation: px-fire-flicker 0.9s steps(4) infinite;
+  animation: px-fire-flicker 0.8s steps(1) infinite;
+}
+@keyframes px-lamp-pulse {
+  0%, 100% { opacity: 0.75; }
+  50% { opacity: 1; }
+}
+.px-lamp {
+  position: absolute;
+  width: 20%;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  pointer-events: none;
+  background: radial-gradient(
+    circle closest-side,
+    rgba(255, 226, 140, 0.26) 0 34%,
+    rgba(255, 200, 100, 0.13) 34% 68%,
+    transparent 68%
+  );
+  mix-blend-mode: screen;
+  animation: px-lamp-pulse 2.6s steps(2, jump-none) infinite;
 }
 .px-leaves, .px-embers {
   position: absolute;
