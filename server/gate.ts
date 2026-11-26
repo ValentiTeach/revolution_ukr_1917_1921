@@ -167,6 +167,7 @@ const REASONS: Record<string, string> = {
   revoked: 'Викладач відкликав це запрошення.',
   not_found: 'Такого запрошення немає.',
   invalid: 'Посилання пошкоджене. Скопіюй його повністю або попроси нове.',
+  secret: 'Гра й основний сайт не впізнали одне одного. Викладачу: перевір, що GAME_REDEEM_SECRET однаковий в обох проєктах.',
 };
 
 // ---------------------------------------------------------------------------
@@ -220,14 +221,25 @@ export async function handleGate(request: Request, env: GateEnv, deps: GateDeps)
         body: JSON.stringify({ action: 'redeem', token }),
         signal: AbortSignal.timeout(REDEEM_TIMEOUT_MS),
       });
-      result = res.ok ? await res.json() : { ok: false, reason: 'server' };
-    } catch {
+      if (res.ok) {
+        result = await res.json();
+      } else {
+        // Без токена й секретів: лише куди стукали і що відповіли (видно в Runtime Logs)
+        const body = (await res.text().catch(() => '')).slice(0, 200);
+        console.error(`[gate] redeem: ${mainSite}/api/game-invite -> HTTP ${res.status} ${body}`);
+        result = { ok: false, reason: res.status === 401 || res.status === 403 ? 'secret' : 'server' };
+      }
+    } catch (err) {
+      console.error(`[gate] redeem: ${mainSite}/api/game-invite -> ${err instanceof Error ? err.message : String(err)}`);
       result = { ok: false, reason: 'server' };
+    }
+    if (!result.ok && result.reason && result.reason !== 'server' && result.reason !== 'secret') {
+      console.error(`[gate] redeem refused: ${result.reason}`);
     }
 
     if (!result.ok) {
       const text = REASONS[result.reason || ''] || 'Не вдалося перевірити запрошення. Спробуй ще раз за хвилину.';
-      return html(result.reason === 'server' ? 502 : 403, 'Запрошення не спрацювало', text);
+      return html(result.reason === 'server' || result.reason === 'secret' ? 502 : 403, 'Запрошення не спрацювало', text);
     }
 
     const hours = Math.min(MAX_SESSION_HOURS, Math.max(1, Number(result.sessionHours) || 168));
