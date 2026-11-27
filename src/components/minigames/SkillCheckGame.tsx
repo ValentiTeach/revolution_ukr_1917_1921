@@ -153,7 +153,7 @@ export const SkillCheckGame: React.FC<StationGameProps & { hits: number; speed: 
           </svg>
           {feedback && (
             <span
-              className={`px-pop absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-pixel text-[10px] [text-shadow:2px_2px_0_#000] ${
+              className={`px-pop absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 font-pixel text-[8px] [text-shadow:2px_2px_0_#000] ${
                 feedback === 'miss' ? 'text-rose-300' : feedback === 'perfect' ? 'text-yellow-200' : 'text-emerald-200'
               }`}
             >

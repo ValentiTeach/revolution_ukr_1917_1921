@@ -114,7 +114,7 @@ export const WiresGame: React.FC<StationGameProps & { wires: number }> = ({ wire
         <div className="mb-2 flex items-center justify-between px-1">
           <span className="font-pixel text-[8px] text-stone-300">РОЗПОДІЛЬЧА КОРОБКА</span>
           <span
-            className={`h-5 w-5 border-2 border-stone-950 ${done && links.length === n ? 'bg-yellow-300 shadow-[0_0_16px_#fde047]' : 'bg-stone-900'}`}
+            className={`h-5 w-5 border-2 border-stone-950 ${done && links.length === n ? 'bg-yellow-300 shadow-[0_0_0_2px_#fde047,0_0_0_4px_rgba(253,224,71,0.35)]' : 'bg-stone-900'}`}
             aria-label={done && links.length === n ? 'Лампа світить' : 'Лампа не світить'}
           />
         </div>

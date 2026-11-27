@@ -32,10 +32,34 @@ function rasterize(char: string, res: number, outline: boolean): string | null {
       bctx.textBaseline = 'middle';
       bctx.font = `${inner * 4 * 0.86}px ${EMOJI_FONT}`;
       bctx.fillText(char, (inner * 4) / 2, (inner * 4) / 2 + inner * 4 * 0.06);
-      ctx.imageSmoothingEnabled = true;
-      ctx.drawImage(big, pad, pad, inner, inner);
-      const img = ctx.getImageData(0, 0, res, res);
+      // Зменшуємо самі, усередненням блоків 4×4 з урахуванням прозорості:
+      // так краї емодзі не темніють, а дрібні деталі не губляться, як при білінійному зменшенні
+      const src = bctx.getImageData(0, 0, inner * 4, inner * 4).data;
+      const img = ctx.createImageData(res, res);
       const d = img.data;
+      const S = inner * 4;
+      for (let y = 0; y < inner; y++) {
+        for (let x = 0; x < inner; x++) {
+          let r = 0, g = 0, b = 0, a = 0;
+          for (let yy = 0; yy < 4; yy++) {
+            for (let xx = 0; xx < 4; xx++) {
+              const i = ((y * 4 + yy) * S + (x * 4 + xx)) * 4;
+              const al = src[i + 3];
+              r += src[i] * al;
+              g += src[i + 1] * al;
+              b += src[i + 2] * al;
+              a += al;
+            }
+          }
+          const o = ((y + pad) * res + (x + pad)) * 4;
+          if (a > 0) {
+            d[o] = r / a;
+            d[o + 1] = g / a;
+            d[o + 2] = b / a;
+          }
+          d[o + 3] = a / 16;
+        }
+      }
       let painted = 0;
       // Жорстка альфа + легке зменшення палітри (4 рівні на канал)
       for (let i = 0; i < d.length; i += 4) {
@@ -87,7 +111,19 @@ interface PixelEmojiProps {
   label?: string;
 }
 
-export const PixelEmoji: React.FC<PixelEmojiProps> = ({ emoji, size = 32, res = 16, outline = true, className = '', label }) => {
+/**
+ * Підбирає роздільність так, щоб кожен піксель спрайта займав ціле число
+ * екранних пікселів: 30 px при сітці 16 давали б пікселі по 1,875 px
+ * (одні стовпчики ширші за інші). Тепер 30 px → сітка 15 × 2 px.
+ */
+export function crispGrid(size: number, res: number): { res: number; px: number } {
+  const n = Math.max(1, Math.round(size / res));
+  const r = Math.max(8, Math.round(size / n));
+  return { res: r, px: r * n };
+}
+
+export const PixelEmoji: React.FC<PixelEmojiProps> = ({ emoji, size: wanted = 32, res: wantedRes = 16, outline = true, className = '', label }) => {
+  const { res, px: size } = crispGrid(wanted, wantedRes);
   const url = useMemo(() => (typeof document === 'undefined' ? null : rasterize(emoji, res, outline)), [emoji, res, outline]);
   if (!url) {
     return (

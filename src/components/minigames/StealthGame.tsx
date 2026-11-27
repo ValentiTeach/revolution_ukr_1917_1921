@@ -135,7 +135,7 @@ export const StealthGame: React.FC<StationGameProps & { map: string[]; guards: S
     <div className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-stone-300">
         <span>
-          Хід: <strong className="font-pixel text-xs text-amber-300">{turn}</strong>
+          Хід: <strong className="font-pixel text-[16px] text-amber-300">{turn}</strong>
         </span>
         {needItems > 0 && (
           <span>

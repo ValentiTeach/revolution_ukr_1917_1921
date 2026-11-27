@@ -136,7 +136,7 @@ export const ShipsGame: React.FC<StationGameProps & { ships: Ship[]; groups: Gro
                   <span className="flex items-center gap-1">
                     <PixelEmoji emoji="🚢" size={28} className={gone ? '' : 'px-bob'} /> {ship.name}
                   </span>
-                  <span className={`font-pixel text-[9px] ${l === ship.capacity ? 'text-emerald-300' : 'text-amber-200'}`}>
+                  <span className={`font-pixel text-[8px] ${l === ship.capacity ? 'text-emerald-300' : 'text-amber-200'}`}>
                     {l}/{ship.capacity}
                   </span>
                 </div>
@@ -163,7 +163,7 @@ export const ShipsGame: React.FC<StationGameProps & { ships: Ship[]; groups: Gro
                       }}
                       disabled={gone}
                       title={gone ? groups[gi].label : 'Висадити назад'}
-                      className="flex items-center gap-1 border border-stone-950 px-1 text-[11px] text-stone-950"
+                      className="flex items-center gap-1 border border-stone-950 px-1 text-xs text-stone-950"
                       style={{ background: GROUP_COLORS[gi % GROUP_COLORS.length] }}
                     >
                       {groups[gi].emoji} {groups[gi].size}
@@ -197,7 +197,7 @@ export const ShipsGame: React.FC<StationGameProps & { ships: Ship[]; groups: Gro
             >
               <PixelEmoji emoji={groups[gi].emoji} size={24} res={14} />
               <span>{groups[gi].label}</span>
-              <span className="font-pixel text-[10px]">{groups[gi].size}</span>
+              <span className="font-pixel text-[8px]">{groups[gi].size}</span>
             </div>
           ))}
           {waiting.length === 0 && !result && <span className="text-sm text-stone-500">Причал порожній.</span>}

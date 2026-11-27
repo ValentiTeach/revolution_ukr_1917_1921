@@ -100,11 +100,11 @@ export const MemoryGame: React.FC<MemoryGameProps> = ({ pairs, onFinish }) => {
         <span>
           Знайдено пар: <strong className="text-amber-300">{matched.length}</strong> / {pairs.length}
         </span>
-        {streak >= 2 && <span className="px-pop font-pixel text-[9px] text-yellow-300">СЕРІЯ ×{streak}</span>}
+        {streak >= 2 && <span className="px-pop font-pixel text-[8px] text-yellow-300">СЕРІЯ ×{streak}</span>}
         <span>Ходів: {moves}</span>
       </div>
 
-      {peek && <p className="px-blink text-center font-pixel text-[10px] text-amber-300">ЗАПАМʼЯТОВУЙ!</p>}
+      {peek && <p className="px-blink text-center font-pixel text-[8px] text-amber-300">ЗАПАМʼЯТОВУЙ!</p>}
 
       <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 sm:gap-3">
         {deck.map((card) => {
@@ -134,10 +134,10 @@ export const MemoryGame: React.FC<MemoryGameProps> = ({ pairs, onFinish }) => {
               {isUp ? (
                 <>
                   <PixelEmoji emoji={card.emoji} size={44} className="px-pop" />
-                  <span className="text-center text-[10px] leading-tight text-stone-200 sm:text-xs">{card.label}</span>
+                  <span className="text-center text-xs leading-tight text-stone-200 sm:text-xs">{card.label}</span>
                 </>
               ) : (
-                <span className="flex h-9 w-9 items-center justify-center border-2 border-stone-950 bg-yellow-400 font-pixel text-sm text-blue-800">?</span>
+                <span className="flex h-9 w-9 items-center justify-center border-2 border-stone-950 bg-yellow-400 font-pixel text-[16px] text-blue-800">?</span>
               )}
             </motion.button>
           );

@@ -122,12 +122,12 @@ const MissionBody: React.FC<Omit<MissionRunnerProps, 'mission'> & { mission: Mis
                   title={s.title}
                 >
                   {state === 'open' ? (
-                    <span className="px-pop font-pixel text-xs text-emerald-300">✓</span>
+                    <span className="px-pop font-pixel text-[16px] text-emerald-300">✓</span>
                   ) : (
                     <PixelEmoji emoji={state === 'here' ? s.emoji : '🚪'} size={28} res={14} />
                   )}
                 </div>
-                <span className="font-pixel text-[7px] text-stone-400">{doorNo(i)}</span>
+                <span className="font-pixel text-[8px] text-stone-400">{doorNo(i)}</span>
               </div>
             );
           })}
@@ -135,7 +135,7 @@ const MissionBody: React.FC<Omit<MissionRunnerProps, 'mission'> & { mission: Mis
             <div className={`flex h-14 w-10 items-center justify-center border-2 ${stage === 'complete' ? 'border-yellow-300 bg-yellow-700 animate-sparkle' : 'border-stone-700 bg-stone-900'}`}>
               <PixelEmoji emoji="🏁" size={28} res={14} />
             </div>
-            <span className="font-pixel text-[7px] text-stone-400">ФІНІШ</span>
+            <span className="font-pixel text-[8px] text-stone-400">ФІНІШ</span>
           </div>
         </div>
         <div className="flex shrink-0 gap-0.5 text-xl" aria-label={`Серця: ${hearts}`}>
@@ -163,7 +163,7 @@ const MissionBody: React.FC<Omit<MissionRunnerProps, 'mission'> & { mission: Mis
                   <span className="font-pixel text-[8px] text-stone-500">{doorNo(i)}</span>
                   <span>{s.emoji}</span>
                   <span className="flex-1 text-stone-200">{s.title}</span>
-                  <span className="text-[10px] text-stone-500">{KIND_LABEL[s.kind]}</span>
+                  <span className="text-xs text-stone-500">{KIND_LABEL[s.kind]}</span>
                   {s.fork && <span title="Є бічні двері">🔀</span>}
                 </li>
               ))}
@@ -233,8 +233,8 @@ const MissionBody: React.FC<Omit<MissionRunnerProps, 'mission'> & { mission: Mis
           <motion.div key={`play-${index}-${attempt}`} initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} className="space-y-3">
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-pixel text-[9px] text-amber-400">ДВЕРІ {doorNo(index)}</span>
-                {usingSide && <span className="text-[10px] text-violet-300">🔀 бічні двері</span>}
+                <span className="font-pixel text-[8px] text-amber-400">ДВЕРІ {doorNo(index)}</span>
+                {usingSide && <span className="text-xs text-violet-300">🔀 бічні двері</span>}
               </div>
               <h3 className="font-serif text-xl font-bold text-amber-200">
                 {station.emoji} {station.title}

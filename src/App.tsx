@@ -47,6 +47,7 @@ import { CHAPTER_CONFIG, DIALOGUE_STEPS } from './game/historicalData';
 import { ACHIEVEMENTS, ARTIFACTS, COMPANION, MINIGAMES, QUIZ_QUESTIONS, getAchievement } from './game/lore';
 import { STORY_ACT_COUNT } from './game/chapters';
 import { BG_IMAGES } from './game/assets';
+import { PixelScene } from './components/PixelScene';
 import { MISSIONS, getMission, getMissionForChapter } from './game/missions';
 import { sound } from './game/sound';
 
@@ -674,8 +675,8 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
   return (
     <main className="flex-1 flex flex-col items-center justify-center p-3 sm:p-6">
       <div className="w-full max-w-5xl bg-stone-950 pixel-frame overflow-hidden">
-        <div className="relative w-full overflow-hidden">
-          <img src={BG_IMAGES.hero} alt="Софійська площа у Києві, 1917 рік" className="px-pan pixelated h-[320px] sm:h-[440px] w-full object-cover" />
+        <div className="relative h-[320px] sm:h-[440px] w-full overflow-hidden">
+          <PixelScene src={BG_IMAGES.hero} alt="Софійська площа у Києві, 1917 рік" focusY={30} pan />
           {/* Піксельні хмари, пил і голуб, що пролітає над площею */}
           <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
             <div className="px-cloud top-6" style={{ animationDelay: '-12s' }} />
@@ -686,21 +687,21 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
             </div>
             <div className="px-dust" />
           </div>
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/40 to-transparent" />
+          <div className="px-shade-up absolute inset-0" />
           <div className="px-crt pointer-events-none absolute inset-0" />
 
           <div className="absolute right-4 top-4 sm:right-10 sm:top-8 flex flex-col items-center gap-1">
             <PixelAvatar id="pigeon" size="md" className="animate-flap border-sky-300" />
-            <span className="px-notch bg-sky-700 px-2 py-0.5 text-[11px] font-bold text-white">{COMPANION.name}</span>
+            <span className="px-notch bg-sky-700 px-2 py-0.5 text-xs font-bold text-white">{COMPANION.name}</span>
           </div>
 
           <div className="absolute bottom-5 left-4 right-4 sm:left-8 sm:right-8">
-            <div className="font-pixel text-[9px] sm:text-[11px] text-sky-300 tracking-wider mb-3">
+            <div className="font-pixel text-[8px] sm:text-[16px] text-sky-300 mb-3">
               ПІКСЕЛЬНА ПРИГОДА · 1917–1921
             </div>
             <h1
               aria-label="Вільна Доля"
-              className="font-display text-[28px] leading-[1.15] sm:text-5xl text-yellow-300 [text-shadow:4px_4px_0_#b45309,8px_8px_0_#0c0a09]"
+              className="font-display text-[24px] leading-[1.15] sm:text-5xl text-yellow-300 [text-shadow:4px_4px_0_#b45309,8px_8px_0_#0c0a09]"
             >
               {'Вільна Доля'.split('').map((ch, i) => (
                 <span key={i} className="px-drop" style={{ animationDelay: `${i * 70}ms` }} aria-hidden>
@@ -755,7 +756,7 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
             </button>
           </div>
 
-          <p className="px-blink text-center font-pixel text-[10px] text-amber-300" aria-hidden>
+          <p className="px-blink text-center font-pixel text-[8px] text-amber-300" aria-hidden>
             ▶ НАТИСНИ, ЩОБ ПОЧАТИ ◀
           </p>
 
@@ -792,10 +793,10 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
                       open ? 'border-stone-700 bg-stone-900 hover:border-amber-500' : 'border-stone-900 bg-stone-950 text-stone-600 cursor-not-allowed'
                     }`}
                   >
-                    <span className={`font-mono text-[10px] block truncate ${open ? 'text-amber-400' : 'text-stone-600'}`}>
+                    <span className={`font-mono text-xs block truncate ${open ? 'text-amber-400' : 'text-stone-600'}`}>
                       {open ? CHAPTER_CONFIG[cid].period : '???'}
                     </span>
-                    <span className={`block text-[11px] ${open ? 'text-stone-200' : 'text-stone-600'}`}>
+                    <span className={`block text-xs ${open ? 'text-stone-200' : 'text-stone-600'}`}>
                       {!open && '🔒 '}
                       {completedChapters.includes(cid) && '✓ '}
                       {idx === ALL_CHAPTERS.length - 1 ? 'Епілог' : `Акт ${idx + 1}`}

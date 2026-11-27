@@ -9,7 +9,8 @@ import { PixelAvatar } from './PixelAvatar';
 import { Modal } from './Modal';
 import { Artifact, BgKey, ChapterId, Mission, DialogueChoice, DialogueStep, FactionId, GameMetrics, HeroSprite } from '../game/types';
 import { CHAPTER_CONFIG, DIALOGUE_STEPS, FACTIONS } from '../game/historicalData';
-import { BG_IMAGES, BG_TITLES, PIXEL_SCENES } from '../game/assets';
+import { BG_IMAGES, BG_TITLES } from '../game/assets';
+import { PixelScene, useInView } from './PixelScene';
 import { COMPANION, getArtifactsForScene, getCompanionHint } from '../game/lore';
 import { getMetricMeta } from '../game/metricsMeta';
 import { sound } from '../game/sound';
@@ -39,7 +40,7 @@ interface RpgAdventureViewProps {
 
 /** Позначка типу варіанта відповіді. */
 function ChoiceBadge({ choice }: { choice: DialogueChoice }) {
-  const base = 'shrink-0 text-[10px] uppercase font-mono border px-2 py-0.5';
+  const base = 'shrink-0 text-xs uppercase font-mono border px-2 py-0.5';
   if (choice.historicalCanon) return <span className={`${base} border-stone-600 bg-stone-800 text-stone-200`}>📜 Як було</span>;
   if (choice.style === 'secret') return <span className={`${base} border-violet-600 bg-violet-950 text-violet-200`}>🔓 Таємний</span>;
   if (choice.style === 'compromise') return <span className={`${base} border-sky-700 bg-sky-950 text-sky-200`}>🤝 Компроміс</span>;
@@ -51,15 +52,51 @@ const ALL_CHAPTERS = Object.keys(CHAPTER_CONFIG) as ChapterId[];
 
 /** Яку частину піксельної сцени показувати, коли вона не вміщується по висоті (0 — верх, 100 — низ). */
 const SCENE_FOCUS: Partial<Record<BgKey, number>> = {
+  hero: 22,
+  rada: 33,
+  map: 50,
+  kruty: 36,
   winter: 62,
   steppe: 58,
-  forest: 60,
+  forest: 53,
   harbor: 58,
-  syvash: 52,
+  syvash: 64,
   armored: 58,
-  kamianets: 45,
+  kamianets: 50,
   fortress: 52,
   memorial: 55,
+};
+
+/** Живе світло на сценах: вогонь багать і свічок мерехтить, лампи й люстри ледь пульсують (у % картини). */
+const SCENE_LIGHTS: Partial<Record<BgKey, { x: number; y: number; w: number; kind: 'fire' | 'lamp' }[]>> = {
+  forest: [{ x: 60, y: 78, w: 34, kind: 'fire' }],
+  memorial: [{ x: 50, y: 76, w: 16, kind: 'fire' }],
+  winter: [{ x: 84, y: 53, w: 14, kind: 'lamp' }],
+  rada: [{ x: 50, y: 17, w: 30, kind: 'lamp' }],
+  kruty: [
+    { x: 39, y: 46, w: 8, kind: 'lamp' },
+    { x: 97, y: 57, w: 10, kind: 'lamp' },
+  ],
+  harbor: [{ x: 25, y: 69, w: 10, kind: 'lamp' }],
+};
+
+/** Знахідка на сцені: стоїть на своєму предметі, але не виходить за межі вікна сцени. */
+const ArtifactMarker: React.FC<{ artifact: Artifact; found: boolean; onOpen: (a: Artifact) => void }> = ({ artifact: a, found, onOpen }) => {
+  const pos = useInView(a.x, a.y);
+  return (
+    <button
+      type="button"
+      onClick={() => onOpen(a)}
+      aria-label={found ? `Знахідка: ${a.name}` : 'Таємнича знахідка'}
+      title={found ? a.name : 'Що це сяє?'}
+      style={pos}
+      className={`absolute z-10 -translate-x-1/2 -translate-y-1/2 flex h-11 w-11 items-center justify-center border-2 ${
+        found ? 'border-emerald-400 bg-stone-950/80' : 'border-yellow-300 bg-amber-500/40 animate-sparkle'
+      }`}
+    >
+      <PixelEmoji emoji={found ? a.emoji : '✨'} size={32} />
+    </button>
+  );
 };
 
 /** Скільки кроків (розмов) у поточному акті та котрий зараз. */
@@ -181,27 +218,11 @@ export const RpgAdventureView: React.FC<RpgAdventureViewProps> = ({
     return () => window.removeEventListener('keydown', onKey);
   });
 
-  const isPixelScene = PIXEL_SCENES.has(bgKey);
   const focus = SCENE_FOCUS[bgKey] ?? 50;
 
-  const renderArtifact = (a: Artifact) => {
-    const found = foundArtifacts.includes(a.id);
-    return (
-      <button
-        key={a.id}
-        type="button"
-        onClick={() => handleArtifactClick(a)}
-        aria-label={found ? `Знахідка: ${a.name}` : 'Таємнича знахідка'}
-        title={found ? a.name : 'Що це сяє?'}
-        style={{ left: `${a.x}%`, top: `${a.y}%` }}
-        className={`absolute z-10 -translate-x-1/2 -translate-y-1/2 flex h-11 w-11 items-center justify-center border-2 ${
-          found ? 'border-emerald-400 bg-stone-950/80' : 'border-yellow-300 bg-amber-500/40 animate-sparkle'
-        }`}
-      >
-        <PixelEmoji emoji={found ? a.emoji : '✨'} size={30} />
-      </button>
-    );
-  };
+  const renderArtifact = (a: Artifact) => (
+    <ArtifactMarker key={a.id} artifact={a} found={foundArtifacts.includes(a.id)} onOpen={handleArtifactClick} />
+  );
 
   const handleArtifactClick = (artifact: Artifact) => {
     const isNew = !foundArtifacts.includes(artifact.id);
@@ -248,64 +269,22 @@ export const RpgAdventureView: React.FC<RpgAdventureViewProps> = ({
       <div className="relative overflow-hidden bg-stone-950 pixel-frame">
         {/* Сцена */}
         <div className="relative h-[260px] sm:h-[360px] md:h-[440px] w-full overflow-hidden bg-stone-900 [container-type:size]">
-          {isPixelScene ? (
-            // Піксельна сцена 16:9 у «кадрі», що покриває контейнер. Знахідки й вогники
-            // лежать у тому самому кадрі, тож завжди точно над своїми предметами.
-            <div
-              className="absolute"
-              style={{
-                width: 'max(100cqw, calc(100cqh * 16 / 9))',
-                height: 'max(100cqh, calc(100cqw * 9 / 16))',
-                left: '50%',
-                top: `${focus}%`,
-                transform: `translate(-50%, -${focus}%)`,
-              }}
-            >
-              <div className="px-pan absolute inset-0">
-                <AnimatePresence mode="wait">
-                  <motion.img
-                    key={bgKey}
-                    src={BG_IMAGES[bgKey]}
-                    alt={BG_TITLES[bgKey]}
-                    className="pixelated absolute inset-0 h-full w-full"
-                    initial={{ opacity: 0, clipPath: 'inset(0 100% 0 0)' }}
-                    animate={{ opacity: 1, clipPath: 'inset(0 0% 0 0)' }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.5, ease: pxEase(8) }}
-                  />
-                </AnimatePresence>
-                {bgKey === 'forest' && <div className="px-fire" style={{ left: '60%', top: '78%' }} />}
-                {bgKey === 'memorial' && <div className="px-fire" style={{ left: '50%', top: '76%', width: '16%' }} />}
-                {bgKey === 'winter' && <div className="px-fire" style={{ left: '84%', top: '53%', width: '14%' }} />}
-                {showSearch && sceneArtifacts.map(renderArtifact)}
-              </div>
-            </div>
-          ) : (
-            <AnimatePresence mode="wait">
-              <motion.img
-                key={bgKey}
-                src={BG_IMAGES[bgKey]}
-                alt={BG_TITLES[bgKey]}
-                className="px-pan pixelated absolute inset-0 h-full w-full object-cover object-center"
-                initial={{ opacity: 0, clipPath: 'inset(0 100% 0 0)' }}
-                animate={{ opacity: 1, clipPath: 'inset(0 0% 0 0)' }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.5, ease: pxEase(8) }}
-              />
-            </AnimatePresence>
-          )}
+          {/* Піксельна сцена 16:9 у «кадрі» з цілим масштабом. Знахідки й вогники
+              лежать у тому самому кадрі, тож завжди точно над своїми предметами. */}
+          <PixelScene src={BG_IMAGES[bgKey]} alt={BG_TITLES[bgKey]} sceneKey={bgKey} focusY={focus} pan={bgKey !== 'map'} fit={bgKey === 'map' ? 'contain' : 'cover'}>
+            {SCENE_LIGHTS[bgKey]?.map((l, i) => (
+              <div key={i} className={l.kind === 'lamp' ? 'px-lamp' : 'px-fire'} style={{ left: `${l.x}%`, top: `${l.y}%`, width: `${l.w}%` }} />
+            ))}
+            {showSearch && sceneArtifacts.map(renderArtifact)}
+          </PixelScene>
           {/* Атмосфера сцени */}
           {(bgKey === 'kruty' || bgKey === 'winter' || bgKey === 'armored') && <div className="px-snow" />}
-          {bgKey === 'rada' && <div className="px-flicker pointer-events-none absolute inset-0" />}
           {(bgKey === 'hero' || bgKey === 'rada' || bgKey === 'steppe' || bgKey === 'fortress') && <div className="px-dust" />}
           {bgKey === 'harbor' && <div className="px-embers" />}
           {bgKey === 'syvash' && <div className="px-fog" />}
           {bgKey === 'kamianets' && <div className="px-leaves" />}
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/20 to-transparent" />
+          <div className="px-shade-up-soft absolute inset-0" />
           <div className="px-crt pointer-events-none absolute inset-0" />
-
-          {/* Знахідки на старих картинах (позиції — у відсотках від сцени) */}
-          {showSearch && !isPixelScene && sceneArtifacts.map(renderArtifact)}
 
           {/* Верхня плашка */}
           <div className="absolute top-3 left-3 right-3 flex flex-wrap items-start justify-between gap-2">
@@ -344,7 +323,7 @@ export const RpgAdventureView: React.FC<RpgAdventureViewProps> = ({
             </motion.div>
             <div className="px-notch bg-stone-950/95 border-2 border-amber-700 px-3 py-2 max-w-[11rem] sm:max-w-xs">
               <div className="font-serif text-sm sm:text-base font-bold text-amber-200 leading-tight">{step.speaker}</div>
-              <div className="text-[11px] sm:text-xs text-stone-400 leading-tight">{step.role}</div>
+              <div className="text-xs text-stone-400 leading-tight">{step.role}</div>
             </div>
           </div>
 
@@ -361,12 +340,12 @@ export const RpgAdventureView: React.FC<RpgAdventureViewProps> = ({
                 className="flex flex-col items-center gap-1"
               >
                 <PixelAvatar id="pigeon" size="md" className="animate-flap border-sky-400" />
-                <span className="bg-sky-600 px-1.5 py-0.5 text-[10px] font-bold text-white">Що це?</span>
+                <span className="bg-sky-600 px-1.5 py-0.5 text-xs font-bold text-white">Що це?</span>
               </button>
             )}
             <div className="hidden sm:flex flex-col items-center gap-1">
               <PixelAvatar id={heroSprite} size="md" className="px-bob" />
-              <span className="bg-stone-950/90 px-1.5 py-0.5 text-[10px] text-stone-200">{heroName}</span>
+              <span className="bg-stone-950/90 px-1.5 py-0.5 text-xs text-stone-200">{heroName}</span>
             </div>
           </div>
         </div>
@@ -552,7 +531,7 @@ export const RpgAdventureView: React.FC<RpgAdventureViewProps> = ({
                       <span className="px-cursor absolute left-1 top-4 hidden text-amber-300 group-hover:inline group-focus-visible:inline" aria-hidden>
                         ▶
                       </span>
-                      <span className="flex h-7 w-7 shrink-0 items-center justify-center bg-amber-500 font-pixel text-[10px] text-stone-950 shadow-[inset_-2px_-2px_0_rgba(0,0,0,0.35)]">
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center bg-amber-500 font-pixel text-[8px] text-stone-950 shadow-[inset_-2px_-2px_0_rgba(0,0,0,0.35)]">
                         {isTyping ? <Lock className="h-3.5 w-3.5" /> : idx + 1}
                       </span>
                       <span className="flex-1 font-semibold text-sm sm:text-base text-stone-100 group-hover:text-amber-100 leading-snug">

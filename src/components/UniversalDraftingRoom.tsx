@@ -227,7 +227,7 @@ export const UniversalDraftingRoom: React.FC<UniversalDraftingRoomProps> = ({
             {rejected && (
               <div className="border border-rose-700 bg-rose-950/60 p-3 text-rose-200 text-xs space-y-1 animate-shake">
                 <div className="font-bold">🗳️ Рада проголосувала «проти»!</div>
-                <p className="text-[11px] text-rose-300">
+                <p className="text-xs text-rose-300">
                   Підтримка лише {draftEvaluation.totalSupport}%. Подивись, які фракції незадоволені (червоні цифри), і заміни статті, що їх сердять.
                 </p>
               </div>
@@ -236,7 +236,7 @@ export const UniversalDraftingRoom: React.FC<UniversalDraftingRoomProps> = ({
             {hasProclaimed && (
               <div className="border border-emerald-700 bg-emerald-950/60 p-3 text-emerald-200 text-xs space-y-1">
                 <div className="font-bold font-serif">«{customTitle}» проголошено!</div>
-                <p className="text-[11px] text-emerald-300">
+                <p className="text-xs text-emerald-300">
                   Текст зачитано перед народом на Софійській площі. Зміни внесено у показники держави.
                 </p>
               </div>

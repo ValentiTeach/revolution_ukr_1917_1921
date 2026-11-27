@@ -106,7 +106,7 @@ export const CodeLockGame: React.FC<StationGameProps & { code: string; clues: st
           <div className="flex items-center justify-center gap-2">
             {digits.map((d, i) => (
               <div key={i} className="flex flex-col items-center">
-                <button type="button" onClick={() => spin(i, 1)} disabled={!!done} className="pixel-btn h-6 w-10 border-2 border-stone-950 bg-stone-700 text-[10px] text-amber-200" aria-label={`Барабан ${i + 1} вгору`}>
+                <button type="button" onClick={() => spin(i, 1)} disabled={!!done} className="pixel-btn h-6 w-10 border-2 border-stone-950 bg-stone-700 text-xs text-amber-200" aria-label={`Барабан ${i + 1} вгору`}>
                   ▲
                 </button>
                 <button
@@ -115,11 +115,11 @@ export const CodeLockGame: React.FC<StationGameProps & { code: string; clues: st
                   className={`my-1 flex h-16 w-10 flex-col items-center justify-center overflow-hidden border-2 bg-stone-950 font-pixel ${cursor === i && !done ? 'border-amber-400' : 'border-stone-950'}`}
                   aria-label={`Барабан ${i + 1}: ${d}`}
                 >
-                  <span className="text-[9px] text-stone-600">{(d + 9) % 10}</span>
+                  <span className="text-xs text-stone-600">{(d + 9) % 10}</span>
                   <span className={`text-sm ${done === 'won' ? 'text-emerald-300' : 'text-amber-200'}`}>{d}</span>
-                  <span className="text-[9px] text-stone-600">{(d + 1) % 10}</span>
+                  <span className="text-xs text-stone-600">{(d + 1) % 10}</span>
                 </button>
-                <button type="button" onClick={() => spin(i, -1)} disabled={!!done} className="pixel-btn h-6 w-10 border-2 border-stone-950 bg-stone-700 text-[10px] text-amber-200" aria-label={`Барабан ${i + 1} вниз`}>
+                <button type="button" onClick={() => spin(i, -1)} disabled={!!done} className="pixel-btn h-6 w-10 border-2 border-stone-950 bg-stone-700 text-xs text-amber-200" aria-label={`Барабан ${i + 1} вниз`}>
                   ▼
                 </button>
               </div>

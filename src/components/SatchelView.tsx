@@ -60,7 +60,7 @@ export const SatchelView: React.FC<SatchelViewProps> = ({
         <div className="flex flex-col sm:flex-row items-center gap-5 p-5 sm:p-6">
           <PixelAvatar id={heroSprite} size="lg" className="animate-float" />
           <div className="flex-1 w-full space-y-2 text-center sm:text-left">
-            <div className="font-pixel text-[10px] text-amber-400">ЗВАННЯ: {rank.title.toUpperCase()}</div>
+            <div className="font-pixel text-[8px] text-amber-400">ЗВАННЯ: {rank.title.toUpperCase()}</div>
             <h2 className="font-serif text-2xl font-bold text-amber-200">
               {heroName}{' '}
               <button type="button" onClick={onRename} className="text-xs font-sans font-normal text-stone-400 underline hover:text-amber-300">
@@ -93,7 +93,7 @@ export const SatchelView: React.FC<SatchelViewProps> = ({
             return (
               <div
                 key={r.id}
-                className={`flex-1 min-w-[96px] px-2 py-2 text-center text-[11px] border-r border-stone-800 ${
+                className={`flex-1 min-w-[96px] px-2 py-2 text-center text-xs border-r border-stone-800 ${
                   r.id === rank.id ? 'bg-amber-500 text-stone-950 font-bold' : reached ? 'bg-stone-800 text-amber-200' : 'text-stone-500'
                 }`}
               >
@@ -153,7 +153,7 @@ export const SatchelView: React.FC<SatchelViewProps> = ({
                   {has ? (
                     <PixelEmoji emoji={a.emoji} size={56} className="px-bob" />
                   ) : (
-                    <span className="flex h-14 w-14 items-center justify-center font-pixel text-xl text-stone-700">?</span>
+                    <span className="flex h-14 w-14 items-center justify-center font-pixel text-[24px] text-stone-700">?</span>
                   )}
                   <span className={`text-xs leading-tight ${has ? 'text-stone-100' : 'text-stone-600'}`}>
                     {has ? a.name : BG_TITLES[a.bgKey]}

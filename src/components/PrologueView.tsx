@@ -9,6 +9,7 @@ import { ArrowRight, Shuffle } from './icons';
 import { PixelAvatar } from './PixelAvatar';
 import { COMPANION, DEFAULT_HERO_NAMES } from '../game/lore';
 import { BG_IMAGES } from '../game/assets';
+import { PixelScene } from './PixelScene';
 import { HeroSprite } from '../game/types';
 import { sound } from '../game/sound';
 
@@ -71,7 +72,7 @@ export const PrologueView: React.FC<PrologueViewProps> = ({ initialName, initial
           <div className="embroidery-strip" />
           <div className="p-5 sm:p-8 space-y-6">
             <div className="text-center space-y-2">
-              <div className="font-pixel text-[10px] sm:text-xs text-amber-400 tracking-wider">ПРОЛОГ</div>
+              <div className="font-pixel text-[8px] sm:text-[16px] text-amber-400">ПРОЛОГ</div>
               <h1 className="font-serif text-2xl sm:text-3xl font-bold text-amber-300">Хто ти, юний джуро?</h1>
               <p className="text-stone-300 text-sm sm:text-base max-w-xl mx-auto">
                 Джура — це юний помічник і посильний. Ти носитимеш листи Центральної Ради, слухатимеш великих людей і допомагатимеш їм приймати рішення.
@@ -163,20 +164,9 @@ export const PrologueView: React.FC<PrologueViewProps> = ({ initialName, initial
     <main className="flex-1 flex items-center justify-center p-4">
       <div className="w-full max-w-4xl bg-stone-950 pixel-frame overflow-hidden">
         <div className="relative h-[240px] sm:h-[360px] overflow-hidden">
-          <AnimatePresence mode="wait">
-            <motion.img
-              key={page.bg + stage}
-              src={BG_IMAGES[page.bg]}
-              alt=""
-              className="absolute inset-0 h-full w-full object-cover"
-              initial={{ opacity: 0, scale: 1.08 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.8 }}
-            />
-          </AnimatePresence>
-          <div className="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/30 to-transparent" />
-          <div className="absolute top-3 right-3 font-pixel text-[10px] text-amber-300 bg-stone-950/80 px-2 py-1">
+          <PixelScene src={BG_IMAGES[page.bg]} alt="" sceneKey={page.bg} focusY={45} pan />
+          <div className="px-shade-up absolute inset-0" />
+          <div className="absolute top-3 right-3 font-pixel text-[8px] text-amber-300 bg-stone-950/80 px-2 py-1">
             {stage + 1} / {PAGES.length}
           </div>
         </div>

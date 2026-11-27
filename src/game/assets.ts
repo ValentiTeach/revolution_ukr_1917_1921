@@ -3,11 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import heroImg from '../assets/images/hero_ukraine_revolution_1917_1794394443346.jpg';
-import radaImg from '../assets/images/pixel_rada_hall_1917_1794394444860.jpg';
-import mapImg from '../assets/images/pixel_map_ukraine_1918_1794394445811.jpg';
-import krutyImg from '../assets/images/pixel_kruty_station_1918_1794394445137.jpg';
-// Сцени 1919–1921 намальовано піксель за пікселем генератором scripts/scenes/scenes.py
+// Усі сцени — справжній піксель-арт 384×216:
+// * площа, Рада й Крути переведені з художніх картин скриптом scripts/scenes/pixelize.py
+//   (з перемальованими піксельним шрифтом написами);
+// * карту намальовано з реальних координат скриптом scripts/scenes/map_scene.py;
+// * сцени 1919–1921 намальовано піксель за пікселем генератором scripts/scenes/scenes.py.
+import heroImg from '../assets/images/scenes/hero.png';
+import radaImg from '../assets/images/scenes/rada.png';
+import mapImg from '../assets/images/scenes/map.png';
+import krutyImg from '../assets/images/scenes/kruty.png';
 import winterImg from '../assets/images/scenes/winter.png';
 import steppeImg from '../assets/images/scenes/steppe.png';
 import forestImg from '../assets/images/scenes/forest.png';
@@ -51,6 +55,3 @@ export const BG_TITLES: Record<BgKey, string> = {
   fortress: 'Мури Замостя, серпень 1920',
   memorial: 'Поле памʼяті під Базаром',
 };
-
-/** Чи це маленька піксельна сцена (її треба збільшувати без згладжування). */
-export const PIXEL_SCENES: ReadonlySet<BgKey> = new Set<BgKey>(['winter', 'steppe', 'forest', 'harbor', 'syvash', 'armored', 'kamianets', 'fortress', 'memorial']);

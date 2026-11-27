@@ -50,7 +50,7 @@ export const MissionsBoard: React.FC<MissionsBoardProps> = ({ missionsDone, avai
             <div className="flex items-center gap-3">
               <PixelAvatar id={m.giver} size="sm" />
               <div className="flex-1">
-                <div className="text-[11px] text-stone-400">
+                <div className="text-xs text-stone-400">
                   {CHAPTER_CONFIG[m.chapterId].title.split(':')[0]} · {m.giverName}
                 </div>
                 <h3 className="font-serif text-lg font-bold text-stone-100">{m.title}</h3>
@@ -60,7 +60,7 @@ export const MissionsBoard: React.FC<MissionsBoardProps> = ({ missionsDone, avai
             <div className="flex flex-wrap gap-1">
               {m.stations.map((s) => (
                 <span key={s.id} title={s.title} className="flex h-8 w-8 items-center justify-center border border-stone-700 bg-stone-950 text-base">
-                  {done ? <span className="font-pixel text-[10px] text-emerald-300">✓</span> : <PixelEmoji emoji={s.emoji} size={24} res={12} />}
+                  {done ? <span className="font-pixel text-[8px] text-emerald-300">✓</span> : <PixelEmoji emoji={s.emoji} size={24} res={12} />}
                   {s.fork && <span className="sr-only"> (є бічні двері)</span>}
                 </span>
               ))}

@@ -192,7 +192,7 @@ export const HistoricalArchiveModal: React.FC = () => {
                     <div className="font-serif text-sm font-bold text-stone-100 truncate">
                       {fig.nameUk}
                     </div>
-                    <div className="text-[11px] text-stone-400 truncate">{fig.years}</div>
+                    <div className="text-xs text-stone-400 truncate">{fig.years}</div>
                   </div>
                 </button>
               );

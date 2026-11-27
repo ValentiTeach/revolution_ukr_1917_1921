@@ -85,31 +85,8 @@ def soldier(
 
 
 def horse(cv: Canvas, x: int, base: int, h: int, body: Color, dark: Color, mane: Color, step: int = 0, facing: int = 1) -> None:
-    """Кінь збоку: тулуб-еліпс, шия, голова, ноги в кроці."""
-    bl = round(h * 1.25)
-    by = base - round(h * 0.55)
-    cv.ellipse(x, by, bl / 2, h * 0.2, shader=lambda xx, yy: body if yy < by + 1 else dark)
-    # Ноги
-    leg_top = by + round(h * 0.12)
-    for i, off in enumerate((-0.38, -0.22, 0.25, 0.4)):
-        lx = x + round(off * bl) * facing + (step if i % 2 else -step) * facing
-        cv.vline(lx, leg_top, base - 1, dark if i % 2 else body)
-        cv.set(lx, base - 1, (25, 20, 18))
-    # Шия й голова
-    nx = x + facing * round(bl * 0.42)
-    for i in range(round(h * 0.42)):
-        cv.set(nx + facing * round(i * 0.45), by - i, body)
-        cv.set(nx + facing * round(i * 0.45) - facing, by - i, mane if i > 1 else body)
-        cv.set(nx + facing * round(i * 0.45) + facing, by - i + 1, body)
-    hx = nx + facing * round(h * 0.2)
-    hy = by - round(h * 0.42)
-    cv.rect(hx - (0 if facing > 0 else 2), hy, 3, 2, body)
-    cv.set(hx + facing * 3, hy + 1, dark)
-    cv.set(hx, hy - 1, dark)  # вухо
-    # Хвіст
-    tx = x - facing * round(bl / 2)
-    for i in range(round(h * 0.35)):
-        cv.set(tx - facing * (i // 3), by - 1 + i, mane)
+    """Кінь збоку кроком (step=1) або стоячи (step=0). Див. horse2."""
+    horse2(cv, x, base, h, body, dark, mane, pose='walk' if step else 'stand', facing=facing)
 
 
 def sled(cv: Canvas, x: int, base: int, w: int, wood: Color, wood_dark: Color, cargo: Color, cargo_dark: Color) -> None:
@@ -178,23 +155,54 @@ def smoke(cv: Canvas, x: int, y: int, length: int, c: Color, seed: int, drift: f
 
 
 def clouds(cv: Canvas, seed: int, y0: int, y1: int, count: int, body: Color, light: Color, shade: Color) -> None:
-    """Пласкі піксельні хмари з підсвіченим низом."""
+    """Купчасті піксельні хмари: кілька клубів із пласким низом.
+
+    Удень (світлі хмари) світло падає згори, а низ у тіні. На заході сонця
+    (темні хмари зі світлим кольором) навпаки: сонце підсвічує хмари знизу.
+    """
     r = random.Random(seed)
+    lum = lambda c: c[0] * 0.3 + c[1] * 0.59 + c[2] * 0.11  # noqa: E731
+    lit_below = lum(body) < 140
     for _ in range(count):
-        cx = r.randrange(-20, cv.w + 20)
-        cy = r.randrange(y0, y1)
-        length = r.randrange(40, 120)
-        th = r.randrange(4, 11)
-        for i in range(length):
-            hh = round(th * math.sin(math.pi * i / length) + r.random())
-            for yy in range(hh):
-                c = body
-                if yy == hh - 1:
+        cx = r.randrange(-30, cv.w + 30)
+        base = r.randrange(y0, y1)
+        width = r.randrange(26, 84)
+        scale = 0.8 + (base - y0) / max(1, y1 - y0) * 0.4  # дальші (вищі) хмари менші
+        puffs = []
+        n = max(2, width // 14)
+        for k in range(n):
+            px = cx + width * (k + 0.5) / n + r.uniform(-3, 3)
+            mid = 1 - abs((k + 0.5) / n - 0.5) * 1.6
+            pr = max(3.5, (4.5 + 8 * mid + r.uniform(-1.5, 1.5)) * scale)
+            puffs.append((px, base - pr * 0.45, pr))
+        top_of: dict[int, int] = {}
+        cells = []
+        for px, py, pr in puffs:
+            for y in range(int(py - pr) - 1, base + 1):
+                for x in range(int(px - pr) - 1, int(px + pr) + 2):
+                    if (x + 0.5 - px) ** 2 + ((y + 0.5 - py) * 1.25) ** 2 <= pr * pr:
+                        cells.append((x, y))
+                        top_of[x] = min(top_of.get(x, 999), y)
+        filled = set(cells)
+        for (x, y) in filled:
+            depth_top = y - top_of[x]
+            depth_bot = base - y
+            c = body
+            if lit_below:
+                if depth_bot == 0:
                     c = light
-                elif yy == 0:
+                elif depth_bot == 1:
+                    c = light if dith(x, y, 0.5) else body
+                elif depth_top == 0:
                     c = shade
-                if dith(cx + i, cy - yy, 0.85):
-                    cv.set(cx + i, cy - yy, c)
+            else:
+                if depth_top == 0:
+                    c = light
+                elif depth_bot <= 1:
+                    c = shade
+                elif depth_bot == 2 and dith(x, y, 0.5):
+                    c = shade
+            cv.set(x, y, c)
 
 
 def snowfall(cv: Canvas, seed: int, count: int, c: Color, c2: Color) -> None:
@@ -232,31 +240,8 @@ def wheel(cv: Canvas, cx: int, cy: int, r: int, rim: Color, spoke: Color, t: flo
 
 
 def gallop_horse(cv: Canvas, x: int, base: int, h: int, body: Color, dark: Color, mane: Color, phase: int = 0) -> None:
-    """Кінь у галопі праворуч: витягнуті ноги, голова вперед."""
-    bl = round(h * 1.35)
-    by = base - round(h * 0.6)
-    cv.ellipse(x, by, bl / 2, h * 0.19, shader=lambda xx, yy: body if yy <= by else dark)
-    # Ноги: передні вперед, задні назад (або зібрані)
-    legs = [(-0.4, -0.9), (-0.3, -0.5), (0.3, 0.7), (0.42, 1.0)] if phase == 0 else [(-0.35, 0.1), (-0.25, 0.35), (0.3, -0.2), (0.38, 0.1)]
-    for i, (off, lean) in enumerate(legs):
-        lx = x + round(off * bl)
-        ln = round(h * 0.45)
-        for k in range(ln):
-            cv.set(lx + round(lean * k * 0.6), by + 2 + k, dark if i % 2 else body)
-    # Шия й голова вперед
-    nx = x + round(bl * 0.45)
-    for i in range(round(h * 0.35)):
-        cv.set(nx + i, by - i // 2 - 1, body)
-        cv.set(nx + i, by - i // 2, body)
-        cv.set(nx + i - 1, by - i // 2 - 2, mane)
-    hx = nx + round(h * 0.35)
-    hy = by - round(h * 0.2)
-    cv.rect(hx, hy - 1, 4, 3, body)
-    cv.set(hx + 4, hy + 1, dark)
-    # Хвіст розвівається
-    tx = x - round(bl / 2)
-    for i in range(round(h * 0.4)):
-        cv.set(tx - i, by - 1 + i // 3, mane)
+    """Кінь у галопі праворуч: два кадри (0 — розгорнутий стрибок, 1 — ноги зібрані)."""
+    horse2(cv, x, base, h, body, dark, mane, pose='gallop0' if phase == 0 else 'gallop1')
 
 
 def tachanka(cv: Canvas, x: int, base: int, s: float, wood: Color, wood_dark: Color, metal: Color, coat: Color, skin: Color, hat: Color, horse_c: tuple[Color, Color, Color], phase: int = 0, flag: Color | None = None) -> None:
@@ -433,3 +418,118 @@ def colonnade(cv: Canvas, x: int, base: int, w: int, h: int, stone: Color, shade
     mx = x + w // 2
     cv.poly([(mx - 6, base - h), (mx + 6, base - h), (mx, base - h - 5)], stone)
     cv.rect(mx - 2, base - h + 4, 4, h - 6, dark)
+
+
+# ---------------------------------------------------------------------------
+# Кінь із правильними пропорціями (замість «такси» з тонкими ногами)
+# ---------------------------------------------------------------------------
+# Пози ніг: для кожної ноги (передня ближня, передня дальня, задня ближня, задня дальня)
+# — зсув копита відносно місця кріплення (du) і висота копита над землею (dv), в одиницях h.
+_HORSE_POSES = {
+    'stand': [(0.0, 0.0), (0.02, 0.0), (0.0, 0.0), (-0.02, 0.0)],
+    'walk': [(0.1, 0.03), (-0.04, 0.0), (0.04, 0.0), (-0.12, 0.04)],
+    'gallop0': [(0.34, 0.2), (0.24, 0.12), (-0.34, 0.16), (-0.26, 0.08)],  # розгорнутий стрибок
+    'gallop1': [(-0.14, 0.14), (-0.06, 0.08), (0.18, 0.12), (0.1, 0.06)],  # ноги зібрані під тілом
+}
+
+
+def horse2(cv: Canvas, x: int, base: int, h: int, body: Color, dark: Color, mane: Color, pose: str = 'stand', facing: int = 1, rim: Color | None = None) -> None:
+    """Кінь збоку. x — середина тулуба, base — земля, h — висота в холці.
+
+    Тулуб завдовжки приблизно з висоту, глибокі груди й круп, шия вгору-вперед,
+    голова донизу, ноги з колінами й копитами. Дальні ноги темніші.
+    """
+    gallop = pose.startswith('gallop')
+
+    def P(u: float, v: float) -> tuple[float, float]:
+        return x + facing * u * h, base - v * h
+
+    def shade(xx: int, yy: int) -> Color:
+        # Світло згори: верхня третина — колір шерсті, низ — тінь
+        rel = (base - yy) / h
+        return body if rel > 0.52 else dark
+
+    # Ноги (спершу дальні, потім тулуб, потім ближні)
+    lw = 2 if h >= 13 else 1
+    legs = [(0.33, 0), (0.4, 1), (-0.36, 0), (-0.29, 1)]  # (місце кріплення u, дальня?)
+    poses = _HORSE_POSES[pose]
+    def leg(i: int) -> None:
+        au, far = legs[i]
+        du, dv = poses[i]
+        top = P(au, 0.5)
+        knee = P(au + du * 0.45 + (0.03 if i < 2 else -0.04) * (1 if not gallop else 0), 0.26 + dv * 0.5)
+        hoof = P(au + du, dv)
+        c = mix(dark, (0, 0, 0), 0.35) if far else dark
+        for (ax, ay), (bx, by) in ((top, knee), (knee, hoof)):
+            steps = max(1, round(max(abs(bx - ax), abs(by - ay))))
+            for k in range(steps + 1):
+                px = round(ax + (bx - ax) * k / steps)
+                py = round(ay + (by - ay) * k / steps)
+                for w in range(lw):
+                    cv.set(px + w * facing * (-1), py, c)
+        hx, hy = round(hoof[0]), round(hoof[1])
+        for w in range(lw + 1):
+            cv.set(hx + w * facing * (-1) + (facing if w == lw else 0) * 0, hy, (24, 18, 14))
+    for i in (1, 3):
+        leg(i)
+
+    # Тулуб: еліпс + груди + круп (круп трохи вищий)
+    cx, cy = P(0.0, 0.62)
+    cv.ellipse(cx, cy, 0.5 * h, 0.2 * h, shader=shade)
+    for (u, v, rr) in ((0.34, 0.61, 0.21), (-0.33, 0.67, 0.22)):
+        ex, ey = P(u, v)
+        cv.ellipse(ex, ey, rr * h, rr * h, shader=shade)
+
+    # Шия й голова
+    if gallop:
+        neck = [P(0.24, 0.8), P(0.46, 0.54), P(0.8, 0.86), P(0.62, 1.02)]
+        head = [P(0.6, 1.02), P(0.72, 1.04), P(0.98, 0.84), P(0.94, 0.76), P(0.74, 0.86)]
+        ear = P(0.64, 1.1)
+        mane_line = [(0.62, 1.0), (0.3, 0.78)]
+    else:
+        neck = [P(0.22, 0.76), P(0.5, 0.56), P(0.68, 1.0), P(0.48, 1.13)]
+        head = [P(0.48, 1.12), P(0.62, 1.16), P(0.86, 0.9), P(0.8, 0.82), P(0.6, 0.94)]
+        ear = P(0.52, 1.22)
+        mane_line = [(0.5, 1.1), (0.27, 0.76)]
+    cv.poly(neck, body)
+    cv.poly(head, body)
+    # Темна нижня щелепа й ніздря
+    mx, my = P(0.86 if not gallop else 0.97, 0.88 if not gallop else 0.8)
+    cv.set(round(mx), round(my), dark)
+    # Око
+    ex, ey = P(0.6 if not gallop else 0.72, 1.06 if not gallop else 0.97)
+    cv.set(round(ex), round(ey), (20, 14, 10))
+    # Вуха
+    cv.set(round(ear[0]), round(ear[1]), dark)
+    cv.set(round(ear[0]) + facing, round(ear[1]) + 1, dark)
+    # Грива вздовж шиї
+    (u0, v0), (u1, v1) = mane_line
+    n = max(2, round(abs(u1 - u0) * h * 1.6))
+    for k in range(n + 1):
+        t = k / n
+        px, py = P(u0 + (u1 - u0) * t, v0 + (v1 - v0) * t)
+        cv.set(round(px), round(py), mane)
+        cv.set(round(px) - facing, round(py), mane)
+        if gallop and k % 2 == 0:
+            cv.set(round(px) - 2 * facing, round(py) + 1, mane)
+
+    # Хвіст
+    tx, ty = P(-0.52, 0.74)
+    tl = round(h * (0.42 if not gallop else 0.36))
+    for k in range(tl):
+        if gallop:
+            px, py = tx - facing * (k * 0.9), ty - 1 + k * 0.35 + math.sin(k / 2) * 0.6
+        else:
+            px, py = tx - facing * (1 + k * 0.16), ty + k
+        cv.set(round(px), round(py), mane)
+        cv.set(round(px) - facing, round(py), mane)
+
+    # Контрове світло вздовж спини
+    if rim:
+        for u in [i / 20 for i in range(-9, 8)]:
+            px, py = P(u, 0.62 + 0.19 * math.sqrt(max(0, 1 - (u / 0.5) ** 2)) + (0.03 if u < -0.2 else 0))
+            if cv.get(round(px), round(py)) == body:
+                cv.set(round(px), round(py), rim)
+
+    for i in (0, 2):
+        leg(i)

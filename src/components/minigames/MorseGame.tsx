@@ -142,7 +142,7 @@ export const MorseGame: React.FC<StationGameProps & { word: string }> = ({ word,
       <span
         key={i}
         className={`inline-block ${s === '.' ? 'h-4 w-4' : 'h-4 w-10'} ${
-          highlight === undefined || highlight === i ? 'bg-amber-300 shadow-[0_0_10px_#fcd34d]' : 'bg-stone-600'
+          highlight === undefined || highlight === i ? 'bg-amber-300 shadow-[0_0_0_2px_#fcd34d,0_0_0_4px_rgba(252,211,77,0.35)]' : 'bg-stone-600'
         }`}
       />
     ));
@@ -152,7 +152,7 @@ export const MorseGame: React.FC<StationGameProps & { word: string }> = ({ word,
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between text-sm text-stone-300">
-        <span className="font-pixel text-xs tracking-widest">
+        <span className="font-pixel text-[16px]">
           {letters.map((l, i) => (
             <span key={i} className={i < index || phase === 'done' ? 'text-emerald-400' : i === index ? 'text-amber-300' : 'text-stone-600'}>
               {l}
@@ -164,8 +164,8 @@ export const MorseGame: React.FC<StationGameProps & { word: string }> = ({ word,
 
       <div className="flex min-h-[120px] flex-col items-center justify-center gap-3 border-2 border-stone-700 bg-stone-950 p-4">
         <div className="flex items-center gap-3">
-          <span className={`h-5 w-5 border-2 border-stone-950 ${lit !== null || pressed ? 'bg-amber-300 shadow-[0_0_14px_#fcd34d]' : 'bg-stone-700'}`} aria-hidden />
-          <span className="font-pixel text-3xl text-amber-200">{letter}</span>
+          <span className={`h-5 w-5 border-2 border-stone-950 ${lit !== null || pressed ? 'bg-amber-300 shadow-[0_0_0_2px_#fcd34d,0_0_0_4px_rgba(252,211,77,0.35)]' : 'bg-stone-700'}`} aria-hidden />
+          <span className="font-pixel text-[32px] text-amber-200">{letter}</span>
         </div>
         {phase === 'watch' && (
           <>
@@ -207,7 +207,7 @@ export const MorseGame: React.FC<StationGameProps & { word: string }> = ({ word,
           <span className="block h-5 w-8 border-2 border-stone-950 bg-stone-950" />
           <span className="text-xs text-stone-300">Тримай ключ (або пробіл): коротко ●, довго ▬</span>
           <span className="absolute bottom-0 left-0 h-1 bg-amber-400" style={{ width: `${pressed ? holdPct : 0}%` }} />
-          {pressed && <span className="absolute right-2 top-1 font-pixel text-[9px] text-amber-200">{holdMs >= DASH_MS ? '▬' : '●'}</span>}
+          {pressed && <span className="absolute right-2 top-1 font-pixel text-[8px] text-amber-200">{holdMs >= DASH_MS ? '▬' : '●'}</span>}
         </button>
         <div className="flex flex-col gap-2">
           <button type="button" onClick={() => addSymbol('.')} disabled={phase !== 'input'} className="pixel-btn border-2 border-stone-600 bg-stone-800 px-3 py-1.5 text-lg disabled:opacity-40" aria-label="Крапка">
@@ -223,7 +223,7 @@ export const MorseGame: React.FC<StationGameProps & { word: string }> = ({ word,
               setPhase('watch');
             }}
             disabled={phase !== 'input'}
-            className="pixel-btn border-2 border-stone-600 bg-stone-900 px-2 py-1 text-[11px] text-stone-300 disabled:opacity-40"
+            className="pixel-btn border-2 border-stone-600 bg-stone-900 px-2 py-1 text-xs text-stone-300 disabled:opacity-40"
           >
             🔁 Ще раз
           </button>

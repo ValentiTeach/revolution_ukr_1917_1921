@@ -144,7 +144,7 @@ export const RouteGame: React.FC<StationGameProps & { map: string[]; food: numbe
         <Stat emoji="🍞" value={food} label="Харчі" />
         <Stat emoji="🔥" value={warmth} label="Тепло" />
         <Stat emoji="❤️" value={morale} label="Сила духу" low={1} />
-        <span className="ml-auto font-pixel text-[9px] text-stone-400">ДЕНЬ {day}</span>
+        <span className="ml-auto font-pixel text-[8px] text-stone-400">ДЕНЬ {day}</span>
       </div>
 
       <div className="relative overflow-hidden border-4 border-stone-950 bg-stone-800 p-1">

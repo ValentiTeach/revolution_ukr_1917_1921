@@ -34,13 +34,34 @@ function toPath(rows: string[], ch: string): string {
   return d;
 }
 
+/**
+ * Іконка намальована на сітці 12×12, тож чітка лише в 12, 24, 36 px. Класи розміру
+ * Tailwind (h-4 = 16 px, h-5 = 20 px…) замінюємо найближчим кратним 12:
+ * до 18 px → 12, до 30 px → 24, далі — округлення до 12.
+ */
+const SIZE_CLASS = /(^|\s)(?:[a-z]+:)?[hw]-(\d+(?:\.\d+)?)(?=\s|$)/g;
+export function snapIconClass(className: string): { cls: string; px: number | null } {
+  let px: number | null = null;
+  const cls = className.replace(SIZE_CLASS, (m, pre: string, n: string) => {
+    if (!m.includes(':')) px = Math.max(px ?? 0, parseFloat(n) * 4);
+    return m.includes(':') ? m : pre;
+  });
+  if (px === null) return { cls: className, px: null };
+  const p = px as number;
+  const snapped = p <= 18 ? 12 : p <= 30 ? 24 : Math.round(p / 12) * 12;
+  return { cls: cls.replace(/\s+/g, ' ').trim(), px: snapped };
+}
+
 function pixelIcon(name: string, rows: string[]): React.FC<IconProps> {
   const main = toPath(rows, '#');
   const shade = toPath(rows, '+');
-  const Icon: React.FC<IconProps> = ({ className = 'h-4 w-4', title, ...rest }) => (
+  const Icon: React.FC<IconProps> = ({ className = 'h-3 w-3', title, style, ...rest }) => {
+    const { cls, px } = snapIconClass(className);
+    return (
     <svg
       viewBox="0 0 12 12"
-      className={`inline-block shrink-0 ${className}`}
+      className={`inline-block shrink-0 ${cls}`}
+      style={px ? { width: px, height: px, ...style } : style}
       shapeRendering="crispEdges"
       fill="currentColor"
       aria-hidden={title ? undefined : true}
@@ -51,7 +72,8 @@ function pixelIcon(name: string, rows: string[]): React.FC<IconProps> {
       {shade && <path d={shade} opacity={0.45} />}
       <path d={main} />
     </svg>
-  );
+    );
+  };
   Icon.displayName = `PixelIcon(${name})`;
   return Icon;
 }

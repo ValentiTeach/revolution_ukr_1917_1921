@@ -197,7 +197,7 @@ export const FordGame: React.FC<StationGameProps & { theme?: Theme; cols?: numbe
         className="relative mx-auto w-full max-w-md overflow-hidden border-4 border-stone-950 p-2"
         style={{ background: theme === 'ice' ? 'linear-gradient(#1e293b,#334155)' : 'linear-gradient(#020617,#0b1d3a)' }}
       >
-        {theme === 'sea' && <div className="pointer-events-none absolute right-4 top-1 h-6 w-6 bg-amber-100 shadow-[0_0_0_3px_#fef3c7,0_0_20px_#fde68a]" aria-hidden />}
+        {theme === 'sea' && <div className="pointer-events-none absolute right-4 top-1 h-6 w-6 bg-amber-100 shadow-[0_0_0_3px_#fef3c7,0_0_0_6px_rgba(253,230,138,0.35)]" aria-hidden />}
         <div className="mb-1 text-center text-xs font-bold text-amber-200">{t.far}</div>
         <div className="grid gap-1" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
           {grid.map((row, y) =>

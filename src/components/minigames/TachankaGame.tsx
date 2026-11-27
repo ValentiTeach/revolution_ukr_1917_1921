@@ -383,7 +383,7 @@ export const TachankaGame: React.FC<StationGameProps & { distance: number; night
         <div className="min-w-[10rem] flex-1">
           <div className="mb-1 flex justify-between text-xs text-stone-400">
             <span>🐎 Проїхано</span>
-            <span className="font-pixel text-[9px] text-amber-200">
+            <span className="font-pixel text-[8px] text-amber-200">
               {hud.dist}/{distance} м
             </span>
           </div>
@@ -398,7 +398,7 @@ export const TachankaGame: React.FC<StationGameProps & { distance: number; night
             </span>
           ))}
         </span>
-        <span className="font-pixel text-[9px] text-stone-400">{Math.round(hud.speed * 3.6)} км/год</span>
+        <span className="font-pixel text-[8px] text-stone-400">{Math.round(hud.speed * 3.6)} км/год</span>
       </div>
 
       <div className="relative border-4 border-stone-950 bg-stone-900">
@@ -428,7 +428,7 @@ export const TachankaGame: React.FC<StationGameProps & { distance: number; night
         )}
         {countdown !== null && (
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-            <span className="px-pop font-pixel text-4xl text-yellow-300 [text-shadow:4px_4px_0_#0c0a09]" key={countdown}>
+            <span className="px-pop font-pixel text-[32px] text-yellow-300 [text-shadow:4px_4px_0_#0c0a09]" key={countdown}>
               {countdown}
             </span>
           </div>

@@ -313,7 +313,6 @@ test('every scene used in the story has an image on disk', () => {
   const used = new Set<BgKey>([...Object.values(DIALOGUE_STEPS).map((s) => s.bgImageKey), ...ARTIFACTS.map((a) => a.bgKey)]);
   for (const key of used) {
     assert.ok(BG_KEYS.includes(key), key);
-    if (['hero', 'rada', 'map', 'kruty'].includes(key)) continue;
     const file = new URL(`../assets/images/scenes/${key}.png`, import.meta.url);
     assert.ok(readFileSync(file).length > 1000, `missing scene ${key}`);
   }
